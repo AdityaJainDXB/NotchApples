@@ -240,7 +240,7 @@ private struct AppPicker: View {
                     for app in all where selected.contains(app.path) { store.add(URL(fileURLWithPath: app.path)) }
                     dismiss()
                 }
-                .buttonStyle(.borderedProminent).disabled(selected.isEmpty)
+                .buttonStyle(.borderedProminent).metalHover().disabled(selected.isEmpty)
             }
         }
         .padding(14).frame(width: 340)

@@ -107,7 +107,7 @@ final class NotchTriggerView: NSView {
     private func updateMetalRim() {
         let on = isHovered && LiquidMetalSetting.isOn && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if on, rimHost == nil {
-            let host = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 2, veil: false))
+            let host = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 3, veil: false))
             host.wantsLayer = true
             host.alphaValue = 0
             addSubview(host)
@@ -122,7 +122,10 @@ final class NotchTriggerView: NSView {
             var notch = NSRect(x: bounds.midX - width / 2, y: bounds.minY + pad.height, width: width, height: bounds.height - pad.height)
             notch = notch.insetBy(dx: -6, dy: 0); notch.origin.y -= 3; notch.size.height += 3
             let path = Self.notchPath(in: notch, shoulder: shoulder, bottom: min(10, notch.height / 2))
-            let ring = path.cgPath.copy(strokingWithWidth: 3.5, lineCap: .round, lineJoin: .round, miterLimit: 1)
+            // The hosting view is flipped (origin top-left) and this view is not, so the outline is mirrored to land in the right place.
+            var flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: bounds.height)
+            let stroked = path.cgPath.copy(strokingWithWidth: 5.5, lineCap: .round, lineJoin: .round, miterLimit: 1)
+            let ring = stroked.copy(using: &flip) ?? stroked
             let mask = CAShapeLayer(); mask.path = ring; mask.fillColor = NSColor.black.cgColor
             host.frame = bounds
             host.layer?.mask = mask

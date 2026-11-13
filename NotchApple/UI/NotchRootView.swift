@@ -132,6 +132,7 @@ struct NotchRootView: View {
             }
         }
         .frame(width: size.width, height: size.height, alignment: .top)
+        .metalButtons()   // liquid metal (opt-in): every button with no style of its own gets it
         // A file dropped anywhere on the open notch (not just inside a tab's own drop area) goes to the Shelf, or to
         // Convert when that is the tab showing. The tabs' own drop areas still take their drops first.
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in

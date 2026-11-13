@@ -298,7 +298,7 @@ struct PersonasSettings: View {
                     HStack {
                         TextField("Name", text: $p.name).font(.headline)
                         Button(role: .destructive) { extras.personas.removeAll { $0.id == p.id } } label: { Image(systemName: "trash") }
-                            .buttonStyle(.borderless)
+                            .buttonStyle(.borderless).metalHover()
                     }
                     TextField("Instructions", text: $p.instructions, axis: .vertical).lineLimit(1...4).font(.callout)
                 }
@@ -327,7 +327,7 @@ struct PersonasSettings: View {
                     TextField("Title", text: $p.title).frame(width: 180)
                     TextField("Prompt", text: $p.text)
                     Button(role: .destructive) { extras.prompts.removeAll { $0.id == p.id } } label: { Image(systemName: "trash") }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(.borderless).metalHover()
                 }
             }
             Button("Add a prompt") { extras.prompts.append(SavedPrompt(title: "New prompt", text: "")) }

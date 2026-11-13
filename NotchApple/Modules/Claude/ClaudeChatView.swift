@@ -694,7 +694,7 @@ struct ClaudeChatView: View {
             HStack {
                 Link(config.provider.isFree ? "Get a free key →" : "Get a key →", destination: config.provider.keyURL).font(.caption.bold())
                 Spacer()
-                Button("Use Ollama on this Mac instead") { config.provider = .ollama }.buttonStyle(.link).font(.caption)
+                Button("Use Ollama on this Mac instead") { config.provider = .ollama }.buttonStyle(.link).metalHover().font(.caption)
             }
         }
         .frame(maxHeight: .infinity, alignment: .center)

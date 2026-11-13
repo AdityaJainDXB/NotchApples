@@ -295,7 +295,7 @@ struct AppearanceSettings: View {
                 Toggle("Liquid metal (experimental)", isOn: $liquidMetal)
                 if liquidMetal {
                     Picker("Liquid metal colour", selection: $liquidMetalColour) {
-                        Text("Theme colour").tag(0); Text("Rainbow").tag(1); Text("Gold").tag(2)
+                        Text("Theme colour").tag(0); Text("Purple").tag(3); Text("Rainbow").tag(1); Text("Gold").tag(2)
                     }.pickerStyle(.segmented)
                 }
             } footer: {
@@ -431,7 +431,7 @@ private struct ThemeSwatchCard: View {
                 .fill(isSelected ? theme.primaryAccent.opacity(0.18) : Color.clear))
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .help(locked ? "Pro theme. \(Feature.proThemes.benefit)" : theme.name)
         .accessibilityLabel(locked ? "\(theme.name), needs Pro" : theme.name)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)

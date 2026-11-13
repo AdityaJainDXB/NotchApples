@@ -92,7 +92,7 @@ struct TopProcessesView: View {
                 .font(.callout)
             }
             Button("Open Activity Monitor") { NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app")) }
-                .buttonStyle(.link)
+                .buttonStyle(.link).metalHover()
         }
         .padding(14).frame(width: 340)
         .confirmationDialog("Quit \(asking?.name ?? "this app")?", isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } })) {
@@ -123,7 +123,7 @@ struct MeetingPlanner: View {
             HStack {
                 Text("Your time: \(moment.formatted(date: .omitted, time: .shortened))").font(.headline)
                 Spacer()
-                Button("Now") { offset = 0 }.buttonStyle(.link)
+                Button("Now") { offset = 0 }.buttonStyle(.link).metalHover()
             }
             Slider(value: $offset, in: 0...47, step: 1)
             ForEach([TimeZone.current.identifier] + zones, id: \.self) { id in

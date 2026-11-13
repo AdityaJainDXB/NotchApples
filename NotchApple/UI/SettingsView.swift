@@ -248,7 +248,7 @@ struct SettingsView: View {
                                         .frame(width: 22, height: 22).background(Theme.accentGradient, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                                 }
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(MetalPlainStyle())
                         }
                     }
                 }
@@ -332,6 +332,7 @@ struct SettingsView: View {
             .navigationTitle(tab.inPrivacyGroup ? "Privacy & Permissions" : tab.title)
             // The pages follow the colour theme chosen in Settings → Appearance.
             .scrollContentBackground(.hidden)
+            .metalButtons()
             .background(Theme.backdrop.ignoresSafeArea())
         }
         .preferredColorScheme(.dark)
@@ -385,7 +386,7 @@ private struct PrivacyChooser: View {
                 choice("Permissions", "What macOS lets Notch Apple use: accessibility, screen, camera and more.", "checkmark.shield.fill", .permissions)
                 choice("Privacy", "What stays on your Mac, what goes online, and how to delete your data.", "eye.slash.fill", .privacy)
             }
-            Button("Cancel") { done(nil) }.keyboardShortcut(.cancelAction).buttonStyle(.plain).foregroundStyle(.secondary)
+            Button("Cancel") { done(nil) }.keyboardShortcut(.cancelAction).buttonStyle(MetalPlainStyle()).foregroundStyle(.secondary)
         }
         .padding(24)
         .frame(width: 480)
@@ -405,7 +406,7 @@ private struct PrivacyChooser: View {
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.accent.opacity(0.25)))
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
     }
 }
 
@@ -890,7 +891,7 @@ private struct HomeScreenSettings: View {
                             .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
                             .help("More: make it its own tab, show it closed, or turn it off")
                     }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.borderless).metalHover()
                 }
             } header: {
                 Text("Home widgets")
@@ -1331,7 +1332,7 @@ private struct AIHistorySettings: View {
                                             .strokeBorder(selected ? Theme.accent.opacity(0.7) : .clear))
                                         .contentShape(Rectangle())
                                     }
-                                    .buttonStyle(.plain)
+                                    .buttonStyle(MetalPlainStyle())
                                     .contextMenu { Button("Delete", role: .destructive) { store.delete(s.id) } }
                                 }
                                 if filtered.isEmpty {
@@ -1674,7 +1675,7 @@ private struct ClipboardSettings: View {
                         Text(NSWorkspace.shared.urlForApplication(withBundleIdentifier: id).map { FileManager.default.displayName(atPath: $0.path) } ?? id)
                         Spacer()
                         Button(role: .destructive) { history.ignoredAppsRaw = history.ignoredApps.filter { $0 != id }.joined(separator: ",") } label: { Image(systemName: "minus.circle") }
-                            .buttonStyle(.borderless)
+                            .buttonStyle(.borderless).metalHover()
                     }
                 }
                 Button("Add an app…") {
@@ -1834,9 +1835,9 @@ private struct AboutSettings: View {
                     .foregroundStyle(Entitlements.shared.tier != .free ? .green : .secondary)
                 if updater.pendingUpdate != nil {
                     Button { AppDelegate.openSettingsWindow(tab: .updates) } label: { Label("Update available", systemImage: "arrow.down.circle.fill") }
-                        .buttonStyle(.link)
+                        .buttonStyle(.link).metalHover()
                 } else {
-                    Button("Check for updates") { AppDelegate.openSettingsWindow(tab: .updates); updater.check(userInitiated: true) }.buttonStyle(.link)
+                    Button("Check for updates") { AppDelegate.openSettingsWindow(tab: .updates); updater.check(userInitiated: true) }.buttonStyle(.link).metalHover()
                 }
             }
             .font(.callout)
@@ -1844,7 +1845,7 @@ private struct AboutSettings: View {
                 Label(WhatsNew.hasUnseen ? "What's new in \(WhatsNew.currentVersion)" : "What's New", systemImage: "sparkles")
             }
             .buttonStyle(PurpleButtonStyle(prominent: WhatsNew.hasUnseen))
-            Button("Replay the tour") { TourModel.shared.replay() }.buttonStyle(.link).font(.caption)
+            Button("Replay the tour") { TourModel.shared.replay() }.buttonStyle(.link).metalHover().font(.caption)
             HStack {
                 Link("Website", destination: URL(string: "https://adityajaindxb.github.io/NotchApples/")!)
                 Text("·").foregroundStyle(.secondary)
@@ -1859,7 +1860,7 @@ private struct AboutSettings: View {
                 Link("Donate", destination: URL(string: "https://github.com/AdityaJainDXB/NotchApples#donate-")!)
             }
             Text("MIT License").font(.caption).foregroundStyle(.secondary)
-            Button("Acknowledgements") { showAcknowledgements = true }.buttonStyle(.link).font(.caption)
+            Button("Acknowledgements") { showAcknowledgements = true }.buttonStyle(.link).metalHover().font(.caption)
             Button("Quit Notch Apple") { NSApp.terminate(nil) }.padding(.top, 8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -20,14 +20,14 @@ enum LiquidMetalSetting {
 /// A capsule filled with flowing metal in the theme colour. `hover` (0 or 1) makes the metal brighter and faster.
 struct LiquidMetalCapsule: View {
     var hover: Bool = false
-    /// 0: a resting or hovered button, 1: the open tab (filled with the theme colour), 2: only a rim (use it through a mask).
+    /// 0: a resting or hovered button, 1: the open tab (filled with the theme colour), 2: a thin flowing ring (buttons), 3: the chrome outline of the closed notch (use it through a mask).
     var mode: Int? = nil
     /// The metal's tint; the current theme's bright accent when nil.
     var tint: Color? = nil
     /// A dark veil keeps white text readable on the metal (tabs). A rim around the notch has no text, so it goes without.
     var veil: Bool = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Settings → Appearance: 0 theme colour, 1 rainbow, 2 gold.
+    /// Settings → Appearance: 0 theme colour, 1 rainbow, 2 gold, 3 purple.
     @AppStorage(LiquidMetalSetting.colourKey) private var colour = 0
 
     var body: some View {
@@ -38,7 +38,7 @@ struct LiquidMetalCapsule: View {
                     Capsule()
                         .fill(.white)
                         .colorEffect(ShaderLibrary.liquidMetal(.float2(geo.size), .float(t), .float(1), .float(hover ? 1 : 0), .float(Float(mode ?? (hover ? 0 : 1))), .float(Float(colour)), .color(tint ?? Theme.accentBright)))
-                    if veil, (mode ?? 0) != 2 { Capsule().fill(Color.black.opacity(hover ? 0.30 : 0.42)) }   // keeps the white tab name readable
+                    if veil, (mode ?? 0) < 2 { Capsule().fill(Color.black.opacity(hover ? 0.30 : 0.42)) }   // keeps the white tab name readable
                     
                 }
             }
@@ -73,4 +73,62 @@ struct MetalPlainStyle: ButtonStyle {
                 .onHover { hovering = $0 }
         }
     }
+}
+
+/// The metal ring on hover, for buttons that keep a system style (bordered, borderless, link). Does nothing while liquid metal is off.
+struct MetalHoverRing: ViewModifier {
+    @AppStorage(LiquidMetalSetting.key) private var metal = false
+    @State private var hovering = false
+    @Environment(\.isEnabled) private var isEnabled
+
+    func body(content: Content) -> some View {
+        content
+            .overlay {
+                if metal && hovering && isEnabled {
+                    LiquidMetalCapsule(hover: true, mode: 2, veil: false)
+                        .mask(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(lineWidth: 1.6))
+                        .allowsHitTesting(false)
+                }
+            }
+            .onHover { hovering = $0 }
+    }
+}
+
+/// What a button without any style of its own looks like while liquid metal is on: a quiet dark capsule that turns to metal under the
+/// pointer and dims when clicked. Set once on a whole screen with `.metalButtons()`; a button that names its own style keeps it.
+struct MetalDefaultStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View { Inner(configuration: configuration) }
+
+    private struct Inner: View {
+        let configuration: ButtonStyleConfiguration
+        @State private var hovering = false
+        @Environment(\.isEnabled) private var isEnabled
+
+        var body: some View {
+            configuration.label
+                .padding(.horizontal, 10).padding(.vertical, 4)
+                .background {
+                    if hovering && isEnabled { LiquidMetalCapsule(hover: configuration.isPressed || hovering) }
+                    else { Capsule().fill(Color.white.opacity(0.08)) }
+                }
+                .contentShape(Capsule())
+                .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
+                .scaleEffect(configuration.isPressed ? 0.98 : 1)
+                .onHover { hovering = $0 }
+        }
+    }
+}
+
+private struct MetalButtonsModifier: ViewModifier {
+    @AppStorage(LiquidMetalSetting.key) private var metal = false
+    @ViewBuilder func body(content: Content) -> some View {
+        if metal { content.buttonStyle(MetalDefaultStyle()) } else { content }
+    }
+}
+
+extension View {
+    /// Liquid-metal hover on a button that keeps a system style.
+    func metalHover() -> some View { modifier(MetalHoverRing()) }
+    /// With liquid metal on, every button below that has no style of its own gets the metal look.
+    func metalButtons() -> some View { modifier(MetalButtonsModifier()) }
 }

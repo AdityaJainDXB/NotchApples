@@ -89,7 +89,7 @@ struct ModuleOrganizer: View {
                 Image(systemName: isOn ? "xmark.circle.fill" : "plus.circle.fill")
                     .font(.system(size: 15)).foregroundStyle(isOn ? Color.secondary : Theme.accent)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             .help(isOn ? "Remove from the notch" : "Add to the notch")
         }
         .padding(.horizontal, 8).padding(.vertical, 6)

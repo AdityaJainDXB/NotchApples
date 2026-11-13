@@ -66,8 +66,9 @@ static inline float3 liquidMetalFill(float2 p, float2 size, float t, float3 tint
 /// A colour from a hue 0...1 (for the Rainbow option).
 static inline float3 lm_rainbow(float h) { return clamp(abs(fract(h + float3(0.0, 2.0 / 3.0, 1.0 / 3.0)) * 6.0 - 3.0) - 1.0, 0.0, 1.0); }
 
-/// chroma 0: the theme colour; 1: Rainbow (the hue drifts across the metal and over time); 2: Gold.
+/// chroma 0: the theme colour; 1: Rainbow (the hue drifts across the metal and over time); 2: Gold; 3: Purple.
 static inline float3 liquidMetalTint(float3 theme, float chroma, float2 p, float2 size, float t) {
+    if (chroma > 2.5) return float3(0.64, 0.42, 1.0);                          // Purple
     if (chroma > 1.5) return float3(1.0, 0.78, 0.30);
     if (chroma > 0.5) return lm_rainbow(p.x / max(size.x, 1.0) * 0.8 + p.y / max(size.y, 1.0) * 0.2 + t * 0.04);
     return theme;
@@ -103,6 +104,22 @@ static inline float3 liquidMetalRing(float2 p, float2 size, float t, float3 tint
     if (mode > 0.5 && mode < 1.5) body = mix(body, hue * 0.42 + float3(0.04), 0.85);   // the open tab is filled with the theme colour
     float3 rgb = body + silver * ring * level + hue * glow * (0.10 + 0.5 * arc) * (0.6 + 0.8 * hover);
     if (mode > 1.5) rgb = silver * (0.6 + 0.5 * arc + 0.3 * hover);
+    return clamp(rgb, 0.0, 1.0);
+}
+
+/// The closed-notch outline: a thin band of liquid chrome, as in the approved prototype. Dark steel and bright silver bands flow along the
+/// outline (the silver takes a little of the theme colour), with a fine white glint. Uniform and smooth, no blobs.
+static inline float3 liquidMetalChrome(float2 p, float t, float3 tint, float hover) {
+    float hue_max = max(max(tint.r, max(tint.g, tint.b)), 0.001);
+    float3 hue = tint / hue_max;
+    float k = t * (0.45 + 0.5 * hover);
+    float s1 = 0.5 + 0.5 * sin(p.x * 0.052 + p.y * 0.07 + k + 1.6 * sin(p.x * 0.017 - k * 0.6));
+    float s2 = 0.5 + 0.5 * sin(p.x * 0.031 - p.y * 0.05 - k * 0.7 + 2.0);
+    float band = smoothstep(0.30, 0.70, 0.62 * s1 + 0.38 * s2);
+    float glint = pow(smoothstep(0.55, 1.0, s1), 6.0);
+    float3 steel = float3(0.035, 0.035, 0.055) + hue * 0.03;
+    float3 silver = mix(float3(0.90, 0.92, 0.97), hue * 0.85 + 0.15, 0.42);
+    float3 rgb = mix(steel, silver, band) + float3(glint) * 0.35;
     return clamp(rgb, 0.0, 1.0);
 }
 

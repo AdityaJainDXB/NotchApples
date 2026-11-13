@@ -29,7 +29,7 @@ struct ShortcutRecorder: View {
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
                         .frame(minWidth: 130)
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.bordered).metalHover()
                 .tint(recording ? Theme.accent : nil)
                 .accessibilityLabel("Shortcut: \(binding.label). Click to change.")
 

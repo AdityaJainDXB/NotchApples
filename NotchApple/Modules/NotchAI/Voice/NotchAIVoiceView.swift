@@ -156,7 +156,7 @@ struct NotchAIVoiceView: View {
                 Label(NotchAIVoiceLogic.isCapturingAudio(voice.state) ? "Done" : (voice.state == .speaking ? "Interrupt and talk" : "Talk"),
                       systemImage: NotchAIVoiceLogic.isCapturingAudio(voice.state) ? "stop.circle.fill" : "mic.fill")
             }
-            .buttonStyle(.borderedProminent).tint(NotchAIView.green)
+            .buttonStyle(.borderedProminent).metalHover().tint(NotchAIView.green)
             .disabled(convo.busy && voice.state != .speaking && !NotchAIVoiceLogic.isCapturingAudio(voice.state))
             if NotchAIVoiceLogic.isCapturingAudio(voice.state) || voice.state == .interrupted {
                 Button("Cancel") { voice.cancelListening() }
