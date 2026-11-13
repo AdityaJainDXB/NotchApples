@@ -94,9 +94,9 @@ struct GamesMenuView: View {
                 Text(c.name).font(.system(size: 12, weight: .semibold))
                 Text("\(n)").font(.system(size: 10.5)).opacity(0.55)
             }
-            .foregroundStyle(on ? Color(hex: "#14121c") : Color.white.opacity(0.78))
+            .foregroundStyle(on ? LiquidMetalSetting.selectedText : Color.white.opacity(0.78))
             .padding(.horizontal, 11).padding(.vertical, 5)
-            .background(Capsule().fill(on ? Color.white : Color.white.opacity(0.07)))
+            .background(ChoiceCapsule(on: on))
         }
         .buttonStyle(MetalPlainStyle())
     }
@@ -136,8 +136,9 @@ struct GamesMenuView: View {
                     }
                     if hover {
                         Color.black.opacity(0.5)
-                        Text(locked ? "Enter code" : "Play").font(.system(size: 12, weight: .bold)).foregroundStyle(Color(hex: "#14121c"))
-                            .padding(.horizontal, 14).padding(.vertical, 4).background(Capsule().fill(locked ? Color(hex: "#cdbfff") : Color.white))
+                        Text(locked ? "Enter code" : "Play").font(.system(size: 12, weight: .bold)).foregroundStyle(LiquidMetalSetting.isOn ? Color.white : Color(hex: "#14121c"))
+                            .padding(.horizontal, 14).padding(.vertical, 4)
+                            .background { if LiquidMetalSetting.isOn { LiquidMetalCapsule(hover: true, mode: 1) } else { Capsule().fill(locked ? Color(hex: "#cdbfff") : Color.white) } }
                     }
                 }
                 .frame(height: 64).saturation(locked ? 0.55 : 1).clipped()

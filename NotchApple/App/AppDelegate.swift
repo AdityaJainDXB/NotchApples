@@ -124,6 +124,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+        // Buttons (DEBUG only): `-notch.selftest.snapshotButtons YES` draws a hovered card, a selected chip and a Play button to /tmp/notch-buttons.png.
+        if UserDefaults.standard.bool(forKey: "notch.selftest.snapshotButtons") {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 2_500_000_000)
+                let sheet = HStack(spacing: 24) {
+                    ZStack { RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.06)); VStack { Text("Plane").foregroundStyle(.white); Text("Online").foregroundStyle(.green) }; MetalHoverOutline() }.frame(width: 150, height: 120)
+                    Text("Arcade 8").font(.system(size: 12, weight: .semibold)).foregroundStyle(LiquidMetalSetting.selectedText).padding(.horizontal, 11).padding(.vertical, 5).background(ChoiceCapsule(on: true))
+                    Text("Racing 4").font(.system(size: 12, weight: .semibold)).foregroundStyle(.white.opacity(0.78)).padding(.horizontal, 11).padding(.vertical, 5).background(ChoiceCapsule(on: false))
+                    Text("Play").font(.system(size: 12, weight: .bold)).foregroundStyle(.white).padding(.horizontal, 14).padding(.vertical, 4).background(LiquidMetalCapsule(hover: true, mode: 1))
+                    Text("Save").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).padding(.horizontal, 14).frame(height: 30).overlay(MetalHoverOutline()).background(Capsule().fill(Color.white.opacity(0.07)))
+                }.padding(24).background(LinearGradient(colors: [Color(red: 0.12, green: 0.05, blue: 0.28), Color(red: 0.07, green: 0.03, blue: 0.16)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                let r = ImageRenderer(content: sheet); r.scale = 2
+                if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: "/tmp/notch-buttons.png")) }
+            }
+        }
         // Every theme (DEBUG only): `-notch.selftest.snapshotThemes YES` draws the closed notch with the hover rim and the tab row for
         // each colour theme to /tmp/notch-themes.png, off-screen.
         if UserDefaults.standard.bool(forKey: "notch.selftest.snapshotThemes") {

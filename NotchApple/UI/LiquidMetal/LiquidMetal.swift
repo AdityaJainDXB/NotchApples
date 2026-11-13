@@ -35,7 +35,8 @@ struct LiquidMetalCapsule: View {
             TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { ctx in
                 let t = reduceMotion ? 4.0 : ctx.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 3600)
                 ZStack {
-                    Capsule()
+                    // Outlines (modes 2 and 3) are cut out by a mask, so they need the whole rectangle, not just the pill shape.
+                    AnyShape(((mode ?? 0) >= 2) ? AnyShape(Rectangle()) : AnyShape(Capsule()))
                         .fill(.white)
                         .colorEffect(ShaderLibrary.liquidMetal(.float2(geo.size), .float(t), .float(1), .float(hover ? 1 : 0), .float(Float(mode ?? (hover ? 0 : 1))), .float(Float(colour)), .color(tint ?? Theme.accentBright)))
                     if veil, (mode ?? 0) < 2 { Capsule().fill(Color.black.opacity(hover ? 0.30 : 0.42)) }   // keeps the white tab name readable
@@ -60,12 +61,7 @@ struct MetalPlainStyle: ButtonStyle {
         var body: some View {
             configuration.label
                 .overlay {
-                    if metal && hovering && isEnabled {
-                        LiquidMetalCapsule(hover: true, mode: 2, veil: false)
-                            .mask(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(lineWidth: 1.6))
-                            .allowsHitTesting(false)
-                            .transition(.opacity)
-                    }
+                    if metal && hovering && isEnabled { MetalHoverOutline() }
                 }
                 .opacity(metal && configuration.isPressed ? 0.8 : 1)
                 .scaleEffect(metal && configuration.isPressed ? 0.98 : 1)
@@ -84,11 +80,7 @@ struct MetalHoverRing: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay {
-                if metal && hovering && isEnabled {
-                    LiquidMetalCapsule(hover: true, mode: 2, veil: false)
-                        .mask(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(lineWidth: 1.6))
-                        .allowsHitTesting(false)
-                }
+                if metal && hovering && isEnabled { MetalHoverOutline() }
             }
             .onHover { hovering = $0 }
     }
@@ -131,4 +123,38 @@ extension View {
     func metalHover() -> some View { modifier(MetalHoverRing()) }
     /// With liquid metal on, every button below that has no style of its own gets the metal look.
     func metalButtons() -> some View { modifier(MetalButtonsModifier()) }
+}
+
+
+/// The chrome outline shown around a hovered button. It follows the button's own shape: round for a small pill, softly rounded for a
+/// card, and it is thick enough to see (2.5 points) with a soft glow outside it.
+struct MetalHoverOutline: View {
+    var body: some View {
+        GeometryReader { geo in
+            let r = min(14, min(geo.size.width, geo.size.height) / 2)
+            ZStack {
+                LiquidMetalCapsule(hover: true, mode: 3, veil: false)
+                    .mask(RoundedRectangle(cornerRadius: r, style: .continuous).strokeBorder(lineWidth: 2.5))
+                RoundedRectangle(cornerRadius: r, style: .continuous).strokeBorder(Theme.accentBright.opacity(0.35), lineWidth: 1).blur(radius: 3)
+            }
+        }
+        .allowsHitTesting(false)
+        .transition(.opacity)
+    }
+}
+
+/// The background of a choice pill (a filter chip, a segment): metal when it is the selected one and liquid metal is on, otherwise the usual.
+struct ChoiceCapsule: View {
+    var on: Bool
+    var off: Color = Color.white.opacity(0.07)
+    @AppStorage(LiquidMetalSetting.key) private var metal = false
+    var body: some View {
+        if metal && on { LiquidMetalCapsule(hover: false, mode: 1).shadow(color: Theme.accent.opacity(0.45), radius: 6) }
+        else { Capsule().fill(on ? Color.white : off) }
+    }
+}
+
+extension LiquidMetalSetting {
+    /// The text colour on a selected choice pill: white on metal, the dark ink on the usual white pill.
+    static var selectedText: Color { isOn ? .white : Color(hex: "#14121c") }
 }
