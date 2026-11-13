@@ -384,13 +384,12 @@ private struct TabButton: View {
                 .background {
                     if active {
                         if let pillSpace {
-                            Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
-                                .matchedGeometryEffect(id: "duoPill", in: pillSpace)
+                            tabFill.matchedGeometryEffect(id: "duoPill", in: pillSpace)
                         } else {
-                            Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
+                            tabFill
                         }
                     } else if hovering {
-                        Capsule().fill(Theme.surfaceHover)
+                        if liquidMetal { LiquidMetalCapsule(hover: true).opacity(0.55) } else { Capsule().fill(Theme.surfaceHover) }
                     }
                 }
                 .contentShape(Capsule())
@@ -411,6 +410,17 @@ private struct TabButton: View {
         .help(module == .messenger && notifier.unread > 0 ? "Messenger · \(notifier.unread) unread" : module.title)
         .accessibilityLabel(module.title)
         .accessibilityAddTraits(active ? .isSelected : [])
+    }
+
+    @AppStorage(LiquidMetalSetting.key) private var liquidMetal = false
+
+    /// The highlight behind the open tab: the theme gradient, or flowing liquid metal when that is switched on.
+    @ViewBuilder private var tabFill: some View {
+        if liquidMetal {
+            LiquidMetalCapsule().shadow(color: Theme.accent.opacity(0.45), radius: 8)
+        } else {
+            Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
+        }
     }
 }
 

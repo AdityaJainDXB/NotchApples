@@ -285,10 +285,16 @@ struct AppearanceSettings: View {
     private let manager = ThemeManager.shared
     @ObservedObject private var entitlements = Entitlements.shared
     @AppStorage("appearance.settingsWindow") private var windowMode = "system"
+    @AppStorage("appearance.liquidMetal") private var liquidMetal = false
 
     var body: some View {
         let current = manager.currentTheme
         Form {
+            Section {
+                Toggle("Liquid metal (experimental)", isOn: $liquidMetal)
+            } footer: {
+                Text("A flowing liquid-metal highlight behind the open tab, and brighter metal under the pointer. It uses the graphics chip a little, holds still with Reduce Motion, and is off by default.")
+            }
             Section {
                 Picker("Settings window", selection: $windowMode) {
                     Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark")
