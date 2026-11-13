@@ -747,3 +747,11 @@ body[data-perf="lite"] .ws-step { animation: none; }
 @media (prefers-reduced-motion: reduce) { .gm-card, .gm-shake { transition: none; animation: none; } }
 .settings-search { width: 100%; margin-bottom: 4px; flex-shrink: 0; }
 .setting.search-hit { background: var(--surface); border-radius: 10px; box-shadow: 0 0 0 1px var(--accent); }
+
+/* Liquid metal (opt-in, see js/liquidmetal.js). The metal rim is a layer on top of the notch that ignores the pointer. */
+.lm-rim { position: absolute; inset: -1px; padding: 3px; border-radius: inherit; pointer-events: none; z-index: 5; background: transparent !important; opacity: 0;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); }
+body.liquid-metal .lm-rim::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: var(--accent); mix-blend-mode: color; opacity: .7; pointer-events: none; }
+body[data-perf="lite"] .lm-rim, body[data-perf="lite"] .metal-fx-canvas { display: none; }
+body.liquid-metal .tab-pill { overflow: hidden; }
+body.liquid-metal .tab-pill .metal-fx-canvas { mix-blend-mode: overlay; opacity: .9; }

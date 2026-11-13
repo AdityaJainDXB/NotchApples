@@ -15,6 +15,7 @@ import { pref, SIZES } from './prefs.js';
 import { setRenderer, earsFor, refresh as refreshPill } from './activity.js';
 import { toast } from './ui.js';
 import { applyPerf, probeOnce, toggleHud } from './perf.js';
+import { init as initLiquidMetal } from './liquidmetal.js';
 
 export { invoke };
 
@@ -25,6 +26,7 @@ const tabbar = document.getElementById('tabbar');
 // The highlight behind the open tab is one element that glides to the next tab (like the Mac's), instead of the
 // whole bar being rebuilt with the highlight jumping.
 const tabPill = el('span', { class: 'tab-pill' });
+queueMicrotask(() => initLiquidMetal(tabPill, document.getElementById('shell')));
 let pillRaf = 0, pillBox = null;
 function pillTarget() {
   const a = tabbar.querySelector('.tab.active');
