@@ -481,6 +481,54 @@ async fn lyrics_overlay_show(app: AppHandle, side: String) -> Result<(), String>
     Ok(())
 }
 
+/// Desktop widgets (Ultimate): one small window per widget ("widget-clock", "widget-todo", "widget-nowplaying"), sitting
+/// at the bottom of the window stack so it never covers what the user is working on. It can be dragged (src/widget.html).
+/// `x` and `y` are the saved position in logical pixels; without them the widget opens down the right edge of the main screen.
+#[tauri::command]
+async fn widget_show(app: AppHandle, kind: String, index: u32, x: Option<f64>, y: Option<f64>) -> Result<(), String> {
+    let (w, h) = match kind.as_str() {
+        "clock" => (190.0, 96.0),
+        "todo" => (240.0, 170.0),
+        "nowplaying" => (240.0, 84.0),
+        _ => return Err("unknown widget".into()),
+    };
+    let label = format!("widget-{kind}");
+    if let Some(existing) = app.get_webview_window(&label) {
+        let _ = existing.show();
+        return Ok(());
+    }
+    let monitor = app.primary_monitor().ok().flatten().ok_or("no monitor")?;
+    let scale = monitor.scale_factor();
+    let screen = monitor.size().to_logical::<f64>(scale);
+    let origin = monitor.position().to_logical::<f64>(scale);
+    let (px, py) = match (x, y) {
+        (Some(x), Some(y)) if x >= origin.x - w + 60.0 && x <= origin.x + screen.width - 60.0 && y >= origin.y && y <= origin.y + screen.height - 40.0 => (x, y),
+        _ => (origin.x + screen.width - w - 24.0, origin.y + 64.0 + (index as f64) * 190.0),
+    };
+    WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(format!("widget.html?kind={kind}").into()))
+        .title("Notch Apple widget")
+        .inner_size(w, h)
+        .position(px, py)
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .resizable(false)
+        .always_on_bottom(true)
+        .skip_taskbar(true)
+        .focused(false)
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Closes one desktop widget (its switch went off, or Ultimate lapsed).
+#[tauri::command]
+fn widget_hide(app: AppHandle, kind: String) {
+    if let Some(w) = app.get_webview_window(&format!("widget-{kind}")) {
+        let _ = w.close();
+    }
+}
+
 /// Closes the lyrics overlay (the switch went off, or Pro lapsed).
 #[tauri::command]
 fn lyrics_overlay_hide(app: AppHandle) {
@@ -680,7 +728,7 @@ fn main() {
             awake::set_keep_awake, awake::keep_awake_state,
             system_stats, top_processes, transliterate, capture_screen,
             installed_apps, path_info, launch_app, open_path, reveal_path, open_url,
-            pick_app, pick_folder, pick_file, open_browser, browser_place, browser_hide, browser_close, browser_nav, lyrics_overlay_show, lyrics_overlay_hide, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
+            pick_app, pick_folder, pick_file, open_browser, browser_place, browser_hide, browser_close, browser_nav, lyrics_overlay_show, lyrics_overlay_hide, widget_show, widget_hide, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
             index::search_files, index::set_search_folders, index::search_status,
             icons::icons,
             watch::screen_time, watch::set_edge_trigger, watch::privacy_now, watch::foreground_now, watch::minimize_external,

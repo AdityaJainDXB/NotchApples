@@ -170,6 +170,7 @@ targets:
       - NotchApple/Core/NotchAIOfficeReader.swift
       - NotchApple/Core/NotchAIDocumentLogic.swift
       - NotchApple/Core/NotchAIOAuth.swift
+      - NotchApple/Core/DesktopWidgetLogic.swift
       - NotchApple/Core/NotchAIConnectorCatalog.swift
       - NotchApple/Core/NotchAIDiagramLogic.swift
       - NotchApple/Core/NotchAIDrawingLogic.swift

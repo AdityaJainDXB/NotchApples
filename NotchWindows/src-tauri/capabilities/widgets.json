@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "widgets",
+  "description": "The desktop widget windows. They can only send and receive events and be dragged; they load the app's own files.",
+  "windows": ["widget-clock", "widget-todo", "widget-nowplaying"],
+  "permissions": [
+    "core:event:default",
+    "core:window:allow-start-dragging"
+  ]
+}

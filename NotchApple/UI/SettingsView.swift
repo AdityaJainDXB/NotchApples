@@ -1772,6 +1772,7 @@ private struct WidgetSettings: View {
 
     var body: some View {
         Form {
+            DesktopWidgetsSettings()
             Section {
                 Toggle("Use my current location", isOn: $location.useCurrentLocation)
                     .onChange(of: location.useCurrentLocation) { _, on in if on { location.requestLocation() } }
