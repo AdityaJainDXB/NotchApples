@@ -39,6 +39,22 @@ export const DEFAULTS = {
   'updates.weekly': false,          // off: you hear about every release; on: one update prompt a week
 };
 
+// The notch's size as a percentage of the standard one (Pro). It replaces the old Small / Standard / Large buttons:
+// 'ui.sizePct' wins once it has been set, and until then the old choice is read as 86 / 100 / 124 %.
+export const SIZE_PCT = { min: 80, max: 150, step: 5, standard: 100 };
+const LEGACY_PCT = { compact: 86, standard: 100, large: 124 };
+const clampPct = (v) => Math.min(SIZE_PCT.max, Math.max(SIZE_PCT.min, Math.round(Number(v))));
+export function sizePct() {
+  const v = load('ui.sizePct', null);
+  if (typeof v === 'number' && Number.isFinite(v)) return clampPct(v);
+  return LEGACY_PCT[load('ui.size', DEFAULTS['ui.size'])] ?? SIZE_PCT.standard;
+}
+/// The pill and the open panel at `pct` percent of the standard size.
+export function sizeFor(pct) {
+  const k = clampPct(pct) / 100, s = SIZES.standard;
+  return { pillWidth: Math.round(s.pillWidth * k), pillHeight: Math.round(s.pillHeight * k), width: Math.round(s.width * k), height: Math.round(s.height * k) };
+}
+
 export const pref = (key) => {
   const v = load(key, DEFAULTS[key]);
   // New shortcut actions added in an update keep their defaults.

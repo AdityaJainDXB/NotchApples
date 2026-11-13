@@ -48,8 +48,10 @@ enum NotchPrefs {
     @AppStorage("notch.haptics") static var haptics = false
 
     static let defaultSize = CGSize(width: 740, height: 420)
-    static let widthRange: ClosedRange<Double> = 620...1000
-    static let heightRange: ClosedRange<Double> = 360...600
+    static let widthRange: ClosedRange<Double> = 580...1120
+    static let heightRange: ClosedRange<Double> = 330...640
+    /// The Size slider in Settings: the open notch as a percentage of the standard 740 × 420.
+    static let percentRange: ClosedRange<Double> = 80...150
 
     /// Set while a game that needs room (the Plane game) is open: the panel grows to at least this size.
     @MainActor static var bigGameOpen = false

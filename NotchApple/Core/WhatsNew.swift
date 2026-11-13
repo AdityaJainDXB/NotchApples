@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.71", date: "13 November 2026", headline: "Notch size slider", items: [
+            "- New: a Notch size slider in Settings → Notch → Size. Drag it from 80% to 150% and the open notch gets bigger or smaller, live, with the percentage shown. It moves the width and the height together; Width and Height are still there to fine-tune. It is part of Pro, like the other size options.",
+        ]),
         ReleaseNote(version: "2.2.70", date: "12 November 2026", headline: "NotchAI: more voices, drawing, diagrams, and a Windows chat", items: [
             "- New: NotchAI Voice has more engines. Piper (a natural voice) and Whisper (speech to text) run on your Mac once you install them and set their paths in Voice. OpenAI's voice is there too and, like every cloud voice, stays blocked while Local first is on",
             "- New: hands-free talking. Turn it on in Voice and a pause ends your sentence, and NotchAI listens again after it answers. A wake word (\"Hey Notch\") is also there: it is off by default, is recognised on your Mac only, shows when the microphone is open, and is experimental",

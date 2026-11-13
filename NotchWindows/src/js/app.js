@@ -11,7 +11,7 @@ import { loadSaved, tierName, setTierOverride, checkEmailGate, storedGate } from
 import { canUse } from './features.js';
 import { MODULES, DEFAULT_ON, byId } from './modules.js';
 import { insideUtilities, route } from './modules/utilitieslogic.js';
-import { pref, SIZES } from './prefs.js';
+import { pref, sizePct, sizeFor } from './prefs.js';
 import { setRenderer, earsFor, refresh as refreshPill } from './activity.js';
 import { toast } from './ui.js';
 import { applyPerf, probeOnce, toggleHud } from './perf.js';
@@ -256,10 +256,12 @@ async function unlock() {
 /// Then the panel grows out of the pill's shape: the window is already full size (and transparent), and the
 /// panel is clipped to the pill's rectangle and released, so the browser animates the clip.
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+/// The notch's size right now: the percentage from Settings (Pro), or the standard size.
+const sizeNow = () => sizeFor(canUse('notchResize') ? sizePct() : 100);
 /// Windows resizes the web view a moment AFTER the window. Revealing before that lays the page out in the old
 /// (tiny or huge) viewport for a frame or two, which shows as a glitch. So wait until the page has the new size.
 const viewportIs = (open) => {
-  const size = SIZES[canUse('notchResize') ? pref('ui.size') : 'standard'] || SIZES.standard;
+  const size = sizeNow();
   const near = (a, b) => Math.abs(a - b) <= 6;
   const wantW = open ? Math.min(size.width + 60, screen.availWidth - 16 + 60) : size.pillWidth;
   return open ? innerWidth >= wantW - 8 : near(innerWidth, wantW);
@@ -274,7 +276,7 @@ const motion = () => body.dataset.anim !== 'off' && body.dataset.perf !== 'lite'
 const shellEl = document.getElementById('shell');
 
 function pillClip() {
-  const size = SIZES[canUse('notchResize') ? pref('ui.size') : 'standard'] || SIZES.standard;
+  const size = sizeNow();
   shellEl.style.setProperty('--pill-half', `${(size.pillWidth - 28) / 2}px`);
   shellEl.style.setProperty('--pill-h', `${size.pillHeight}px`);
 }
@@ -538,8 +540,7 @@ export function bigBrowser(on) { on = !!on; if (bigBrowserOn === on) return; big
 /// While a page is showing in the notch, clicking the page (another window) must not close the notch.
 export function holdOpen(on) { busy = Math.max(0, busy + (on ? 1 : -1)); }
 function sendLayout() {
-  const sizeName = canUse('notchResize') ? pref('ui.size') : 'standard';
-  const size = { ...(SIZES[sizeName] || SIZES.standard) };
+  const size = { ...sizeNow() };
   if (chatGames.size) { size.width = Math.max(size.width, CHAT_GAME_SIZE.width); size.height = Math.max(size.height, CHAT_GAME_SIZE.height); }
   if (tallChatGames.size) { size.width = Math.max(size.width, TALL_CHAT_GAME_SIZE.width); size.height = Math.max(size.height, TALL_CHAT_GAME_SIZE.height); }
   if (bigBrowserOn) { size.width = Math.max(size.width, BIG_BROWSER_SIZE.width); size.height = Math.max(size.height, BIG_BROWSER_SIZE.height); }
@@ -624,7 +625,7 @@ applyLayout();
 buildTabs();
 refreshPill();
 
-for (const key of ['ui.position', 'ui.inset', 'ui.size', 'ui.hideFullscreen', 'ui.animation', 'ui.performance', 'ui.font', 'ui.edgeTrigger']) watch(key, applyLayout);
+for (const key of ['ui.position', 'ui.inset', 'ui.size', 'ui.sizePct', 'ui.hideFullscreen', 'ui.animation', 'ui.performance', 'ui.font', 'ui.edgeTrigger']) watch(key, applyLayout);
 watch('ui.glass', () => { if (expanded) applyGlass(); });
 watch('shortcuts', registerShortcuts);
 watch('ui.showClock', refreshPill);

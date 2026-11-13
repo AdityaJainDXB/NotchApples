@@ -122,6 +122,12 @@ struct NotchSettings: View {
             }
 
             Section {
+                LabeledContent("Notch size") {
+                    HStack {
+                        Slider(value: sizePercent, in: NotchPrefs.percentRange, step: 5) { editing in preview(editing) }.frame(width: 200)
+                        Text("\(Int(sizePercent.wrappedValue))%").monospacedDigit().frame(width: 60, alignment: .trailing)
+                    }
+                }
                 LabeledContent("Width") {
                     HStack {
                         Slider(value: $panelWidth, in: NotchPrefs.widthRange, step: 10) { editing in preview(editing) }.frame(width: 200)
@@ -138,7 +144,7 @@ struct NotchSettings: View {
             } header: {
                 proHeader("Size", .notchResize)
             } footer: {
-                Text("The notch opens while you drag, so you can see the size live. You can also pinch on the open notch.")
+                Text("The notch opens while you drag, so you can see the size live. Notch size moves the width and height together (80% to 150%); Width and Height fine-tune them. You can also pinch on the open notch.")
             }
             .disabled(!entitlements.canUse(.notchResize))
             .onChange(of: panelWidth) { _, _ in notch?.reposition() }
@@ -204,6 +210,17 @@ struct NotchSettings: View {
     /// Opens the notch while a size slider is dragged, so the change is visible.
     private func preview(_ editing: Bool) {
         if editing { notch?.expand() }
+    }
+
+    /// The open notch as a percentage of the standard size: one slider that moves the width and the height together.
+    private var sizePercent: Binding<Double> {
+        Binding(
+            get: { (panelWidth / NotchPrefs.defaultSize.width * 100).rounded() },
+            set: { percent in
+                let scale = percent / 100
+                panelWidth = (NotchPrefs.defaultSize.width * scale).clamped(to: NotchPrefs.widthRange)
+                panelHeight = (NotchPrefs.defaultSize.height * scale).clamped(to: NotchPrefs.heightRange)
+            })
     }
 }
 

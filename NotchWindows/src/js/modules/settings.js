@@ -3,7 +3,7 @@ import { el, load, save } from '../store.js';
 import { invoke, openUrl } from '../native.js';
 import { THEMES, applyTheme, currentThemeId, customTheme, saveCustom } from '../themes.js';
 import { MODULES } from '../modules.js';
-import { pref, setPref, SHORTCUT_NAMES, DEFAULTS } from '../prefs.js';
+import { pref, setPref, SHORTCUT_NAMES, DEFAULTS, SIZE_PCT, sizePct } from '../prefs.js';
 import { canUse, FEATURES, tierLabel } from '../features.js';
 import { tier, TIERS, maskedCode, deactivate, hasSignedKey } from '../license.js';
 import { isEnabled, setEnabled, tabOrder, setTabOrder, appInfo, registerShortcuts, show } from '../app.js';
@@ -162,7 +162,16 @@ function helloCard() {
 function General(repaint, opts) {
   const auto = toggle(false, (v) => invoke('set_autostart', { on: v }).catch((e) => toast(e.message, { error: true })));
   invoke('get_autostart').then((on) => { auto.querySelector('input').checked = on; });
-  const sizeSel = segmented([{ value: 'compact', label: 'Small' }, { value: 'standard', label: 'Standard' }, { value: 'large', label: 'Large' }], pref('ui.size'), (v) => { if (v !== 'standard' && !canUse('notchResize')) { toast('Notch size is part of Pro.'); sizeSel.setValue('standard'); return; } setPref('ui.size', v); });
+  // The notch's size as a percentage of the standard one: bigger or smaller, live as you drag.
+  const pctNow = () => (canUse('notchResize') ? sizePct() : SIZE_PCT.standard);
+  const pctShown = el('span', { class: 'num', style: 'width:44px;text-align:right' }, `${pctNow()}%`);
+  const pctRange = el('input', { type: 'range', min: SIZE_PCT.min, max: SIZE_PCT.max, step: SIZE_PCT.step, value: pctNow(), style: 'width:180px', title: 'Notch size' });
+  pctRange.addEventListener('input', () => {
+    if (!canUse('notchResize')) { toast('Notch size is part of Pro.'); pctRange.value = SIZE_PCT.standard; pctShown.textContent = `${SIZE_PCT.standard}%`; return; }
+    pctShown.textContent = `${pctRange.value}%`; setPref('ui.sizePct', Number(pctRange.value));
+  });
+  const sizeSel = el('span', { class: 'hstack', style: 'gap:8px' }, pctRange, pctShown,
+    el('button', { class: 'btn small ghost', title: 'Back to 100%', onclick: () => { pctRange.value = SIZE_PCT.standard; pctShown.textContent = `${SIZE_PCT.standard}%`; if (canUse('notchResize')) setPref('ui.sizePct', SIZE_PCT.standard); } }, 'Reset'));
   return [
     card('Startup',
       setting('Start with Windows', 'Notch Apple opens quietly when you sign in.', auto),
@@ -170,7 +179,7 @@ function General(repaint, opts) {
     helloCard(),
     card('The notch',
       setting('Position', 'Where the pill sits on the top edge.', segmented([{ value: 'left', label: 'Left' }, { value: 'center', label: 'Centre' }, { value: 'right', label: 'Right' }], pref('ui.position'), (v) => setPref('ui.position', v))),
-      setting('Size', canUse('notchResize') ? '' : 'Small and Large are part of Pro.', sizeSel),
+      setting('Size', canUse('notchResize') ? 'Make the whole notch bigger or smaller, from 80% to 150%.' : 'Notch size is part of Pro.', sizeSel),
       setting('Open when the mouse rests on the pill', '', prefToggle('ui.hoverOpen')),
       setting('Open by pushing the mouse to the top edge', 'Pro', prefToggle('ui.edgeTrigger', 'edgeTrigger')),
       setting('Close when I click somewhere else', '', prefToggle('ui.closeOnBlur')),

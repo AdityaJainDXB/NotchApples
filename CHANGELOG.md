@@ -4,6 +4,16 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.71 · Windows 2.2.71 BETA · 13 November 2026 · 📏 Notch size slider
+
+**Mac**
+
+- New: a Notch size slider in Settings → Notch → Size. Drag it from 80% to 150% and the open notch gets bigger or smaller, live, with the percentage shown. It moves the width and the height together; Width and Height are still there to fine-tune. It is part of Pro, like the other size options.
+
+**Windows**
+
+- New: a Notch size slider in Settings → General → The notch. It replaces the Small / Standard / Large buttons: drag from 80% to 150% and the whole notch, the pill and the open panel, gets bigger or smaller, with the percentage shown and a Reset button. If you had chosen Small or Large before, it starts at 86% or 124%. It is part of Pro, like the old size buttons.
+
 ### Mac 2.2.70 · Windows 2.2.70 BETA · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
 
 **Mac**

@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.71 · Windows 2.2.71 · 13 November 2026 · 📏 Notch size slider
+
+- Mac: a Notch size slider in Settings → Notch → Size. Drag it from 80% to 150% and the open notch gets bigger or smaller, live, with the percentage shown. It moves the width and the height together; Width and Height are still there to fine-tune. It is part of Pro, like the other size options.
+- Windows: a Notch size slider in Settings → General → The notch. It replaces the Small / Standard / Large buttons: drag from 80% to 150% and the whole notch, the pill and the open panel, gets bigger or smaller, with the percentage shown and a Reset button. If you had chosen Small or Large before, it starts at 86% or 124%. It is part of Pro, like the old size buttons.
+
 ### Mac 2.2.70 · Windows 2.2.70 · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
 
 - New: NotchAI Voice has more engines. Piper (a natural voice) and Whisper (speech to text) run on your Mac once you install them and set their paths in Voice. OpenAI's voice is there too and, like every cloud voice, stays blocked while Local first is on
@@ -165,11 +170,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 - Fixed: the Now Playing helper could be left running after Notch Apple quit or restarted for an update, one more each time, all polling in the background. It now stops with the app, ends by itself if the app is gone, and leftovers from older runs are ended when Notch Apple starts
 - Fixed: in NotchAI's Screen section the buttons stayed greyed out until you found the switch. Pressing one now turns Screen awareness on and asks for Screen Recording if it is missing. After you allow it in System Settings, quit and reopen Notch Apple; macOS only applies it after a restart
-
-### Mac 2.2.68 · Windows 2.2.68 · 12 November 2026 · 🧭 Choose what stays on your screen
-
-- Added: after an update, a one-time card asks "What should stay on your screen?". Switch off the features you don't want in the notch; the recommended ones start on, nothing changes until you press a button, and you can change any of it later in Settings → Modules
-- Added: in NotchAI you can ask an agent a follow-up question about a task it has finished. It answers in its own chat for that task, using the same model, and the Local first rule still applies
 
 ## Plugins
 
