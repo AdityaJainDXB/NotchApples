@@ -107,7 +107,7 @@ final class NotchTriggerView: NSView {
     private var sheenHost: PassThroughHost?
 
     private func updateMetalRim() {
-        let on = (isHovered || LiquidMetalSetting.outlinesOn) && (LiquidMetalSetting.isOn || LiquidMetalSetting.outlinesOn) && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        let on = (isHovered || LiquidMetalSetting.outlinesOn || activity != nil) && (LiquidMetalSetting.isOn || LiquidMetalSetting.outlinesOn) && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if on, rimHost == nil {
             let rim = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 3, veil: false))
             let sheen = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 0, veil: false))
@@ -126,7 +126,7 @@ final class NotchTriggerView: NSView {
             // The metal lives INSIDE the notch's own outline: a band along the whole edge (top included), cut to the filled silhouette, so
             // it can never poke out past the black pill.
             let filled = path.cgPath
-            let band = filled.copy(strokingWithWidth: 11, lineCap: .round, lineJoin: .round, miterLimit: 1).intersection(filled)
+            let band = filled.copy(strokingWithWidth: 9, lineCap: .round, lineJoin: .round, miterLimit: 1).intersection(filled)
             // The hosting views are flipped (origin top-left) and this view is not, so the shapes are mirrored to land in the right place.
             var flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: bounds.height)
             func mask(_ shape: CGPath) -> CAShapeLayer {
@@ -139,7 +139,7 @@ final class NotchTriggerView: NSView {
             NSAnimationContext.runAnimationGroup { $0.duration = 0.18; rim.animator().alphaValue = 1; sheen.animator().alphaValue = 0.2 }
         } else {
             NSAnimationContext.runAnimationGroup({ $0.duration = 0.18; rim.animator().alphaValue = 0; sheen.animator().alphaValue = 0 }, completionHandler: { [weak self] in
-                guard let self, !self.isHovered else { return }
+                guard let self, !self.isHovered, !LiquidMetalSetting.outlinesOn, self.activity == nil else { return }
                 self.rimHost?.removeFromSuperview(); self.rimHost = nil
                 self.sheenHost?.removeFromSuperview(); self.sheenHost = nil
             })
@@ -168,7 +168,7 @@ final class NotchTriggerView: NSView {
     /// What to show beside the closed notch (charging, focus timer, unread dot, volume/brightness HUD).
     var activity: LiveActivity? {
         didSet {
-            if oldValue != activity { startTicker() }
+            if oldValue != activity { startTicker(); updateMetalRim() }
             updateBarsTimer()
         }
     }
@@ -265,7 +265,7 @@ final class NotchTriggerView: NSView {
 
     private var targetEar: CGFloat { max(Self.earWidth(for: activity), isRecording ? 24 : 0) }
     /// The ear width currently drawn (it eases toward `targetEar`). The window must be at least this wide.
-    private(set) var displayedEar: CGFloat = 0
+    private(set) var displayedEar: CGFloat = 0 { didSet { if rimHost != nil, oldValue != displayedEar { updateMetalRim() } } }
     private var displayedGauge: CGFloat = 0
     private var pulse: CGFloat = 0
     /// Synced to the display's refresh (up to 120 Hz on ProMotion), so the ears and gauge glide.
