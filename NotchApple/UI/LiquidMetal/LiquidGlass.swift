@@ -15,35 +15,24 @@ enum LiquidGlassSetting {
     static var isOn: Bool { UserDefaults.standard.bool(forKey: key) }
 }
 
-/// A pane of glass in `shape`. `lit` is the pointer being on it.
+/// A pane of frosted glass in `shape`: a faint milky body, a bright top edge that fades down the sides, and a soft glint in the upper
+/// half. Drawn by Notch Apple on every macOS (Apple's own glass turns to grey mud on the always-black notch). `lit` is the pointer on it.
 struct GlassSurface<S: Shape>: View {
     var shape: S
     var lit: Bool
     var pressed: Bool = false
     var body: some View {
-        if #available(macOS 26.0, *) { systemGlass } else { drawnGlass }
-    }
-
-    @available(macOS 26.0, *)
-    private var systemGlass: some View {
-        let glass: Glass = lit ? Glass.regular.tint(Color.white.opacity(0.14)).interactive() : Glass.regular
-        return Color.clear.glassEffect(glass, in: shape).opacity(pressed ? 0.8 : 1)
-    }
-
-    private var drawnGlass: some View {
-        let top: Double = lit ? 0.26 : 0.12
-        let bottom: Double = lit ? 0.08 : 0.03
-        let rimA: Double = lit ? 0.75 : 0.45
-        let rimB: Double = lit ? 0.35 : 0.18
-        let sheen = LinearGradient(colors: [Color.white.opacity(top), Color.white.opacity(bottom)], startPoint: .top, endPoint: .bottom)
-        let rim = LinearGradient(colors: [Color.white.opacity(rimA), Color.white.opacity(0.08), Color.white.opacity(rimB)], startPoint: .topLeading, endPoint: .bottomTrailing)
-        return ZStack {
-            shape.fill(.ultraThinMaterial)
-            shape.fill(sheen)
+        let body = LinearGradient(colors: [Color.white.opacity(lit ? 0.20 : 0.11), Color.white.opacity(lit ? 0.07 : 0.04)], startPoint: .top, endPoint: .bottom)
+        let rim = LinearGradient(colors: [Color.white.opacity(lit ? 0.85 : 0.55), Color.white.opacity(0.10), Color.white.opacity(lit ? 0.40 : 0.22)], startPoint: .top, endPoint: .bottom)
+        let glint = LinearGradient(colors: [Color.white.opacity(lit ? 0.30 : 0.16), Color.white.opacity(0)], startPoint: .top, endPoint: .center)
+        ZStack {
+            shape.fill(body)
+            shape.fill(glint).padding(1.5).mask(LinearGradient(colors: [.white, .clear], startPoint: .top, endPoint: .bottom))
             shape.stroke(rim, lineWidth: 1)
         }
-        .shadow(color: Color.black.opacity(0.25), radius: lit ? 4 : 2, y: 1)
-        .opacity(pressed ? 0.8 : 1)
+        .shadow(color: Color.white.opacity(lit ? 0.18 : 0), radius: 5)
+        .opacity(pressed ? 0.75 : 1)
+        .animation(.easeOut(duration: 0.15), value: lit)
     }
 }
 

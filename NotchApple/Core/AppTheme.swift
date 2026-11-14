@@ -288,6 +288,7 @@ struct AppearanceSettings: View {
     @AppStorage("appearance.liquidMetal") private var liquidMetal = false
     @AppStorage("appearance.liquidMetalColour") private var liquidMetalColour = 0
     @AppStorage("appearance.liquidGlass") private var liquidGlass = false
+    @AppStorage("appearance.liquidMetalOutlines") private var liquidOutliners = false
 
     var body: some View {
         let current = manager.currentTheme
@@ -303,9 +304,10 @@ struct AppearanceSettings: View {
                 Text("Recommended. A flowing liquid-metal look for the open tab, the closed notch, and every button when you point at it or click it. It uses the graphics chip a little and holds still with Reduce Motion.")
             }
             Section {
+                Toggle("Liquid metal outliners", isOn: $liquidOutliners)
                 Toggle("Liquid glass buttons", isOn: $liquidGlass)
             } footer: {
-                Text("Every button becomes a pane of glass that lights up when you point at it and dips when you click it. It uses the system's Liquid Glass on macOS 26 and later. It works with liquid metal: glass buttons, metal tab and notch.")
+                Text("Outliners: every button, the open tab and the closed notch wear a thin flowing metal outline all the time, brighter when you point at them (the look of the original prototype). Glass: every button becomes a pane of frosted glass that lights up when you point at it and dips when you click it. Glass wins on buttons if both are on.")
             }
             Section {
                 Picker("Settings window", selection: $windowMode) {

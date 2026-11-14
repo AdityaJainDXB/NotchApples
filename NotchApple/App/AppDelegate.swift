@@ -140,6 +140,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: "/tmp/notch-buttons.png")) }
             }
         }
+        // Button looks (DEBUG only): `-notch.selftest.snapshotStyles YES` draws plain, glass and outliner buttons to /tmp/notch-styles-{plain,glass,outliners}.png.
+        if UserDefaults.standard.bool(forKey: "notch.selftest.snapshotStyles") {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 2_500_000_000)
+                for (name, glass, out) in [("plain", false, false), ("glass", true, false), ("outliners", false, true)] {
+                    UserDefaults.standard.set(glass, forKey: "appearance.liquidGlass"); UserDefaults.standard.set(out, forKey: "appearance.liquidMetalOutlines"); UserDefaults.standard.set(!glass, forKey: "appearance.liquidMetal")
+                    let sheet = VStack(spacing: 14) {
+                        HStack(spacing: 8) { ForEach(["Home", "AI", "Games", "Sports"], id: \.self) { n in Button {} label: { Text(n).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).padding(.horizontal, 12).frame(height: 30) }.buttonStyle(MetalPlainStyle()) } }
+                        HStack(spacing: 10) { Button("Run a demo question") {}.buttonStyle(MetalDefaultStyle()).foregroundStyle(.white); Button("qwen3:8b · Local") {}.buttonStyle(MetalDefaultStyle()).foregroundStyle(.white); Button("Settings") {}.buttonStyle(MetalDefaultStyle()).foregroundStyle(.white) }
+                        Button {} label: { VStack { Text("Plane").foregroundStyle(.white); Text("Online").foregroundStyle(.green) }.frame(width: 150, height: 70) }.buttonStyle(MetalPlainStyle())
+                    }.padding(24).background(Color.black)
+                    try? await Task.sleep(nanoseconds: 600_000_000)
+                    let r = ImageRenderer(content: sheet); r.scale = 2
+                    if let img = r.nsImage, let tiff = img.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff), let png = rep.representation(using: .png, properties: [:]) { try? png.write(to: URL(fileURLWithPath: "/tmp/notch-styles-\(name).png")) }
+                }
+            }
+        }
         // Every theme (DEBUG only): `-notch.selftest.snapshotThemes YES` draws the closed notch with the hover rim and the tab row for
         // each colour theme to /tmp/notch-themes.png, off-screen.
         if UserDefaults.standard.bool(forKey: "notch.selftest.snapshotThemes") {

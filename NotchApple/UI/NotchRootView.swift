@@ -414,10 +414,13 @@ private struct TabButton: View {
     }
 
     @AppStorage(LiquidMetalSetting.key) private var liquidMetal = false
+    @AppStorage(LiquidMetalSetting.outlinesKey) private var outliners = false
 
     /// The highlight behind the open tab: the theme gradient, or flowing liquid metal when that is switched on.
     @ViewBuilder private var tabFill: some View {
-        if liquidMetal {
+        if outliners {
+            Capsule().fill(Color(red: 0.082, green: 0.075, blue: 0.11)).overlay(MetalHoverOutline(hover: false)).overlay(MetalHoverOutline(hover: true).opacity(0.55))
+        } else if liquidMetal {
             LiquidMetalCapsule().shadow(color: Theme.accent.opacity(0.45), radius: 8)
         } else {
             Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
