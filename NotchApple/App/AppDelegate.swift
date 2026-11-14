@@ -41,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ModuleRegistry.shared.register(CursorCompanion.shared)
         CursorCompanion.shared.start()   // no-op unless the user turned the green dot on
         AgentHUD.shared.refresh()        // no-op unless the user turned on the agent cards
+        DesktopWidgets.shared.refresh()   // desktop widgets (Ultimate): shows only the ones switched on
         CaptionOverlay.shared.start()    // shows words only while NotchAI is speaking
         if UserDefaults.standard.bool(forKey: "notchai.draw.on") { NotchAIDrawing.shared.refresh() }   // draw on screen with ctrl-option, only if turned on
         if UserDefaults.standard.object(forKey: "notchai.voice.hotkey") as? Bool ?? true {

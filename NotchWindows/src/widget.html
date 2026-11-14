@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Widget</title>
+<style>
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; user-select: none; -webkit-user-select: none; }
+  body { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; color: #fff; }
+  #card { box-sizing: border-box; height: 100%; padding: 12px 14px; border-radius: 18px; background: rgba(20, 18, 28, .82); border: 1px solid rgba(255,255,255,.12); cursor: grab; overflow: hidden; }
+  .dim { color: rgba(255,255,255,.6); }
+  .big { font-size: 40px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .small { font-size: 12px; } .t { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 4px 0; }
+  .np { display: flex; gap: 10px; align-items: center; height: 100%; } .np .a { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+</head>
+<body>
+<div id="card" data-tauri-drag-region></div>
+<script type="module" src="js/widget.js"></script>
+</body>
+</html>

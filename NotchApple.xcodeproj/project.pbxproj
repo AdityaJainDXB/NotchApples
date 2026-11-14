@@ -238,6 +238,7 @@
 		5E92B32B8E218C4DA0ECFDDD /* NotchAIConversationLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB63454B0761715BDBAA4F80 /* NotchAIConversationLogic.swift */; };
 		5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
 		5FC8FBC7D5A465315FB27591 /* nightshift.js in Resources */ = {isa = PBXBuildFile; fileRef = C60D1D2426B0E7E89DA1D3FF /* nightshift.js */; };
+		6043E84DBC4D05154CED0C5F /* DesktopWidgetLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2471BBBA3823161DB0644C9 /* DesktopWidgetLogic.swift */; };
 		616802F0F15A56E4A64C5C64 /* NotchAIVoiceEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194AE15F63853B715420206A /* NotchAIVoiceEngines.swift */; };
 		61A9F92AAA6718010B67D425 /* NotchAIConversationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE57913A6BF1A082CB823276 /* NotchAIConversationView.swift */; };
 		62345AC43148BC9A9FEF68F0 /* RacingGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 69B4A0D4B7C6F5540FABA3AE /* RacingGame.html */; };
@@ -315,6 +316,7 @@
 		7AC9653A722F4971D2C680AF /* DoItGeometryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 737F56550092636CD2B51F2F /* DoItGeometryTests.swift */; };
 		7AD5B26CCD47C4B789FA217F /* AIModes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44CAF8A30126F03D6A230ED7 /* AIModes.swift */; };
 		7B128EEA15D6A4918D365964 /* FriendsClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45A5C027BD4B67CE5182EE27 /* FriendsClient.swift */; };
+		7B12BD9CB555C24A35F8E4D3 /* DesktopWidgetLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2471BBBA3823161DB0644C9 /* DesktopWidgetLogic.swift */; };
 		7B585A54684C47977CA762E6 /* tetris.js in Resources */ = {isa = PBXBuildFile; fileRef = 34E60A6D24A27DF650F178FD /* tetris.js */; };
 		7BE7835157820B158696A5F2 /* GeminiFallbackLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C24B75034156B4EB2E82381 /* GeminiFallbackLogic.swift */; };
 		7C53773C6C64387C5C3275E7 /* ScribbleGame.html in Resources */ = {isa = PBXBuildFile; fileRef = BBA74EF46CD28A513D70A225 /* ScribbleGame.html */; };
@@ -359,6 +361,7 @@
 		8F8A7D3944B4A343BEAE8C0C /* LyricsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93AC47229DA13D09C39B7BBA /* LyricsModel.swift */; };
 		8FFB80DA4806007F641ABDFD /* GameEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2294A11AF6369D10835393 /* GameEngines.swift */; };
 		909524F17FF3BA788A6749D0 /* MeetingNotesLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813CF5ACE0591AF47CA5C5F6 /* MeetingNotesLogic.swift */; };
+		90B75BF37C6334B3AB28FC7D /* DesktopWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = F16988DA54FB64B820F56636 /* DesktopWidgets.swift */; };
 		91AE275CB3750107932271A9 /* QuickAnswerLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E7257E185D98B4E05674B7F /* QuickAnswerLogic.swift */; };
 		91D37C4D542D774F3D65DE92 /* NotchAIOAuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF38FA8BB2F0DBB9BC3114F /* NotchAIOAuthTests.swift */; };
 		92D6E8322DCEC6A2AE6A5795 /* HotCornerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */; };
@@ -589,6 +592,7 @@
 		EF02204760AC6C1EDD00A135 /* CompanionPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E7ACC6F1129AAB5813B46CB /* CompanionPairing.swift */; };
 		EFF20A8A9B9E9074DD68C003 /* NotchAIOfficeReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF49A743A06AD509B4C7F54A /* NotchAIOfficeReaderTests.swift */; };
 		F0CBE28D073C0AD4162FD682 /* LockCodeLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D18E2961864C5FA141A8F222 /* LockCodeLogic.swift */; };
+		F17172CD038F6DFA20F61A9B /* DesktopWidgetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F18696C64B42B473FA2EED83 /* DesktopWidgetTests.swift */; };
 		F1CD7BFD6F1DB21AF8CB6A7B /* GamesMenuLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3BF9A890031FCE78F1EA4EDD /* GamesMenuLogic.swift */; };
 		F256EABCE0810FC5545ED857 /* MathEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52CE6E000FE00226413E9D0B /* MathEngine.swift */; };
 		F26CAE9CFE110DCD23C422BC /* WellbeingLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7687E5F02BA5A9C7ECCC75 /* WellbeingLogic.swift */; };
@@ -1077,6 +1081,7 @@
 		D18F3EB72C85DD46BAE38C8F /* LocalVoiceEngines.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalVoiceEngines.swift; sourceTree = "<group>"; };
 		D2080B6F1BB18CC9E7A42044 /* ActivationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActivationView.swift; sourceTree = "<group>"; };
 		D223033B92E81EB8504E4904 /* MCPOAuthFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MCPOAuthFlow.swift; sourceTree = "<group>"; };
+		D2471BBBA3823161DB0644C9 /* DesktopWidgetLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopWidgetLogic.swift; sourceTree = "<group>"; };
 		D24E86D5C7113199B225E101 /* KlickEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KlickEngine.swift; sourceTree = "<group>"; };
 		D27AA020801BE2A842BE0732 /* MediaKeyInterceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaKeyInterceptor.swift; sourceTree = "<group>"; };
 		D28DA59E1F14A580A8995731 /* NotchAIDictationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIDictationTests.swift; sourceTree = "<group>"; };
@@ -1152,7 +1157,9 @@
 		EFF38FA8BB2F0DBB9BC3114F /* NotchAIOAuthTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIOAuthTests.swift; sourceTree = "<group>"; };
 		F00C15D268B3400D0DB5DF87 /* NotchAITaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAITaskTests.swift; sourceTree = "<group>"; };
 		F07E1B78F23E06B22957659F /* NotchPlacementEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchPlacementEditor.swift; sourceTree = "<group>"; };
+		F16988DA54FB64B820F56636 /* DesktopWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopWidgets.swift; sourceTree = "<group>"; };
 		F173F2DD0E8CE0B158D9A906 /* BambuManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuManager.swift; sourceTree = "<group>"; };
+		F18696C64B42B473FA2EED83 /* DesktopWidgetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesktopWidgetTests.swift; sourceTree = "<group>"; };
 		F323D82F0AF46D956EA470CA /* Converter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Converter.swift; sourceTree = "<group>"; };
 		F3AFED57764B805B3A659A96 /* mascots.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = mascots.js; sourceTree = "<group>"; };
 		F3E027F4B2B51B24BE31C8AA /* GeminiFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeminiFallback.swift; sourceTree = "<group>"; };
@@ -1394,6 +1401,7 @@
 				EBAA0CB18986318FE6AE4708 /* Utilities */,
 				00236DEE8D903F0B7CFA3315 /* Wallpaper */,
 				112C476CF3AD2D4B68464A68 /* Wellbeing */,
+				834DD21A6288BCC634EE4333 /* Widgets */,
 				5FBEBD2F24CA136CBA09D39A /* Windows */,
 				63B5F483B9A998123FAE1D8E /* WorldClock */,
 			);
@@ -1541,6 +1549,7 @@
 				E43BFD01B43AA99D60FB3B9D /* CompanionPairingTests.swift */,
 				0650E2DE70AE8CA13EB15838 /* CompanionStreamTests.swift */,
 				A6990C97BC4CC845C430404C /* CustomProviderTests.swift */,
+				F18696C64B42B473FA2EED83 /* DesktopWidgetTests.swift */,
 				7CC31FE35B8BD0245C7DD53D /* DevToolkitTests.swift */,
 				737F56550092636CD2B51F2F /* DoItGeometryTests.swift */,
 				0BABFA210B92DCAD31AE16D8 /* DoItPolicyTests.swift */,
@@ -1647,6 +1656,7 @@
 				404BC8444E5005DE5B170B5C /* CompanionMotion.swift */,
 				0918F482C2DF3A150F375D22 /* CompanionServer.swift */,
 				6FFA9D604A028F627FC52A01 /* DemoHooks.swift */,
+				D2471BBBA3823161DB0644C9 /* DesktopWidgetLogic.swift */,
 				50DD954B11024EFCFE5CFAA7 /* DevToolkitLogic.swift */,
 				45249414D86E2FEEDAAA8AC1 /* DoItGeometry.swift */,
 				9E3E78DF9912B9A35A605E50 /* DoItPolicy.swift */,
@@ -1886,6 +1896,14 @@
 				5D272CF7B938DCD55B7EF450 /* NotchWidget.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		834DD21A6288BCC634EE4333 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				F16988DA54FB64B820F56636 /* DesktopWidgets.swift */,
+			);
+			path = Widgets;
 			sourceTree = "<group>";
 		};
 		8C41903580F1849D76F1722D = {
@@ -2653,6 +2671,8 @@
 				DFEDE6722BDF5310FD00615D /* DailyTriviaGameView.swift in Sources */,
 				94A1DAACE593691EEA463858 /* DailyWordGameView.swift in Sources */,
 				CD90A054724EB2DEDC4FEE75 /* DemoHooks.swift in Sources */,
+				7B12BD9CB555C24A35F8E4D3 /* DesktopWidgetLogic.swift in Sources */,
+				90B75BF37C6334B3AB28FC7D /* DesktopWidgets.swift in Sources */,
 				4C0F7D796DCC0A288B9322F6 /* DevToolkitLogic.swift in Sources */,
 				A0A0F5485BA1A9A4A4CA4A7A /* DevToolsView.swift in Sources */,
 				3DEAFC4359632CB4DF71ECE1 /* DevicesView.swift in Sources */,
@@ -3026,6 +3046,8 @@
 				122D9CCF369E1D97483D1892 /* CompanionStreamTests.swift in Sources */,
 				F3C7A9A25D260F232F140B77 /* Converter.swift in Sources */,
 				6417411E18C8510A01E94E24 /* CustomProviderTests.swift in Sources */,
+				6043E84DBC4D05154CED0C5F /* DesktopWidgetLogic.swift in Sources */,
+				F17172CD038F6DFA20F61A9B /* DesktopWidgetTests.swift in Sources */,
 				549C20A234C9F9EC43C884CD /* DevToolkitLogic.swift in Sources */,
 				9F68FFA4EE2970516B9AA33A /* DevToolkitTests.swift in Sources */,
 				F8D083001DA36DE0620CD5A6 /* DoItGeometry.swift in Sources */,

@@ -1,5 +1,6 @@
 // Settings.
 import { el, load, save } from '../store.js';
+import * as DW from '../services/desktopwidgets.js';
 import { invoke, openUrl } from '../native.js';
 import { THEMES, applyTheme, currentThemeId, customTheme, saveCustom } from '../themes.js';
 import { MODULES } from '../modules.js';
@@ -279,6 +280,7 @@ function Appearance(repaint) {
     setting('Skin', 'How the open notch looks: solid, a thin outline, or a glowing edge.', select([{ value: 'solid', label: 'Solid' }, { value: 'outline', label: 'Outline' }, { value: 'neon', label: 'Neon edge' }], pref('ui.skin'), (v) => setPref('ui.skin', v), { cls: 'auto' })),
     setting('Glass (experimental)', 'Lets your desktop show through behind the open notch. Only looks right on PCs where Windows blurs it; on others it is clear, not blurred, so it is off by default.', select([{ value: true, label: 'On' }, { value: false, label: 'Off' }], pref('ui.glass'), (v) => setPref('ui.glass', v === true || v === 'true'), { cls: 'auto' })),
     setting('Performance', 'Auto switches to Lite on slow graphics (no glows or looping animations).', select([{ value: 'auto', label: 'Auto' }, { value: 'full', label: 'Full' }, { value: 'lite', label: 'Lite' }], pref('ui.performance'), (v) => setPref('ui.performance', v), { cls: 'auto' })),
+    ...['clock', 'todo', 'nowplaying'].map((k) => setting(`Desktop widget: ${({ clock: 'Clock', todo: 'To-do', nowplaying: 'Now Playing' })[k]}`, canUse('desktopWidgets') ? 'A small window on your desktop you can drag; it stays under your other windows.' : 'Ultimate', toggle(DW.isOn(k), (v) => { if (!canUse('desktopWidgets')) { toast('Desktop widgets are part of Ultimate.'); return; } DW.setOn(k, v); }))),
     setting('Sounds', 'When the notch opens and timers finish (Pro).', prefToggle('ui.sounds', 'customSounds')),
     setting('Tab names', '', select([{ value: 'auto', label: 'Icons, name on the open tab' }, { value: 'names', label: 'Always show names' }], pref('ui.compactTabs'), (v) => setPref('ui.compactTabs', v), { cls: 'auto' }))));
   return out;
