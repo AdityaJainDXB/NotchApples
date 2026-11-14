@@ -150,18 +150,21 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
-### Mac 2.2.71 · Windows 2.2.71 · 14 November 2026 · Liquid metal, liquid glass buttons, desktop widgets and the F1 simulation
+### Mac 2.2.72 · Windows 2.2.72 · 14 November 2026 · Liquid metal, liquid glass buttons, desktop widgets and the F1 simulation
+
+- New: liquid metal (recommended). Settings → Appearance → Liquid metal gives the open tab, the closed notch and every button a flowing metal look when you point at it or click it, in your theme colour, Purple, Rainbow or Gold. The AI start screen has a new "Ready when you are" look. It holds still with Reduce Motion
+- New: liquid glass buttons. Settings → Appearance → Liquid glass buttons turns every button into a pane of frosted glass that lights up when you point at it. It works alone or together with liquid metal
+- New: liquid metal outliners. Settings → Appearance → Liquid metal outliners outlines only the open tab and whatever you point at with flowing metal, one thing at a time, and the closed notch rim lights up when you point at it or a notification arrives. It is the look of the original prototype
+- New: desktop widgets (Ultimate). Clock, To-do and Now Playing as small windows on your desktop that you can drag; they stay under your other windows. Turn them on in Settings → Widget
+- Fixed: Flight Economy opens with your Ultimate key, no code needed
+
+### Mac 2.2.71 · Windows 2.2.71 · 14 November 2026 · Racing: the full F1 simulation (opt-in F1 Weekend)
 
 - New: Racing has an F1 Weekend mode for the F1 car (Menu → F1 Weekend → Standard or Sprint). Switch it on and the F1 car is simulated properly: ground effect and porpoising, dirty air, DRS (2025) or active aero (2026), the hybrid power unit and battery, fuel burn, tyre surface and carcass temperatures with graining and blistering, and damage to the wings, floor and sidepods. Pick the 2025 or the 2026 regulations in the menu
 - New: race control. Yellow, blue, black-and-white and black flags, the Virtual Safety Car (with a delta timer), the Safety Car (staging at the pit exit, leader catches it at the line, lapped cars may overtake, comes in at the end of the lap), the Medical Car (sent to a crash, stops beside it, returns) and red flags with a restart. You can also drive the Safety Car and the Medical Car yourself
 - New: stewards. Track limits (strike 4 is +5 s, strike 5 is +10 s), pit-lane speeding, unsafe release, and drive-through, stop-and-go and time penalties served or added after the race
 - New: the weekend. Open it from the menu for practice, qualifying with the 107% rule and 22, 16, 10 knockouts, the Sprint, and the Grand Prix, with 13 dry tyre sets (one Soft kept for Q3), the two-compound rule, a season pool of engine parts with 10 and 5 place grid penalties, and track rubber that builds up and rain that washes away
 - New: a race engineer who calls the undercut, the tyres and the fuel, and an MFD for brake bias, differentials and ERS. Nothing is added to the screen until you turn it on: U is the F1 telemetry panel, I the MFD (O, comma, full stop, minus, equals to change it), C cycles race control messages. J is still the steering panel
-- New: liquid metal (recommended). Settings → Appearance → Liquid metal gives the open tab, the closed notch and every button a flowing metal look when you point at it or click it, in your theme colour, Purple, Rainbow or Gold. The AI start screen has a new "Ready when you are" look. It holds still with Reduce Motion
-- New: liquid glass buttons. Settings → Appearance → Liquid glass buttons turns every button into a pane of frosted glass that lights up when you point at it. It works alone or together with liquid metal
-- New: liquid metal outliners. Settings → Appearance → Liquid metal outliners outlines only the open tab and whatever you point at with flowing metal, one thing at a time, and the closed notch rim lights up when you point at it or a notification arrives. It is the look of the original prototype
-- New: desktop widgets (Ultimate). Clock, To-do and Now Playing as small windows on your desktop that you can drag; they stay under your other windows. Turn them on in Settings → Widget
-- Fixed: Flight Economy opens with your Ultimate key, no code needed
 - Other racing modes and cars are unchanged
 
 ### Mac 2.2.70 · Windows 2.2.70 · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
