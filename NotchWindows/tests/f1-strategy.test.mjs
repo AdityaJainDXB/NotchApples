@@ -82,3 +82,8 @@ test('the engineer\'s strategy calls: undercut, rain, cliff, damage, overtake mo
   assert.ok(t({ fuelDeltaLaps: 2.2, lap: 5 }).includes('fuel-spare'));
   assert.equal(S.STRAT.engineer, 'Marc');
 });
+
+test('the computer drivers manage the battery: save it when low, attack when it is full or a car is close', () => {
+  assert.equal(S.ersAuto({ socFraction: 0.05 }), 'LOW'); assert.equal(S.ersAuto({ socFraction: 0.5, gapAheadS: 0.8 }), 'HIGH'); assert.equal(S.ersAuto({ socFraction: 0.5 }), 'MEDIUM');
+  assert.equal(S.ersAuto({ socFraction: 0.95 }), 'HIGH'); assert.equal(S.ersAuto({ socFraction: 0.2 }), 'LOW'); assert.equal(S.ersAuto({ socFraction: 0.5, lapsLeft: 1 }), 'HIGH'); assert.equal(S.ersAuto({ socFraction: 0.2, gapAheadS: 0.5 }), 'LOW');
+});

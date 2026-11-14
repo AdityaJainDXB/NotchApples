@@ -138,6 +138,8 @@ function plane(host) {
 
 /// Racing: cars on a straight, curved or mixed track, with computer rivals or friends in an online room. The same script
 /// runs in the Mac app's web view. It stops when you switch away (a race is short).
+/// The F1 Weekend simulation of Racing, loaded before the game (each file registers itself in window.NotchRaceF1).
+const F1_MODULES = ['era', 'aero', 'powerunit', 'tyres', 'damage', 'sim', 'racecontrol', 'penalties', 'weekend', 'evolution', 'strategy', 'mfd'];
 function racing(host) {
   host.style.position = 'relative';
   const box = el('div', { style: 'position:absolute;inset:0' });
@@ -145,7 +147,7 @@ function racing(host) {
   let stop = () => {}, gone = false;
   // The race engineer can use the AI set up in the AI tab to answer any question about your race (null when there is none).
   window.NotchRaceAI = async (system, question) => (AI.ready() ? AI.ask(question, { system }) : null);
-  import('../games/leaderboard.js').then(() => import('../games/racing.js')).then(() => { if (!gone) { stop = window.NotchRaceGame.mount(box); box.firstElementChild && box.firstElementChild.focus(); } });
+  import('../games/leaderboard.js').then(() => F1_MODULES.reduce((p, m) => p.then(() => import(`../games/f1/${m}.js`)), Promise.resolve())).then(() => import('../games/racing.js')).then(() => { if (!gone) { stop = window.NotchRaceGame.mount(box); box.firstElementChild && box.firstElementChild.focus(); } });
   return () => { gone = true; host.style.position = ''; stop(); };
 }
 

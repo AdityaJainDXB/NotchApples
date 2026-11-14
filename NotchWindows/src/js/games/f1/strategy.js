@@ -133,7 +133,17 @@
     return calls;
   }
 
-  const api = { STRAT, lapsToCliff, lapsToEnd, chooseCompound, pitLoss, undercut, overcut, shouldPit, engineerCalls };
+  /// The ERS mode a computer driver uses: save the battery when it is low, attack when it is full or a car is close, otherwise the balanced mode.
+  function ersAuto(o) {
+    const soc = o.socFraction == null ? 0.5 : o.socFraction;
+    if (soc < 0.12) return 'LOW';
+    if ((o.gapAheadS != null && o.gapAheadS < 1.2 && soc > 0.3) || (o.gapBehindS != null && o.gapBehindS < 0.8 && soc > 0.3)) return 'HIGH';
+    if (soc > 0.9) return 'HIGH';
+    if (o.lapsLeft != null && o.lapsLeft <= 1) return 'HIGH';
+    return soc < 0.3 ? 'LOW' : 'MEDIUM';
+  }
+
+  const api = { STRAT, ersAuto, lapsToCliff, lapsToEnd, chooseCompound, pitLoss, undercut, overcut, shouldPit, engineerCalls };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.NotchRaceF1 = root.NotchRaceF1 || {};
   root.NotchRaceF1.strategy = api;

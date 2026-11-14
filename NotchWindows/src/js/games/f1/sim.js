@@ -47,8 +47,10 @@
     // The wings open only if the rules allow it, the driver wants it, and he is not braking.
     const open = !!(p.wingOpenWanted && p.wingOpenAllowed && brk < 0.05 && thr > 0.5);
     sim.wingOpen = open;
+    // A kerb strike: counted once when the car hits it (not every step it is on it), then not again for a moment.
     let bump = 0;
-    if (p.kerb && v > 30) { bump = S.kerbMm * Math.min(1, v / 70); dm.kerb(sim.dmg, v, Math.min(1, v / 80)); }
+    sim.kerbT = Math.max(0, (sim.kerbT || 0) - dt);
+    if (p.kerb && v > 30 && sim.kerbT <= 0) { sim.kerbT = 0.6; bump = S.kerbMm * Math.min(1, v / 70); dm.kerb(sim.dmg, v, Math.min(1, v / 80)); }
     const a = aero.step(sim.aero, { v, rho, massKg: mass, setup: sim.setup, era, open, gapS: p.gapAheadS, damage: fx.aero, bumpMm: bump }, dt);
     // The power unit: the engine's heat and any damage take power away; Overtake Mode / the ERS mode come from the driver.
     sim.pu.mode = sim.setup.ersMode || sim.pu.mode; sim.pu.mix = sim.setup.mix || sim.pu.mix;

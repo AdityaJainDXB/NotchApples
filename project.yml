@@ -41,6 +41,10 @@ targets:
       # The Racing game's engine is shared with the Windows app too.
       - path: NotchWindows/src/js/games/racing.js
         buildPhase: resources
+      # The F1 Weekend simulation of the Racing game (era, aero, power unit, tyres, damage, race control, stewards, weekend rules, track evolution, strategy, MFD): shared with the Windows app.
+      - path: NotchWindows/src/js/games/f1
+        type: folder
+        buildPhase: resources
       # Capture the Flag (ctf.js and its rules) is shared with the Windows app too.
       - path: NotchWindows/src/js/games/ctf-logic.js
         buildPhase: resources
