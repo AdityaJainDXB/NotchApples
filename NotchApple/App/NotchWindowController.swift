@@ -107,7 +107,7 @@ final class NotchTriggerView: NSView {
     private var sheenHost: PassThroughHost?
 
     private func updateMetalRim() {
-        let on = isHovered && LiquidMetalSetting.isOn && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        let on = (isHovered || LiquidMetalSetting.outlinesOn) && (LiquidMetalSetting.isOn || LiquidMetalSetting.outlinesOn) && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if on, rimHost == nil {
             let rim = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 3, veil: false))
             let sheen = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 0, veil: false))
@@ -149,6 +149,7 @@ final class NotchTriggerView: NSView {
     override init(frame: NSRect) {
         super.init(frame: frame)
         registerForDraggedTypes([.fileURL])
+        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification, object: nil, queue: .main) { [weak self] _ in self?.updateMetalRim() }
     }
 
     required init?(coder: NSCoder) { fatalError() }

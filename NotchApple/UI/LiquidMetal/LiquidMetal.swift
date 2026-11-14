@@ -15,6 +15,10 @@ enum LiquidMetalSetting {
     static let key = "appearance.liquidMetal"
     static let colourKey = "appearance.liquidMetalColour"
     static var isOn: Bool { UserDefaults.standard.bool(forKey: key) }
+    /// "Liquid metal outliners": the look of the approved prototype, where every button wears a thin flowing metal outline all the time
+    /// (brighter under the pointer), the open tab is outlined instead of filled, and the closed notch keeps its metal rim.
+    static let outlinesKey = "appearance.liquidMetalOutlines"
+    static var outlinesOn: Bool { UserDefaults.standard.bool(forKey: outlinesKey) }
 }
 
 /// A capsule filled with flowing metal in the theme colour. `hover` (0 or 1) makes the metal brighter and faster.
@@ -56,18 +60,19 @@ struct MetalPlainStyle: ButtonStyle {
         let configuration: ButtonStyleConfiguration
         @AppStorage(LiquidMetalSetting.key) private var metal = false
         @AppStorage(LiquidGlassSetting.key) private var glass = false
+        @AppStorage(LiquidMetalSetting.outlinesKey) private var outlines = false
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
 
         var body: some View {
             configuration.label
                 .overlay {
-                    if hovering && isEnabled {
-                        if glass { GlassHoverOverlay() } else if metal { MetalHoverOutline() }
-                    }
+                    if glass { if hovering && isEnabled { GlassHoverOverlay() } }
+                    else if outlines { if isEnabled { MetalHoverOutline(hover: hovering) } }
+                    else if metal && hovering && isEnabled { MetalHoverOutline() }
                 }
-                .opacity((metal || glass) && configuration.isPressed ? 0.8 : 1)
-                .scaleEffect((metal || glass) && configuration.isPressed ? 0.98 : 1)
+                .opacity((metal || glass || outlines) && configuration.isPressed ? 0.8 : 1)
+                .scaleEffect((metal || glass || outlines) && configuration.isPressed ? 0.98 : 1)
                 .animation(.easeOut(duration: 0.15), value: hovering)
                 .onHover { hovering = $0 }
         }
@@ -78,15 +83,16 @@ struct MetalPlainStyle: ButtonStyle {
 struct MetalHoverRing: ViewModifier {
     @AppStorage(LiquidMetalSetting.key) private var metal = false
     @AppStorage(LiquidGlassSetting.key) private var glass = false
+    @AppStorage(LiquidMetalSetting.outlinesKey) private var outlines = false
     @State private var hovering = false
     @Environment(\.isEnabled) private var isEnabled
 
     func body(content: Content) -> some View {
         content
             .overlay {
-                if hovering && isEnabled {
-                    if glass { GlassHoverOverlay() } else if metal { MetalHoverOutline() }
-                }
+                if glass { if hovering && isEnabled { GlassHoverOverlay() } }
+                else if outlines { if isEnabled { MetalHoverOutline(hover: hovering) } }
+                else if metal && hovering && isEnabled { MetalHoverOutline() }
             }
             .onHover { hovering = $0 }
     }
@@ -100,6 +106,7 @@ struct MetalDefaultStyle: ButtonStyle {
     private struct Inner: View {
         let configuration: ButtonStyleConfiguration
         @AppStorage(LiquidGlassSetting.key) private var glass = false
+        @AppStorage(LiquidMetalSetting.outlinesKey) private var outlines = false
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
 
@@ -107,10 +114,12 @@ struct MetalDefaultStyle: ButtonStyle {
             configuration.label
                 .padding(.horizontal, 10).padding(.vertical, 4)
                 .background {
-                    if glass { GlassSurface(shape: Capsule(), lit: hovering && isEnabled, pressed: configuration.isPressed) }
+                    if outlines && !glass { Capsule().fill(Color(red: 0.082, green: 0.075, blue: 0.11)) }
+                    else if glass { GlassSurface(shape: Capsule(), lit: hovering && isEnabled, pressed: configuration.isPressed) }
                     else if hovering && isEnabled { LiquidMetalCapsule(hover: configuration.isPressed || hovering) }
                     else { Capsule().fill(Color.white.opacity(0.08)) }
                 }
+                .overlay { if outlines && !glass && isEnabled { MetalHoverOutline(hover: hovering) } }
                 .contentShape(Capsule())
                 .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
                 .scaleEffect(configuration.isPressed ? 0.98 : 1)
@@ -122,8 +131,9 @@ struct MetalDefaultStyle: ButtonStyle {
 private struct MetalButtonsModifier: ViewModifier {
     @AppStorage(LiquidMetalSetting.key) private var metal = false
     @AppStorage(LiquidGlassSetting.key) private var glass = false
+    @AppStorage(LiquidMetalSetting.outlinesKey) private var outlines = false
     @ViewBuilder func body(content: Content) -> some View {
-        if metal || glass { content.buttonStyle(MetalDefaultStyle()) } else { content }
+        if metal || glass || outlines { content.buttonStyle(MetalDefaultStyle()) } else { content }
     }
 }
 
@@ -138,13 +148,15 @@ extension View {
 /// The chrome outline shown around a hovered button. It follows the button's own shape: round for a small pill, softly rounded for a
 /// card, and it is thick enough to see (2.5 points) with a soft glow outside it.
 struct MetalHoverOutline: View {
+    /// The pointer is on it: brighter and faster. Outliners keep every button outlined, so a resting one is calmer.
+    var hover: Bool = true
     var body: some View {
         GeometryReader { geo in
             let r = min(14, min(geo.size.width, geo.size.height) / 2)
             ZStack {
-                LiquidMetalCapsule(hover: true, mode: 3, veil: false)
-                    .mask(RoundedRectangle(cornerRadius: r, style: .continuous).strokeBorder(lineWidth: 2.5))
-                RoundedRectangle(cornerRadius: r, style: .continuous).strokeBorder(Theme.accentBright.opacity(0.35), lineWidth: 1).blur(radius: 3)
+                LiquidMetalCapsule(hover: hover, mode: 3, veil: false)
+                    .mask(RoundedRectangle(cornerRadius: r, style: .continuous).strokeBorder(lineWidth: hover ? 2.5 : 1.6))
+                if hover { RoundedRectangle(cornerRadius: r, style: .continuous).strokeBorder(Theme.accentBright.opacity(0.35), lineWidth: 1).blur(radius: 3) }
             }
         }
         .allowsHitTesting(false)
