@@ -14,6 +14,7 @@ export const DEFAULTS = {
   'ui.showClock': true,             // the time on the pill when nothing is happening
   'ui.animation': 'smooth',         // smooth | fast | off (Pro: other than smooth)
   'ui.glass': false,                // experimental: let the desktop show through behind the open notch (off: solid material)
+  'ui.liquidMetal': false,         // liquid metal on the open tab and a metal rim when the pointer is on the notch (WebGL; off by default)
   'ui.performance': 'auto',         // auto | full | lite: lite drops glows and looping animations on slow graphics
   'ui.sounds': false,               // Pro: sounds on open and when timers end
   'ui.textScale': 1,                // 0.9 | 1 | 1.15 | 1.3: the size of text in the open notch
@@ -44,7 +45,7 @@ export const pref = (key) => {
   // New shortcut actions added in an update keep their defaults.
   return key === 'shortcuts' ? { ...DEFAULTS.shortcuts, ...v } : v;
 };
-export const setPref = (key, value) => save(key, value);
+export const setPref = (key, value) => { save(key, value); try { window.dispatchEvent(new CustomEvent('notch-pref', { detail: { key, value } })); } catch {} };
 
 export const SIZES = {
   compact:  { pillWidth: 200, pillHeight: 30, width: 640, height: 380 },
