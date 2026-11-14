@@ -122,7 +122,7 @@ struct GamesMenuView: View {
     }
 
     private func card(_ g: GamesCatalog.Entry) -> some View {
-        let locked = g.locked && !access.isUnlocked()
+        let locked = g.locked && !access.isUnlocked() && Entitlements.shared.tier != .ultimate   // an Ultimate key opens it without a code
         let hover = hovered == g.id
         return Button { launch(g) } label: {
             VStack(spacing: 0) {
@@ -183,7 +183,7 @@ struct GamesMenuView: View {
     private func launch(_ g: GamesCatalog.Entry) {
         notice = nil
         if g.locked {
-            if access.isUnlocked() { launchPrivate() } else { codeFor = g }
+            if access.isUnlocked() || Entitlements.shared.tier == .ultimate { launchPrivate() } else { codeFor = g }   // an Ultimate key needs no code (open() unlocks it with the key)
         } else if let game = GamesView.Game(menuID: g.id) {
             open(game)
         }
