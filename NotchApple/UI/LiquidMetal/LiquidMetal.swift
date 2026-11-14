@@ -15,9 +15,20 @@ enum LiquidMetalSetting {
     static let key = "appearance.liquidMetal"
     static let colourKey = "appearance.liquidMetalColour"
     static var isOn: Bool { UserDefaults.standard.bool(forKey: key) }
-    /// "Liquid metal outliners": the look of the approved prototype, where every button wears a thin flowing metal outline all the time
-    /// (brighter under the pointer), the open tab is outlined instead of filled, and the closed notch keeps its metal rim.
+    /// "Liquid metal outliners": the look of the approved prototype, with one thing lit at a time: the open tab is outlined instead of
+    /// filled, whatever the pointer is on gets the flowing outline, and the closed notch keeps its metal rim.
     static let outlinesKey = "appearance.liquidMetalOutlines"
+    /// The fixed metal colours (4 and up); nil for the theme colour, rainbow, gold and purple, which the shader makes itself.
+    static func fixedTint(_ n: Int) -> Color? {
+        switch n {
+        case 4: return Color(white: 0.92)
+        case 5: return Color(red: 0.35, green: 0.62, blue: 1.0)
+        case 6: return Color(red: 0.28, green: 0.85, blue: 0.55)
+        case 7: return Color(red: 1.0, green: 0.36, blue: 0.40)
+        case 8: return Color(red: 1.0, green: 0.50, blue: 0.80)
+        default: return nil
+        }
+    }
     static var outlinesOn: Bool { UserDefaults.standard.bool(forKey: outlinesKey) }
 }
 
@@ -31,7 +42,7 @@ struct LiquidMetalCapsule: View {
     /// A dark veil keeps white text readable on the metal (tabs). A rim around the notch has no text, so it goes without.
     var veil: Bool = true
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Settings → Appearance: 0 theme colour, 1 rainbow, 2 gold, 3 purple.
+    /// Settings → Appearance: 0 theme colour, 1 rainbow, 2 gold, 3 purple, 4 silver, 5 blue, 6 green, 7 red, 8 pink.
     @AppStorage(LiquidMetalSetting.colourKey) private var colour = 0
 
     var body: some View {
@@ -42,7 +53,7 @@ struct LiquidMetalCapsule: View {
                     // Outlines (modes 2 and 3) are cut out by a mask, so they need the whole rectangle, not just the pill shape.
                     AnyShape(((mode ?? 0) >= 2) ? AnyShape(Rectangle()) : AnyShape(Capsule()))
                         .fill(.white)
-                        .colorEffect(ShaderLibrary.liquidMetal(.float2(geo.size), .float(t), .float(1), .float(hover ? 1 : 0), .float(Float(mode ?? (hover ? 0 : 1))), .float(Float(colour)), .color(tint ?? Theme.accentBright)))
+                        .colorEffect(ShaderLibrary.liquidMetal(.float2(geo.size), .float(t), .float(1), .float(hover ? 1 : 0), .float(Float(mode ?? (hover ? 0 : 1))), .float(Float(colour >= 4 ? 0 : colour)), .color(LiquidMetalSetting.fixedTint(colour) ?? tint ?? Theme.accentBright)))
                     if veil, (mode ?? 0) < 2 { Capsule().fill(Color.black.opacity(hover ? 0.30 : 0.42)) }   // keeps the white tab name readable
                     
                 }
@@ -68,8 +79,8 @@ struct MetalPlainStyle: ButtonStyle {
             configuration.label
                 .overlay {
                     if glass { if hovering && isEnabled { GlassHoverOverlay() } }
-                    else if outlines { if isEnabled { MetalHoverOutline(hover: hovering) } }
-                    else if metal && hovering && isEnabled { MetalHoverOutline() }
+                    else if (metal || outlines) && hovering && isEnabled { MetalHoverOutline() }
+                    else if false && hovering && isEnabled { MetalHoverOutline() }
                 }
                 .opacity((metal || glass || outlines) && configuration.isPressed ? 0.8 : 1)
                 .scaleEffect((metal || glass || outlines) && configuration.isPressed ? 0.98 : 1)
@@ -91,8 +102,8 @@ struct MetalHoverRing: ViewModifier {
         content
             .overlay {
                 if glass { if hovering && isEnabled { GlassHoverOverlay() } }
-                else if outlines { if isEnabled { MetalHoverOutline(hover: hovering) } }
-                else if metal && hovering && isEnabled { MetalHoverOutline() }
+                else if (metal || outlines) && hovering && isEnabled { MetalHoverOutline() }
+                else if false && hovering && isEnabled { MetalHoverOutline() }
             }
             .onHover { hovering = $0 }
     }
@@ -119,7 +130,7 @@ struct MetalDefaultStyle: ButtonStyle {
                     else if hovering && isEnabled { LiquidMetalCapsule(hover: configuration.isPressed || hovering) }
                     else { Capsule().fill(Color.white.opacity(0.08)) }
                 }
-                .overlay { if outlines && !glass && isEnabled { MetalHoverOutline(hover: hovering) } }
+                .overlay { if outlines && !glass && isEnabled && hovering { MetalHoverOutline() } }
                 .contentShape(Capsule())
                 .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
                 .scaleEffect(configuration.isPressed ? 0.98 : 1)

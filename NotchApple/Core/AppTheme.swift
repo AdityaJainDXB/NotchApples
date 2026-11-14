@@ -295,10 +295,11 @@ struct AppearanceSettings: View {
         Form {
             Section {
                 Toggle("Liquid metal (recommended)", isOn: $liquidMetal)
-                if liquidMetal {
-                    Picker("Liquid metal colour", selection: $liquidMetalColour) {
+                if liquidMetal || liquidOutliners {
+                    Picker("Metal colour", selection: $liquidMetalColour) {
                         Text("Theme colour").tag(0); Text("Purple").tag(3); Text("Rainbow").tag(1); Text("Gold").tag(2)
-                    }.pickerStyle(.segmented)
+                        Text("Silver").tag(4); Text("Blue").tag(5); Text("Green").tag(6); Text("Red").tag(7); Text("Pink").tag(8)
+                    }
                 }
             } footer: {
                 Text("Recommended. A flowing liquid-metal look for the open tab, the closed notch, and every button when you point at it or click it. It uses the graphics chip a little and holds still with Reduce Motion.")
@@ -307,7 +308,7 @@ struct AppearanceSettings: View {
                 Toggle("Liquid metal outliners", isOn: $liquidOutliners)
                 Toggle("Liquid glass buttons", isOn: $liquidGlass)
             } footer: {
-                Text("Outliners: every button, the open tab and the closed notch wear a thin flowing metal outline all the time, brighter when you point at them (the look of the original prototype). Glass: every button becomes a pane of frosted glass that lights up when you point at it and dips when you click it. Glass wins on buttons if both are on.")
+                Text("Outliners: only one thing is lit at a time. The open tab and the closed notch wear a flowing metal outline, and so does whatever you point at (the look of the original prototype). Glass: every button becomes a pane of frosted glass that lights up when you point at it and dips when you click it. Glass wins on buttons if both are on.")
             }
             Section {
                 Picker("Settings window", selection: $windowMode) {
