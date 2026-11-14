@@ -363,6 +363,13 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
     <div><h3>Is it really one payment?</h3><p>Yes. Pro is $5 and Ultimate is $15, once. There are no subscriptions, renewals or expiry dates, and every future update is included, 2.0 and beyond.</p></div>
     <div id="faqStudent" hidden><h3>Student discount?</h3><p>Students in Dubai can ask for a discount code: send an email to <a href="mailto:notchapples.support@gmail.com?subject=Student%20discount%20code" style="text-decoration:underline">notchapples.support@gmail.com</a>. Enter the code in the Discount code box when you buy.</p></div>
     <div><h3>Can I pay more?</h3><p>Yes, add a tip at checkout. It all goes to four high school developers, and it's hugely appreciated.</p></div>
+    <div><h3>What does paying by card cost?</h3><p>Card payments carry a small processing fee that you pay on top of the price (it is shown before you pay), so small amounts cost proportionally more. With a card:</p>
+      <table style="border-collapse:collapse;margin:8px 0;font-size:14px"><thead><tr><th style="text-align:left;padding:4px 14px 4px 0">Price</th><th style="text-align:left;padding:4px 14px 4px 0">You pay</th><th style="text-align:left;padding:4px 14px 4px 0">Card fee</th></tr></thead><tbody>
+        <tr><td style="padding:4px 14px 4px 0">AED 4.40</td><td style="padding:4px 14px 4px 0">AED 5.66</td><td style="padding:4px 14px 4px 0">AED 1.26 (28.6%)</td></tr>
+        <tr><td style="padding:4px 14px 4px 0">AED 18.00</td><td style="padding:4px 14px 4px 0">AED 19.67</td><td style="padding:4px 14px 4px 0">AED 1.67 (9.3%)</td></tr>
+        <tr><td style="padding:4px 14px 4px 0">$5.00</td><td style="padding:4px 14px 4px 0">$5.46</td><td style="padding:4px 14px 4px 0">$0.46 (9.2%)</td></tr>
+        <tr><td style="padding:4px 14px 4px 0">$1.00</td><td style="padding:4px 14px 4px 0">$1.34</td><td style="padding:4px 14px 4px 0">$0.34 (34.0%)</td></tr></tbody></table>
+      <p>Crypto has no card fee (you only pay the network fee).</p></div>
     <div><h3>How does activation work?</h3><p>Your key is signed by our license server. The app checks the signature on your Mac, offline, using a public key built into the app. When you activate, the app tells the server a one-way hash of your Mac (so a key works on up to 3 Macs); nothing else.</p></div>
     <div><h3>I have Pro. How do I upgrade?</h3><p>Use the Upgrade tab: paste your Pro key and pay the $10 difference. You get a new Ultimate key; your Pro key keeps working until you replace it.</p></div>
     <div><h3>I lost my key</h3><p>Use "Lost my key?" with the email you bought with. Keys are emailed only to that address.</p></div>
@@ -372,7 +379,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
   </section>
 </div>
 </main>
-<footer><a href="mailto:notchapples.support@gmail.com">Support</a><a href="./">Home</a><a href="terms.html">Terms and refunds</a><a href="https://www.instagram.com/notchapples/" target="_blank" rel="noopener">Instagram</a><a href="cookie-policy.html">Cookie policy</a><a href="#" data-cookie-settings>Cookie settings</a><a href="https://github.com/AdityaJainDXB/NotchApples">GitHub</a></footer>
+<footer><a href="mailto:notchapples.support@gmail.com">Support</a><a href="./">Home</a><a href="terms.html">Terms and refunds</a><a href="https://www.instagram.com/notchapples/" target="_blank" rel="noopener">Instagram</a><a href="https://www.youtube.com/@Theultimatenotch" target="_blank" rel="noopener">YouTube</a><a href="https://x.com/Notchapplessupp" target="_blank" rel="noopener">X</a><a href="cookie-policy.html">Cookie policy</a><a href="#" data-cookie-settings>Cookie settings</a><a href="https://github.com/AdityaJainDXB/NotchApples">GitHub</a></footer>
 
 <script src="assets/qrcode.min.js"></script>
 <script>
@@ -615,13 +622,18 @@ async function returnFromCard(id) {
 }
 const WHOP_LINKS = { usd: { pro: 'https://whop.com/checkout/ch_592NS3uitgEidbE/', ultimate: 'https://whop.com/checkout/ch_keWbl1Cow14HTuq/' },
   aed: { pro: 'https://whop.com/checkout/plan_ebtYN1VAJeNt8', ultimate: 'https://whop.com/checkout/plan_ArxUVe16TNsAO' } };
+// Tips on Whop: a Whop checkout takes one plan, so a tip is its own small checkout (the Tip Jar product) that opens in a second tab.
+const WHOP_TIPS = { usd: { 1: 'https://whop.com/checkout/plan_4wO0lQEqLGXgt', 3: 'https://whop.com/checkout/plan_7Adufg6ydToZx', 5: 'https://whop.com/checkout/plan_R2Cfg45sk9zB0' },
+  aed: { 1: 'https://whop.com/checkout/plan_oMJkeNfnjrwz9', 3: 'https://whop.com/checkout/plan_YhhRwdq8BzBgU', 5: 'https://whop.com/checkout/plan_TBo6N9EBAlsDh' } };
 /// Whop takes the payment and the license server emails the key to the address given on Whop (a Whop webhook calls the server).
 function startWhop(btn, statusId, body) {
   if (body.upgradeFrom) return status(statusId, uaeRegion ? 'Upgrading from Pro is not on Whop yet. Pay with the card (Ziina) or crypto instead.' : 'Upgrading from Pro is not on Whop yet. Pay with crypto instead.', 'err', false);
   // Same as the card and crypto routes: ask for the email here first, so nobody lands on Whop's checkout without one.
   if (!validEmail(body.email)) return status(statusId, 'Enter a valid email address first. Use the same one on Whop: your key is sent there after you pay.', 'err', false);
   const url = WHOP_LINKS[CUR === 'AED' ? 'aed' : 'usd'][body.tier === 'ultimate' ? 'ultimate' : 'pro'];
-  status(statusId, 'Opening Whop. Enter ' + body.email + ' there; your key arrives at that address after you pay.', '', false);
+  const tipUrl = body.tip ? WHOP_TIPS[CUR === 'AED' ? 'aed' : 'usd'][body.tip] : '';
+  if (tipUrl) window.open(tipUrl, '_blank', 'noopener');   // the tip is paid on its own Whop checkout, opened beside this one
+  status(statusId, (tipUrl ? 'Opening Whop. Your tip opens in a new tab and Pro or Ultimate opens here, so pay both. ' : 'Opening Whop. ') + 'Enter ' + body.email + ' there; your key arrives at that address after you pay.', '', false);
   location.href = url;
 }
 async function startOrder(btn, statusId, body) {
