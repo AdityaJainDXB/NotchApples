@@ -255,7 +255,7 @@ struct VoiceNotesView: View {
                             Image(systemName: model.isRecording ? "stop.fill" : "mic.fill").font(.system(size: 30, weight: .bold)).foregroundStyle(.white)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(MetalPlainStyle())
                     .help(model.isRecording ? "Stop and transcribe" : "Start a voice note")
                     Text(model.isRecording ? CountdownTimer.long(model.elapsed) : "Tap to record")
                         .font(.system(size: 15, weight: .semibold, design: .rounded)).monospacedDigit().foregroundStyle(.white)

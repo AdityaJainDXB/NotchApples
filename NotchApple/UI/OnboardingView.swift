@@ -69,7 +69,7 @@ struct OnboardingView: View {
             HStack {
                 if page > 0 { Button("Back") { withAnimation(Theme.spring) { page -= 1 } } }
                 Spacer()
-                Button("Skip") { done() }.buttonStyle(.plain).foregroundStyle(.secondary)
+                Button("Skip") { done() }.buttonStyle(MetalPlainStyle()).foregroundStyle(.secondary)
                 Button(page == 3 ? "Start using Notch Apple" : "Continue") {
                     if page == 3 { done(); AppDelegate.current?.notch?.expand() }
                     else { withAnimation(Theme.spring) { page += 1 } }
@@ -144,7 +144,7 @@ private struct OnboardingTheme: View {
                         .overlay(RoundedRectangle(cornerRadius: 10).stroke(selected ? t.primaryAccent : t.borderColor, lineWidth: selected ? 2 : 1))
                         .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(MetalPlainStyle())
                     .accessibilityLabel(t.name)
                     .accessibilityAddTraits(selected ? .isSelected : [])
                 }

@@ -70,10 +70,13 @@ struct NotchAIConversationView: View {
                 Button("Use Ollama on this Mac") { config.provider = .ollama }.controlSize(.small)
                 Text("Or allow cloud models in Settings → AI.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
             } else {
-                Text(config.provider.isConfigured
-                     ? "Ask anything. Uses \(config.provider.title) · \(config.model) (\(local)). Text only: nothing on your screen is sent."
-                     : "Choose a provider in Settings → AI to start.")
-                    .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                NotchAIReadyView(providerTitle: config.provider.title, model: config.model,
+                                 locality: ModelLocality.of(provider: config.provider, model: config.model),
+                                 configured: config.provider.isConfigured) { convo.send($0) }
+                if config.provider.isConfigured {
+                    Text("Text only: nothing on your screen is sent. Uses \(config.provider.title) (\(local)).")
+                        .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

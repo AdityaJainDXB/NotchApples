@@ -173,7 +173,7 @@ struct GreetingChooserView: View {
                 .frame(height: 236)
             HStack {
                 Button("No thanks") { prefs.decline(); done(false) }
-                    .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).font(.system(size: 12))
+                    .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).font(.system(size: 12))
                 Spacer()
                 Button("Use this hello") { prefs.choose(picked); done(true) }.buttonStyle(PurpleButtonStyle())
             }

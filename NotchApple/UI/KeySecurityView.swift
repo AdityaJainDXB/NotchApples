@@ -176,7 +176,7 @@ struct VerifyKeyView: View {
                 case .passkey: Button("Email me a code instead") { step = .email; error = nil }
                 }
             }
-            .buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.accent)
+            .buttonStyle(MetalPlainStyle()).font(.system(size: 11)).foregroundStyle(Theme.accent)
         }
         .frame(maxWidth: 420, alignment: .leading)
         .onAppear { DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { focused = true } }

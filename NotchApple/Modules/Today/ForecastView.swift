@@ -74,7 +74,7 @@ struct ForecastView: View {
                 Spacer()
                 TextField("Add a city", text: $newCity).textFieldStyle(.roundedBorder).frame(width: 140).onSubmit(addCity)
                 if selected > 0 {
-                    Button { remove(selected) } label: { Image(systemName: "minus.circle") }.buttonStyle(.plain).hitTarget().help("Remove this city")
+                    Button { remove(selected) } label: { Image(systemName: "minus.circle") }.buttonStyle(MetalPlainStyle()).hitTarget().help("Remove this city")
                 }
             }
             if let problem { Text(problem).font(.caption).foregroundStyle(.orange) }

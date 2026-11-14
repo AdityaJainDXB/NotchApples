@@ -130,7 +130,7 @@ private struct PlacementView: View {
                 }
                 Button("Confirm placement") { finish(place) }
                     .keyboardShortcut(.defaultAction)
-                    .buttonStyle(.borderedProminent).tint(Theme.accent)
+                    .buttonStyle(.borderedProminent).metalHover().tint(Theme.accent)
             }
             .controlSize(.large)
         }

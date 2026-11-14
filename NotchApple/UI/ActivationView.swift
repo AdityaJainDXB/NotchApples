@@ -79,7 +79,7 @@ struct ActivationModalView: View {
                             .font(.system(size: 12)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 12) {
                             Button("Show the window") { KeyVerifyWindow.shared.bringForward() }.buttonStyle(PurpleButtonStyle())
-                            Button("Use a different key") { verifying = nil }.buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.accent)
+                            Button("Use a different key") { verifying = nil }.buttonStyle(MetalPlainStyle()).font(.system(size: 11)).foregroundStyle(Theme.accent)
                         }
                     }
                 } else if !succeeded {
@@ -119,7 +119,7 @@ struct ActivationModalView: View {
                         HStack(spacing: 12) {
                             Link("Get \(needed.name), \(needed.price) →", destination: URL(string: LicenseServer.site)!)
                             Link("Lost my key?", destination: URL(string: LicenseServer.site + "#recover")!)
-                            Button("Compare tiers") { AppDelegate.openSettingsWindow(tab: .license) }.buttonStyle(.plain)
+                            Button("Compare tiers") { AppDelegate.openSettingsWindow(tab: .license) }.buttonStyle(MetalPlainStyle())
                         }
                         .font(.system(size: 11)).foregroundStyle(Theme.accent)
                     }

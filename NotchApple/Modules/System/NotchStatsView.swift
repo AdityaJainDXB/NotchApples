@@ -128,7 +128,7 @@ private struct NetworkTools: View {
     var body: some View {
         HStack(spacing: 8) {
             Button { Task { await test.run() } } label: { Label(test.result ?? "Speed test", systemImage: "speedometer") }
-                .buttonStyle(.plain).font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright).disabled(test.running)
+                .buttonStyle(MetalPlainStyle()).font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright).disabled(test.running)
                 .help("Downloads about 20 MB from Cloudflare to measure your speed")
             if watch.internetAlert, let ms = watch.latency {
                 Text("\(Int(ms)) ms").font(.system(size: 10)).foregroundStyle(watch.state == .online ? Theme.textSecondary : .orange).monospacedDigit()
@@ -164,7 +164,7 @@ private struct TopAppsButton: View {
             Label("Top apps", systemImage: Entitlements.shared.canUse(.topProcesses) ? "list.number" : "lock.fill")
                 .font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .help(Entitlements.shared.canUse(.topProcesses) ? Feature.topProcesses.benefit : "Pro: \(Feature.topProcesses.benefit)")
         .popover(isPresented: $showing) { TopProcessesView() }
     }

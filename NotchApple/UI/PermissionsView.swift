@@ -136,7 +136,7 @@ struct PermissionsView: View {
                         EmptyView()
                     } else {
                         HStack {
-                            Button("Allow") { ScreenPermission.request() }.buttonStyle(.borderedProminent)
+                            Button("Allow") { ScreenPermission.request() }.buttonStyle(.borderedProminent).metalHover()
                             Button("Open Settings…") { ScreenPermission.openSettings() }
                             Button("Relaunch") { AppRelauncher.relaunch() }.help("macOS applies Screen Recording only after the app restarts")
                         }
@@ -166,7 +166,7 @@ struct PermissionsView: View {
                     switch model.loginItem {
                     case .enabled: Button("Turn off", action: model.disableLoginItem)
                     case .requiresApproval: Button("Approve in Login Items…") { SMAppService.openSystemSettingsLoginItems() }
-                    default: Button("Turn on", action: model.enableLoginItem).buttonStyle(.borderedProminent)
+                    default: Button("Turn on", action: model.enableLoginItem).buttonStyle(.borderedProminent).metalHover()
                     }
                 }
             } header: { Text("Background") }
@@ -176,7 +176,7 @@ struct PermissionsView: View {
                     detail: "Messages and focus timer alerts.", state: grantState(model.notifications == .authorized,
                                                                                    denied: model.notifications == .denied)) {
                     switch model.notifications {
-                    case .notDetermined: Button("Allow", action: model.requestNotifications).buttonStyle(.borderedProminent)
+                    case .notDetermined: Button("Allow", action: model.requestNotifications).buttonStyle(.borderedProminent).metalHover()
                     case .denied: Button("Open Settings…") { NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension")!) }
                     default: EmptyView()
                     }
@@ -185,7 +185,7 @@ struct PermissionsView: View {
                     detail: "Local weather in Today and the widget. Approximate location only.",
                     state: grantState(location.isAuthorized, denied: location.status == .denied || location.status == .restricted)) {
                     switch location.status {
-                    case .notDetermined: Button("Allow") { location.useCurrentLocation = true; location.requestLocation() }.buttonStyle(.borderedProminent)
+                    case .notDetermined: Button("Allow") { location.useCurrentLocation = true; location.requestLocation() }.buttonStyle(.borderedProminent).metalHover()
                     case .denied, .restricted: Button("Open Settings…", action: location.openSystemSettings)
                     default: EmptyView()
                     }
@@ -194,7 +194,7 @@ struct PermissionsView: View {
                     detail: "Your next events in Today and the widget.",
                     state: grantState(model.calendar == .fullAccess, denied: model.calendar == .denied || model.calendar == .restricted)) {
                     switch model.calendar {
-                    case .notDetermined: Button("Allow", action: model.requestCalendar).buttonStyle(.borderedProminent)
+                    case .notDetermined: Button("Allow", action: model.requestCalendar).buttonStyle(.borderedProminent).metalHover()
                     case .fullAccess: EmptyView()
                     default: Button("Open Settings…") { PermissionsModel.openPrivacy("Privacy_Calendars") }
                     }

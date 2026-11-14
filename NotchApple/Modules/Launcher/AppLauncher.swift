@@ -190,7 +190,7 @@ private struct LauncherTile: View {
             .animation(Theme.quick, value: hovering)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .onHover { hovering = $0 }
         .contextMenu {
             Button("Open") { store.launch(app) }.disabled(url == nil)
@@ -229,7 +229,7 @@ private struct AppPicker: View {
                     }
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MetalPlainStyle())
             }
             .frame(height: 300)
             HStack {
@@ -240,7 +240,7 @@ private struct AppPicker: View {
                     for app in all where selected.contains(app.path) { store.add(URL(fileURLWithPath: app.path)) }
                     dismiss()
                 }
-                .buttonStyle(.borderedProminent).disabled(selected.isEmpty)
+                .buttonStyle(.borderedProminent).metalHover().disabled(selected.isEmpty)
             }
         }
         .padding(14).frame(width: 340)

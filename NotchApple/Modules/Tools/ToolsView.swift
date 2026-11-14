@@ -345,7 +345,7 @@ struct ToolsView: View {
             .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(selected ? Theme.accentBright : .clear, lineWidth: 1))
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .accessibilityLabel(u.title)
     }
 
@@ -371,7 +371,7 @@ struct ToolsView: View {
                         .help(Entitlements.shared.canUse(.annotate) ? "Select part of the screen and draw on it" : "Pro: \(Feature.annotate.benefit)")
                     if !Entitlements.shared.canUse(.ruler) { TierBadge(tier: .pro) }
                 }
-                .buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                .buttonStyle(MetalPlainStyle()).font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
             }
         }
     }
@@ -408,7 +408,7 @@ struct ToolsView: View {
                     }
                     .font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MetalPlainStyle())
                 if optionsOpen {
                     VStack(alignment: .leading, spacing: 10) {
                         VStack(spacing: 6) {
@@ -507,7 +507,7 @@ struct ToolsView: View {
                                 .frame(width: 30, height: 30)
                                 .overlay(RoundedRectangle(cornerRadius: 7, style: .continuous).strokeBorder(.white.opacity(0.25)))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(MetalPlainStyle())
                         .help("\(hex) · \(ColorPickerModel.rgb(hex))")
                         .contextMenu {
                             Button("Copy \(hex)") { colors.copy(hex) }

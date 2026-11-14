@@ -41,7 +41,7 @@ struct NotchAIMemoryView: View {
                             .background(NotchAIView.green.opacity(0.25), in: Capsule()).foregroundStyle(.white)
                         TextField("", text: Binding(get: { item.text }, set: { memory.update(item.id, text: $0) })).textFieldStyle(.plain)
                             .font(.system(size: 11)).foregroundStyle(item.enabled ? .white : Theme.textSecondary)
-                        Button { memory.delete(item.id) } label: { Image(systemName: "trash") }.buttonStyle(.plain).foregroundStyle(.red.opacity(0.8))
+                        Button { memory.delete(item.id) } label: { Image(systemName: "trash") }.buttonStyle(MetalPlainStyle()).foregroundStyle(.red.opacity(0.8))
                     }
                     .padding(6).background(Theme.surface, in: RoundedRectangle(cornerRadius: 7))
                 }

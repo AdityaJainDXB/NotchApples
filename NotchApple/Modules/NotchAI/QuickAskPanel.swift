@@ -81,7 +81,7 @@ private struct QuickAskView: View {
                 Spacer()
                 Label("\(config.provider.title) · \(config.model)", systemImage: ModelLocality.of(provider: config.provider, model: config.model).symbol)
                     .font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1)
-                Button(action: openFull) { Image(systemName: "arrow.up.forward.square") }.buttonStyle(.plain)
+                Button(action: openFull) { Image(systemName: "arrow.up.forward.square") }.buttonStyle(MetalPlainStyle())
                     .help("Continue in NotchAI").foregroundStyle(.white)
             }
             NotchAIConversationView(compact: true)

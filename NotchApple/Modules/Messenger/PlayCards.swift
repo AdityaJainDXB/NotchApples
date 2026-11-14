@@ -179,7 +179,7 @@ struct PlayCard: View {
                     }
                     .padding(3).background(Color.blue.opacity(0.55), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MetalPlainStyle())
                 .disabled(!PlayRules.canDrop(s, id: myID, column: col))
                 .accessibilityLabel("Drop in column \(col + 1)")
             }
@@ -223,7 +223,7 @@ struct PlayCard: View {
                                 }
                                 .frame(width: 34, height: 34)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(MetalPlainStyle())
                             .disabled(s.status != .playing || me == nil)
                             .accessibilityLabel("Square \(row + 1), \(col + 1)")
                         }
@@ -302,7 +302,7 @@ struct PlayCard: View {
                             .frame(width: 78, height: 62)
                             .background(play.myPick == i ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(MetalPlainStyle())
                         .disabled(s.status != .playing || s.rps.commit[me] != nil)
                     }
                 }
@@ -374,7 +374,7 @@ struct PlayCard: View {
                             }
                             .frame(width: 20, height: 20)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(MetalPlainStyle())
                         .disabled(!tappable || !PlayRules.canShoot(s, id: myID, cell: cell))
                         .accessibilityLabel("Square \(row + 1), \(col + 1)")
                     }

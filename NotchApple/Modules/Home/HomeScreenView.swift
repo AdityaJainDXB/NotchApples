@@ -275,7 +275,7 @@ struct HomeScreenView: View {
                 }
                 .padding(.horizontal, 12).frame(height: 38).contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             if isOpen {
                 Divider().overlay(Theme.separator)
                 ModuleContentView(module: m).id(m)
@@ -388,7 +388,7 @@ private struct NotificationsCard: View {
                             Spacer(minLength: 0)
                         }
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(MetalPlainStyle())
                 }
             }
             Spacer(minLength: 0)
@@ -423,7 +423,7 @@ private struct ClipboardCard: View {
                     .padding(.horizontal, 6).frame(height: 22)
                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 6))
                 }
-                .buttonStyle(.plain).help("Copy it again")
+                .buttonStyle(MetalPlainStyle()).help("Copy it again")
             }
             Spacer(minLength: 0)
         }
@@ -442,7 +442,7 @@ private struct NowPlayingCard: View {
                 Button { withAnimation(Theme.spring) { cassette.toggle() } } label: {
                     Image(systemName: cassette ? "rectangle.stack.fill" : "recordingtape").font(.system(size: 11))
                 }
-                .buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright)
+                .buttonStyle(MetalPlainStyle()).hitTarget().foregroundStyle(Theme.accentBright)
                 .help(cassette ? "Back to the normal player" : "Cassette mode")
                 .accessibilityLabel(cassette ? "Switch to the normal player" : "Switch to cassette mode")
             }
@@ -468,7 +468,7 @@ private struct NowPlayingCard: View {
                 Button { monitor.playPause() } label: {
                     Image(systemName: monitor.current?.isPlaying == true ? "pause.circle.fill" : "play.circle.fill").font(.system(size: 28))
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.accentBright).help("Play or pause")
+                .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.accentBright).help("Play or pause")
                 IconButton(systemImage: "forward.fill", help: "Next") { MediaControl.send(.next) }
                 Spacer()
             }

@@ -91,7 +91,7 @@ struct FriendsView: View {
                         sectionLabel("Groups")
                         Spacer()
                         Button { groupName = ""; groupPick = []; groupNote = nil; showNewGroup = true } label: { Image(systemName: "plus.circle") }
-                            .buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright).help("Start a group chat with some of your friends")
+                            .buttonStyle(MetalPlainStyle()).hitTarget().foregroundStyle(Theme.accentBright).help("Start a group chat with some of your friends")
                             .disabled(client.friends.isEmpty)
                     }
                     if client.groups.isEmpty {
@@ -139,7 +139,7 @@ struct FriendsView: View {
         HStack {
             Text(r.alias ?? "Friend \(Friends.hex(r.fingerprint).prefix(4).uppercased())").font(.system(size: 12)).foregroundStyle(Theme.textSecondary).lineLimit(1)
             Spacer()
-            Button { client.remove(r.box) } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Cancel this request")
+            Button { client.remove(r.box) } label: { Image(systemName: "xmark.circle") }.buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).help("Cancel this request")
         }
         .padding(.horizontal, 8).padding(.vertical, 5).background(Theme.surface.opacity(0.6), in: RoundedRectangle(cornerRadius: 10))
     }
@@ -158,7 +158,7 @@ struct FriendsView: View {
             .padding(.horizontal, 6).padding(.vertical, 4).contentShape(Rectangle())
             .background(selected == r.box ? AnyShapeStyle(Theme.surfaceHover) : AnyShapeStyle(Color.clear), in: RoundedRectangle(cornerRadius: 9))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .contextMenu {
             Button("Nickname…") { selected = r.box; aliasDraft = r.alias ?? ""; renaming = true }
             Button("Clear chat…", role: .destructive) { selected = r.box; confirmClear = true }
@@ -181,7 +181,7 @@ struct FriendsView: View {
             .padding(.horizontal, 6).padding(.vertical, 4).contentShape(Rectangle())
             .background(selected == g.key ? AnyShapeStyle(Theme.surfaceHover) : AnyShapeStyle(Color.clear), in: RoundedRectangle(cornerRadius: 9))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .contextMenu {
             Button("Clear chat…", role: .destructive) { selected = g.key; confirmClear = true }
             Button("Add friends…") { groupPick = []; groupNote = nil; addToGroupKey = g.key }
@@ -211,7 +211,7 @@ struct FriendsView: View {
                                 }
                                 .padding(.horizontal, 8).padding(.vertical, 5).contentShape(Rectangle())
                                 .background(on ? Theme.surfaceHover : Theme.surface, in: RoundedRectangle(cornerRadius: 8))
-                            }.buttonStyle(.plain)
+                            }.buttonStyle(MetalPlainStyle())
                         }
                     }
                 }
@@ -277,7 +277,7 @@ struct FriendsView: View {
                                     }
                                     .padding(.horizontal, 8).padding(.vertical, 5).contentShape(Rectangle())
                                     .background(on ? Theme.surfaceHover : Theme.surface, in: RoundedRectangle(cornerRadius: 8))
-                                }.buttonStyle(.plain)
+                                }.buttonStyle(MetalPlainStyle())
                             }
                         }
                     }.frame(maxHeight: 150)
@@ -343,7 +343,7 @@ struct FriendsView: View {
     private func composer(key: String, typing: Bool, send: @escaping () -> Void) -> some View {
         HStack(spacing: 6) {
             Button { attach(to: key) } label: { Image(systemName: "paperclip").font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle()) }
-                .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Send a file (up to \(Friends.maxFileText)). It is encrypted like a message.")
+                .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).help("Send a file (up to \(Friends.maxFileText)). It is encrypted like a message.")
             TextField("Message", text: $draft)
                 .textFieldStyle(.plain).foregroundStyle(Theme.textPrimary).font(.system(size: 13)).padding(.horizontal, 12).frame(height: 32)
                 .background(Theme.surface, in: Capsule())
@@ -409,9 +409,9 @@ struct FriendsView: View {
                 Button { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(Friends.displayCode(client.identity.code), forType: .string)
                     copiedCode = true; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copiedCode = false } } label: {
                     Image(systemName: copiedCode ? "checkmark" : "doc.on.doc").font(.system(size: 11))
-                }.buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright).help("Copy your friend code")
+                }.buttonStyle(MetalPlainStyle()).hitTarget().foregroundStyle(Theme.accentBright).help("Copy your friend code")
                 Button { showQR = true } label: { Image(systemName: "qrcode").font(.system(size: 12)) }
-                    .buttonStyle(.plain).hitTarget().foregroundStyle(Theme.accentBright).help("Show your QR code")
+                    .buttonStyle(MetalPlainStyle()).hitTarget().foregroundStyle(Theme.accentBright).help("Show your QR code")
                     .popover(isPresented: $showQR) {
                         VStack(spacing: 8) {
                             if let qr = FriendsSettingsSection.qr(client.identity.link) { Image(nsImage: qr).interpolation(.none).resizable().frame(width: 170, height: 170) }
@@ -575,7 +575,7 @@ private struct FriendBubble: View {
                         .foregroundStyle(message.mine ? Theme.onAccent : Theme.textPrimary).padding(.horizontal, 10).padding(.vertical, 6).frame(maxWidth: 240, alignment: .leading)
                         .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(message.mine ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover)))
                     }
-                    .buttonStyle(.plain).help("Show in Finder")
+                    .buttonStyle(MetalPlainStyle()).help("Show in Finder")
                 }
                 if !message.text.isEmpty {
                     Text(message.text).font(.system(size: 13)).foregroundStyle(message.mine ? Theme.onAccent : Theme.textPrimary).textSelection(.enabled)
@@ -600,7 +600,7 @@ private struct FriendBubble: View {
         case .sent: Text("· sent")
         case .delivered: Text("· delivered")
         case .read: Text("· read").foregroundStyle(Theme.accentBright)
-        case .failed: Button("· failed, tap to retry", action: retry).buttonStyle(.plain).foregroundStyle(.orange)
+        case .failed: Button("· failed, tap to retry", action: retry).buttonStyle(MetalPlainStyle()).foregroundStyle(.orange)
         }
     }
 }

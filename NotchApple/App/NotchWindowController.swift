@@ -93,8 +93,58 @@ final class NotchTriggerView: NSView {
     var onDragEnter: () -> Void = {}
     var onHoverChange: (Bool) -> Void = { _ in }
 
-    private var isHovered = false { didSet { needsDisplay = true } }
+    private var isHovered = false { didSet { needsDisplay = true; updateMetalRim() } }
     private var tracking: NSTrackingArea?
+
+    // MARK: Liquid metal rim (opt-in: Settings → Appearance)
+
+    /// A click-through SwiftUI layer that shows flowing metal around the closed notch while the pointer is on it.
+    private final class PassThroughHost: NSHostingView<LiquidMetalCapsule> {
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    }
+    private var rimHost: PassThroughHost?
+    /// A faint flowing-metal sheen inside the closed notch while it is hovered, so the whole pill is alive.
+    private var sheenHost: PassThroughHost?
+
+    private func updateMetalRim() {
+        let on = isHovered && LiquidMetalSetting.isOn && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        if on, rimHost == nil {
+            let rim = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 3, veil: false))
+            let sheen = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 0, veil: false))
+            for h in [sheen, rim] { h.wantsLayer = true; h.alphaValue = 0; addSubview(h) }
+            rimHost = rim; sheenHost = sheen
+        }
+        guard let rim = rimHost, let sheen = sheenHost else { return }
+        if on {
+            // The same silhouette as the hover outline in draw(_:).
+            let pad = Self.hitPadding
+            let shoulder = NotchRootView.collapsedShoulder
+            let width = notchWidth + 2 * (shoulder + displayedEar)
+            var notch = NSRect(x: bounds.midX - width / 2, y: bounds.minY + pad.height, width: width, height: bounds.height - pad.height)
+            notch = notch.insetBy(dx: -6, dy: 0); notch.origin.y -= 3; notch.size.height += 3
+            let path = Self.notchPath(in: notch, shoulder: shoulder, bottom: min(10, notch.height / 2))
+            // The metal lives INSIDE the notch's own outline: a band along the whole edge (top included), cut to the filled silhouette, so
+            // it can never poke out past the black pill.
+            let filled = path.cgPath
+            let band = filled.copy(strokingWithWidth: 11, lineCap: .round, lineJoin: .round, miterLimit: 1).intersection(filled)
+            // The hosting views are flipped (origin top-left) and this view is not, so the shapes are mirrored to land in the right place.
+            var flip = CGAffineTransform(a: 1, b: 0, c: 0, d: -1, tx: 0, ty: bounds.height)
+            func mask(_ shape: CGPath) -> CAShapeLayer {
+                let m = CAShapeLayer(); m.path = shape.copy(using: &flip) ?? shape; m.fillColor = NSColor.black.cgColor
+                return m
+            }
+            rim.frame = bounds; sheen.frame = bounds
+            rim.layer?.mask = mask(band)
+            sheen.layer?.mask = mask(filled)
+            NSAnimationContext.runAnimationGroup { $0.duration = 0.18; rim.animator().alphaValue = 1; sheen.animator().alphaValue = 0.2 }
+        } else {
+            NSAnimationContext.runAnimationGroup({ $0.duration = 0.18; rim.animator().alphaValue = 0; sheen.animator().alphaValue = 0 }, completionHandler: { [weak self] in
+                guard let self, !self.isHovered else { return }
+                self.rimHost?.removeFromSuperview(); self.rimHost = nil
+                self.sheenHost?.removeFromSuperview(); self.sheenHost = nil
+            })
+        }
+    }
 
     override init(frame: NSRect) {
         super.init(frame: frame)

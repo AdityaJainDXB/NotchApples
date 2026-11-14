@@ -202,8 +202,8 @@ struct NotchAIDocumentsView: View {
             }
             Spacer()
             Button(question.isEmpty ? "Summarise" : "Ask") { ResearchAgent.shared.ask(about: URL(fileURLWithPath: d.path), question: question) }.disabled(!unlocked)
-            Button { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: d.path)]) } label: { Image(systemName: "magnifyingglass") }.buttonStyle(.plain).help("Show in Finder")
-            Button { store.remove(d.id) } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain).help("Remove from the list (the file is not touched)")
+            Button { NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: d.path)]) } label: { Image(systemName: "magnifyingglass") }.buttonStyle(MetalPlainStyle()).help("Show in Finder")
+            Button { store.remove(d.id) } label: { Image(systemName: "xmark.circle") }.buttonStyle(MetalPlainStyle()).help("Remove from the list (the file is not touched)")
         }
         .padding(8).background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
     }

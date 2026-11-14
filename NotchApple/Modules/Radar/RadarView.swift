@@ -171,6 +171,6 @@ struct RadarView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 8).fill(on ? Theme.accent.opacity(0.3) : Theme.surface))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
     }
 }

@@ -225,7 +225,7 @@ struct ProfilesSettings: View {
                             }.labelsHidden().fixedSize()
                         }
                         Spacer()
-                        Button(role: .destructive) { store.rules.removeAll { $0.id == r.id } } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                        Button(role: .destructive) { store.rules.removeAll { $0.id == r.id } } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless).metalHover()
                     }
                 }
                 Button("Add an app…") {

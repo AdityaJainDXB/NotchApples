@@ -572,7 +572,7 @@ struct UpdatesSettings: View {
                         Spacer()
                         Button("Not now") { updater.skip() }.disabled(isBusy)
                         Button(isFailed ? "Try again" : "Update") { updater.install() }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.borderedProminent).metalHover()
                             .disabled(isBusy)
                     }
                     if !release.notes.isEmpty {
@@ -648,7 +648,7 @@ struct UpdatePill: View {
                     .frame(height: 26)
                     .background(Capsule().fill(Theme.accentGradient))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             .help("Notch Apple \(release.version) is available")
         }
     }

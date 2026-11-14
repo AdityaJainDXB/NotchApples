@@ -79,7 +79,7 @@ struct NotchAIScreenView: View {
                         HStack {
                             Text(id).font(.system(size: 10, design: .monospaced)).foregroundStyle(Theme.textSecondary)
                             Spacer()
-                            Button { screen.exclusions = screen.exclusions.filter { $0 != id } } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain)
+                            Button { screen.exclusions = screen.exclusions.filter { $0 != id } } label: { Image(systemName: "xmark.circle") }.buttonStyle(MetalPlainStyle())
                         }
                     }
                 }

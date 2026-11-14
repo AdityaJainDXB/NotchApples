@@ -65,7 +65,7 @@ struct SnippetsView: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                     .contentShape(Rectangle())
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(MetalPlainStyle())
                                 .help(AXIsProcessTrusted() ? "Paste into the app in front" : "Copy (allow Accessibility to paste directly)")
                                 IconButton(systemImage: "pencil", help: "Edit") { edit(snippet) }
                                 IconButton(systemImage: "trash", help: "Delete") { store.items.removeAll { $0.id == snippet.id } }

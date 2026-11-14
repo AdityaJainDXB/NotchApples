@@ -458,7 +458,7 @@ private struct BalanceRow: View {
                 Text("R").font(.system(size: 10, weight: .bold)).foregroundStyle(audio.balance > 0.55 ? .white : Theme.textSecondary)
                 Text(label).font(.system(size: 10).monospacedDigit()).foregroundStyle(Theme.textSecondary).frame(width: 62, alignment: .leading)
                 if abs(audio.balance - 0.5) > 0.01 {
-                    Button("Centre") { audio.setBalance(0.5) }.buttonStyle(.plain)
+                    Button("Centre") { audio.setBalance(0.5) }.buttonStyle(MetalPlainStyle())
                         .font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
                 }
             }
@@ -508,7 +508,7 @@ private struct NowPlayingLyricsView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Button(action: close) { Label("Player", systemImage: "chevron.left").font(.system(size: 11, weight: .semibold)) }
-                    .buttonStyle(.plain).foregroundStyle(.white.opacity(0.85)).help("Back to the player")
+                    .buttonStyle(MetalPlainStyle()).foregroundStyle(.white.opacity(0.85)).help("Back to the player")
                 Spacer()
                 IconButton(systemImage: "arrow.up.left.and.arrow.down.right", help: "Full-screen lyrics") {
                     AppDelegate.current?.notch?.closeNotch()

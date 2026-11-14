@@ -34,7 +34,7 @@ struct WindowsView: View {
                             Button { manager.snapFrontWindow(layout) } label: {
                                 LayoutGlyph(layout: layout, active: hovered == layout).frame(width: 60, height: 40)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(MetalPlainStyle())
                             .onHover { hovered = $0 ? layout : (hovered == layout ? nil : hovered) }
                             .help(layout.title)
                             .accessibilityLabel(layout.title)
@@ -106,7 +106,7 @@ struct WindowsView: View {
                                     .padding(8)
                                     .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(MetalPlainStyle())
                                 .help("Restore this layout")
                                 IconButton(systemImage: "trash", help: "Delete layout") { store.delete(layout) }
                             }

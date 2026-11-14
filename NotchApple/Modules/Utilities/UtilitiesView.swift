@@ -19,7 +19,7 @@ struct UtilitiesView: View {
                 Button { withAnimation(Theme.spring) { self.open = nil } } label: {
                     Label("Utilities", systemImage: "chevron.left").font(.system(size: 12, weight: .semibold))
                 }
-                .buttonStyle(.plain).foregroundStyle(Theme.accentBright).hitTarget()
+                .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.accentBright).hitTarget()
                 ModuleContentView(module: open)
             }
         } else {
@@ -59,7 +59,7 @@ private struct Panel<Content: View>: View {
                 .foregroundStyle(Theme.textSecondary)
                 .frame(minHeight: 20).contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             content.frame(maxWidth: .infinity, alignment: .leading)
             Spacer(minLength: 0)
         }
@@ -187,7 +187,7 @@ private struct LauncherPanel: View {
                         Button { store.launch(app) } label: {
                             Image(nsImage: NSWorkspace.shared.icon(forFile: app.path)).resizable().frame(width: 24, height: 24)
                         }
-                        .buttonStyle(.plain).help(app.name)
+                        .buttonStyle(MetalPlainStyle()).help(app.name)
                     }
                 }
             }
