@@ -55,16 +55,19 @@ struct MetalPlainStyle: ButtonStyle {
     private struct Inner: View {
         let configuration: ButtonStyleConfiguration
         @AppStorage(LiquidMetalSetting.key) private var metal = false
+        @AppStorage(LiquidGlassSetting.key) private var glass = false
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
 
         var body: some View {
             configuration.label
                 .overlay {
-                    if metal && hovering && isEnabled { MetalHoverOutline() }
+                    if hovering && isEnabled {
+                        if glass { GlassHoverOverlay() } else if metal { MetalHoverOutline() }
+                    }
                 }
-                .opacity(metal && configuration.isPressed ? 0.8 : 1)
-                .scaleEffect(metal && configuration.isPressed ? 0.98 : 1)
+                .opacity((metal || glass) && configuration.isPressed ? 0.8 : 1)
+                .scaleEffect((metal || glass) && configuration.isPressed ? 0.98 : 1)
                 .animation(.easeOut(duration: 0.15), value: hovering)
                 .onHover { hovering = $0 }
         }
@@ -74,13 +77,16 @@ struct MetalPlainStyle: ButtonStyle {
 /// The metal ring on hover, for buttons that keep a system style (bordered, borderless, link). Does nothing while liquid metal is off.
 struct MetalHoverRing: ViewModifier {
     @AppStorage(LiquidMetalSetting.key) private var metal = false
+    @AppStorage(LiquidGlassSetting.key) private var glass = false
     @State private var hovering = false
     @Environment(\.isEnabled) private var isEnabled
 
     func body(content: Content) -> some View {
         content
             .overlay {
-                if metal && hovering && isEnabled { MetalHoverOutline() }
+                if hovering && isEnabled {
+                    if glass { GlassHoverOverlay() } else if metal { MetalHoverOutline() }
+                }
             }
             .onHover { hovering = $0 }
     }
@@ -93,6 +99,7 @@ struct MetalDefaultStyle: ButtonStyle {
 
     private struct Inner: View {
         let configuration: ButtonStyleConfiguration
+        @AppStorage(LiquidGlassSetting.key) private var glass = false
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
 
@@ -100,7 +107,8 @@ struct MetalDefaultStyle: ButtonStyle {
             configuration.label
                 .padding(.horizontal, 10).padding(.vertical, 4)
                 .background {
-                    if hovering && isEnabled { LiquidMetalCapsule(hover: configuration.isPressed || hovering) }
+                    if glass { GlassSurface(shape: Capsule(), lit: hovering && isEnabled, pressed: configuration.isPressed) }
+                    else if hovering && isEnabled { LiquidMetalCapsule(hover: configuration.isPressed || hovering) }
                     else { Capsule().fill(Color.white.opacity(0.08)) }
                 }
                 .contentShape(Capsule())
@@ -113,8 +121,9 @@ struct MetalDefaultStyle: ButtonStyle {
 
 private struct MetalButtonsModifier: ViewModifier {
     @AppStorage(LiquidMetalSetting.key) private var metal = false
+    @AppStorage(LiquidGlassSetting.key) private var glass = false
     @ViewBuilder func body(content: Content) -> some View {
-        if metal { content.buttonStyle(MetalDefaultStyle()) } else { content }
+        if metal || glass { content.buttonStyle(MetalDefaultStyle()) } else { content }
     }
 }
 
