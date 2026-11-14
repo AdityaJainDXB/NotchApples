@@ -81,29 +81,29 @@ for multipliers when the F1 model is on; `raceCtl` becomes a view over `racecont
 - [x] Integration: `stepCar` / `tyreGrip` / the computer driver use the multipliers when a car has `c.f1` (set only in the F1 Weekend mode); the other cars and the 51 existing tests are unchanged. `f1/sim.js` joins the modules per car. (Wiring the sim into the race loop: with the F1 Weekend mode, below.)
 
 ### Phase 2: race control state machine
-- [ ] Extract `racecontrol.js`: states `GREEN, YELLOW_SINGLE, YELLOW_DOUBLE` (per mini-sector), `VSC, SAFETY_CAR, RED_FLAG, CHEQUERED`, plus driver flags `BLUE, BLACK_AND_ORANGE, BLACK_AND_WHITE, BLACK`
-- [ ] Move the existing `setFlag/incident/flagForCrash` behaviour behind it first (green tests before adding anything)
-- [ ] VSC positive sector delta with breach penalty; SC with bunching, lapped cars may unlap, no overtaking before Safety Car Line 1
-- [ ] Red flag: freeze classification from the last timing loop all cars crossed, cars to the pit lane fast lane in race order, tyre changes (counts toward the compound rule), front-wing swap,
+- [x] Extract `racecontrol.js`: states `GREEN, YELLOW_SINGLE, YELLOW_DOUBLE` (per mini-sector), `VSC, SAFETY_CAR, RED_FLAG, CHEQUERED`, plus driver flags `BLUE, BLACK_AND_ORANGE, BLACK_AND_WHITE, BLACK`
+- [x] Move the existing `setFlag/incident/flagForCrash` behaviour behind it first (green tests before adding anything)
+- [x] VSC positive sector delta with breach penalty; SC with bunching, lapped cars may unlap, no overtaking before Safety Car Line 1
+- [x] Red flag: freeze classification from the last timing loop all cars crossed, cars to the pit lane fast lane in race order, tyre changes (counts toward the compound rule), front-wing swap,
       formation lap behind the SC, standing start (dry) or rolling start (wet)
-- [ ] Blue flag: within 1.2 s of a backmarker, must yield within 3 marshal posts or +5 s; meatball on critical damage forces a pit; B&W on strike 3 / unsportsmanlike; black on DSQ or ignored Stop-Go
-- [ ] Tests: legal/illegal transitions, escalation order, classification freeze, restart ordering, blue-flag timer, no overtaking in flagged sectors
+- [x] Blue flag: within 1.2 s of a backmarker, must yield within 3 marshal posts or +5 s; meatball on critical damage forces a pit; B&W on strike 3 / unsportsmanlike; black on DSQ or ignored Stop-Go
+- [x] Tests: legal/illegal transitions, escalation order, classification freeze, restart ordering, blue-flag timer, no overtaking in flagged sectors
 
 ### Phase 3: weekend loop, pit stops, penalties
-- [ ] `weekend.js`: standard (`FP1 FP2 FP3 Q1[18] Q2[15] Q3[12] GP`) and sprint (`FP1 SQ1 SQ2 SQ3 Sprint GPQ GP`) flows reusing the existing knockout functions; 107 % rule in Q1
-- [ ] Parc Fermé after the first exit in Q1/SQ1 (allowed: front wing angle, brake bias, diff, tyre pressure; breaking it = pit-lane start)
-- [ ] Tyre allocation 13 dry sets (2 H, 3 M, 8 S, 1 S reserved for Q3) + Inter/Wet; two-distinct-compound rule (waived if Inter/Wet used); post-race DSQ if broken
-- [ ] `penalties.js`: pit limiter 80 km/h (60 on tight street tracks), track limits per the spec (strike 1–2 lap deleted/warning, 3 B&W, 4 +5 s, 5 +10 s then reset: the existing counter differs and will be corrected),
+- [x] `weekend.js`: standard (`FP1 FP2 FP3 Q1[18] Q2[15] Q3[12] GP`) and sprint (`FP1 SQ1 SQ2 SQ3 Sprint GPQ GP`) flows reusing the existing knockout functions; 107 % rule in Q1
+- [x] Parc Fermé after the first exit in Q1/SQ1 (allowed: front wing angle, brake bias, diff, tyre pressure; breaking it = pit-lane start)
+- [x] Tyre allocation 13 dry sets (2 H, 3 M, 8 S, 1 S reserved for Q3) + Inter/Wet; two-distinct-compound rule (waived if Inter/Wet used); post-race DSQ if broken
+- [x] `penalties.js`: pit limiter 80 km/h (60 on tight street tracks), track limits per the spec (strike 1–2 lap deleted/warning, 3 B&W, 4 +5 s, 5 +10 s then reset: the existing counter differs and will be corrected),
       5/10 s served stationary before mechanics touch the car or added post-race, Drive-Through and 10 s Stop-Go within 3 laps, unsafe release
-- [ ] Tests: knockout sizes and ordering, 107 %, parc fermé violations, allocation counts, compound rule, every penalty path and timer
+- [x] Tests: knockout sizes and ordering, 107 %, parc fermé violations, allocation counts, compound rule, every penalty path and timer
 
 ### Phase 4: AI strategy, track evolution, telemetry
-- [ ] `evolution.js`: +3–5 % grip on the racing line as rubber is laid, rain washes it (dry-line vs wet-line, slick kerbs)
-- [ ] Season component pool (4 ICE/TC/MGU-K, 2 ES/CE, 8 exhausts) with 10-place then 5-place grid penalties, kept in local storage
-- [ ] `strategy.js`: AI undercut/overcut windows and tyre choice by wear/weather; race engineer prompts (fuel delta, ERS, tyre windows, weather, undercut) on top of the existing radio and TTS
-- [ ] `mfd.js` + HUD: multi-function display (brake bias, diff, ERS mode, wing angle, pit strategy) and live sector deltas, carcass/surface temps, flag indicators
-- [ ] Tests: evolution curve and rain reset, component penalty arithmetic, strategy decisions on fixed scenarios, MFD limits
-- [ ] A full-race integration test and a headless-browser run per phase
+- [x] `evolution.js`: +3–5 % grip on the racing line as rubber is laid, rain washes it (dry-line vs wet-line, slick kerbs)
+- [x] Season component pool (4 ICE/TC/MGU-K, 2 ES/CE, 8 exhausts) with 10-place then 5-place grid penalties, kept in local storage
+- [x] `strategy.js`: AI undercut/overcut windows and tyre choice by wear/weather; race engineer prompts (fuel delta, ERS, tyre windows, weather, undercut) on top of the existing radio and TTS
+- [x] `mfd.js` + HUD: multi-function display (brake bias, diff, ERS mode, wing angle, pit strategy) and live sector deltas, carcass/surface temps, flag indicators
+- [x] Tests: evolution curve and rain reset, component penalty arithmetic, strategy decisions on fixed scenarios, MFD limits
+- [x] A full-race integration test and a headless-browser run per phase
 
 R&D tree, cost cap and wind-tunnel limits (career/My Team) are in the second spec you pasted but not in the module list: **I propose leaving them out of these four phases** and adding a Phase 5 only if wanted. Fuel load is also missing and is needed for the engineer's fuel delta: I'd add a simple fuel mass to Phase 1.
 

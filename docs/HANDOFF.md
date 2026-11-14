@@ -2,6 +2,10 @@
 
 For the next agent (or person) picking this up. Read `CLAUDE.md` first: its release, README and safety rules apply. Facts below were true when written; check them (`gh release list`, `gh run list`, `gh pr list`) before relying on them. Things that are already pushed and finished are not listed here; they are in the Releases page, `CHANGELOG.md` and git history.
 
+## Racing: the F1 simulation (2.2.71, 14 November 2026)
+
+All four phases of `PLAN.md` are built (`NotchWindows/src/js/games/f1/*.js`, glued into `racing.js`, opt-in via Menu → F1 Weekend, F1 car only). 660 node tests pass (`node --test NotchWindows/tests/*.test.mjs`); headless Chromium runs of a race, the Safety Car / Medical Car / VSC scenarios and the weekend hub were clean. **Not done:** real-device play on a Mac or Windows PC, a full 60-minute practice or 18-minute qualifying played through by hand (tested only up to starting the sessions), pit-lane starters after parc fermé breaks, and driving the Safety Car / Medical Car by hand in a browser (logic is unit-tested). Keys: U telemetry, I MFD, C race control messages, J (old) steering panel.
+
 ## Open pull requests (draft, not merged, not released)
 
 - **#85** Flight Economy opens with an Ultimate key without the code box (Mac and Windows).
