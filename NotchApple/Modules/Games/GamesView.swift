@@ -66,6 +66,8 @@ struct GamesView: View {
     @AppStorage(GameSound.key) private var soundOn = true
     /// The tab opens on the menu of games; picking one shows it with a way back.
     @State private var showingGame = false
+    /// Flight Economy shown inside the notch (its saved page and name), or nil.
+    @State private var privateGame: (file: URL, title: String)?
     private var game: Game { Game(rawValue: lastRaw) ?? .g2048 }
 
     private func open(_ g: Game) {
@@ -76,13 +78,41 @@ struct GamesView: View {
 
     var body: some View {
         Group {
-            if showingGame { gameLayout } else { GamesMenuView(open: open) }
+            if let pg = privateGame { privateLayout(pg) }
+            else if showingGame { gameLayout } else { GamesMenuView(open: open, openPrivate: { privateGame = ($0, $1) }) }
         }
         // The Plane and Racing games are drawn for a bigger panel: grow the notch while one is open, and shrink it back after.
-        .onAppear { setBig(showingGame && game.isBig) }
-        .onChange(of: lastRaw) { _, _ in setBig(showingGame && game.isBig) }
-        .onChange(of: showingGame) { _, _ in setBig(showingGame && game.isBig) }
+        .onAppear { setBig(privateGame != nil || (showingGame && game.isBig)) }
+        .onChange(of: lastRaw) { _, _ in setBig(privateGame != nil || (showingGame && game.isBig)) }
+        .onChange(of: showingGame) { _, _ in setBig(privateGame != nil || (showingGame && game.isBig)) }
+        .onChange(of: privateGame?.file) { _, _ in setBig(privateGame != nil || (showingGame && game.isBig)) }
         .onDisappear { setBig(false) }
+    }
+
+    /// Flight Economy inside the notch: a back button and a pop-out button beside the game.
+    private func privateLayout(_ pg: (file: URL, title: String)) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Button { privateGame = nil } label: {
+                    Label("All games", systemImage: "chevron.left").font(.system(size: 12, weight: .semibold)).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(PurpleButtonStyle())
+                Label(pg.title, systemImage: "airplane.departure").font(.system(size: 13, weight: .bold)).foregroundStyle(.white).lineLimit(2)
+                Spacer(minLength: 0)
+                Button {
+                    PrivateGameWindow.show(id: PrivateGames.flightEconomy, file: pg.file, title: pg.title)
+                    privateGame = nil
+                } label: {
+                    Label("Pop out", systemImage: "arrow.up.forward.app").font(.system(size: 11, weight: .semibold)).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(PurpleButtonStyle())
+                .help("Open the game in its own bigger window")
+                Text("Your airline saves by itself. Use Pop out for a bigger screen.").font(.system(size: 9.5)).foregroundStyle(Theme.textSecondary).fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(width: 130)
+            .frame(maxHeight: .infinity, alignment: .top)
+            GlassCard { PrivateGameNotchView(file: pg.file).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)) }
+        }
     }
 
     /// One game, with a column on the left: the way back to the menu, the sound switch and the game's hint.
