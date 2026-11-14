@@ -16,7 +16,7 @@ enum LiquidMetalSetting {
     static let colourKey = "appearance.liquidMetalColour"
     static var isOn: Bool { UserDefaults.standard.bool(forKey: key) }
     /// "Liquid metal outliners": the look of the approved prototype, with one thing lit at a time: the open tab is outlined instead of
-    /// filled, whatever the pointer is on gets the flowing outline, and the closed notch keeps its metal rim.
+    /// filled, whatever the pointer is on gets the flowing outline, and the closed notch's metal rim shows when you point at it or a notification arrives.
     static let outlinesKey = "appearance.liquidMetalOutlines"
     /// The fixed metal colours (4 and up); nil for the theme colour, rainbow, gold and purple, which the shader makes itself.
     static func fixedTint(_ n: Int) -> Color? {

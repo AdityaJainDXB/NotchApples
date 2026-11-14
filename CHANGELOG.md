@@ -13,7 +13,7 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 - New: a race engineer who calls the undercut, the tyres and the fuel, and an MFD for brake bias, differentials and ERS. Nothing is added to the screen until you turn it on: U is the F1 telemetry panel, I the MFD (O, comma, full stop, minus, equals to change it), C cycles race control messages. J is still the steering panel
 - New: liquid metal (recommended). Settings → Appearance → Liquid metal gives the open tab, the closed notch and every button a flowing metal look when you point at it or click it, in your theme colour, Purple, Rainbow or Gold. The AI start screen has a new "Ready when you are" look. It holds still with Reduce Motion
 - New: liquid glass buttons. Settings → Appearance → Liquid glass buttons turns every button into a pane of frosted glass that lights up when you point at it. It works alone or together with liquid metal
-- New: liquid metal outliners. Settings → Appearance → Liquid metal outliners gives every button, the open tab and the closed notch a thin flowing metal outline all the time, brighter when you point at it. It is the look of the original prototype
+- New: liquid metal outliners. Settings → Appearance → Liquid metal outliners outlines only the open tab and whatever you point at with flowing metal, one thing at a time, and the closed notch rim lights up when you point at it or a notification arrives. It is the look of the original prototype
 - New: desktop widgets (Ultimate). Clock, To-do and Now Playing as small windows on your desktop that you can drag; they stay under your other windows. Turn them on in Settings → Widget
 - Fixed: Flight Economy opens with your Ultimate key, no code needed
 - Other racing modes and cars are unchanged

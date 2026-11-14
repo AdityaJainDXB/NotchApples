@@ -308,7 +308,7 @@ struct AppearanceSettings: View {
                 Toggle("Liquid metal outliners", isOn: $liquidOutliners)
                 Toggle("Liquid glass buttons", isOn: $liquidGlass)
             } footer: {
-                Text("Outliners: only one thing is lit at a time. The open tab and the closed notch wear a flowing metal outline, and so does whatever you point at (the look of the original prototype). Glass: every button becomes a pane of frosted glass that lights up when you point at it and dips when you click it. Glass wins on buttons if both are on.")
+                Text("Outliners: only one thing is lit at a time. The open tab wears a flowing metal outline, and so does whatever you point at, and the closed notch when you point at it or a notification arrives (the look of the original prototype). Glass: every button becomes a pane of frosted glass that lights up when you point at it and dips when you click it. Glass wins on buttons if both are on.")
             }
             Section {
                 Picker("Settings window", selection: $windowMode) {
