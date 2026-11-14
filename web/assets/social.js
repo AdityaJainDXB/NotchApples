@@ -21,7 +21,9 @@
     w.style.bottom = document.getElementById('toTop') ? 'max(72px,calc(env(safe-area-inset-bottom) + 60px))' : 'max(16px,env(safe-area-inset-bottom))';
     w.innerHTML = '<div class="na-ig-m" id="na-ig-m" hidden>' +
       '<a href="' + PROFILE + '" target="_blank" rel="noopener">Open our profile<small>@notchapples on Instagram</small></a>' +
-      '<a href="' + DM + '" target="_blank" rel="noopener">Send us a message<small>Opens a direct message</small></a></div>' +
+      '<a href="' + DM + '" target="_blank" rel="noopener">Send us a message<small>Opens a direct message</small></a>' +
+      '<a href="https://www.youtube.com/@Theultimatenotch" target="_blank" rel="noopener">YouTube<small>@Theultimatenotch</small></a>' +
+      '<a href="https://x.com/Notchapplessupp" target="_blank" rel="noopener">X<small>@Notchapplessupp</small></a></div>' +
       '<button type="button" class="na-ig-b" aria-haspopup="true" aria-expanded="false" aria-controls="na-ig-m" aria-label="Notch Apple on Instagram">' +
       '<span aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg></span><span class="na-ig-t">Instagram</span></button>';
     document.body.appendChild(w);
