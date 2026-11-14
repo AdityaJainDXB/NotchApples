@@ -103,11 +103,12 @@ final class NotchTriggerView: NSView {
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
     }
     private var rimHost: PassThroughHost?
+    private var rimUntil = Date.distantPast
     /// A faint flowing-metal sheen inside the closed notch while it is hovered, so the whole pill is alive.
     private var sheenHost: PassThroughHost?
 
     private func updateMetalRim() {
-        let on = (isHovered || LiquidMetalSetting.outlinesOn || activity != nil) && (LiquidMetalSetting.isOn || LiquidMetalSetting.outlinesOn) && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        let on = (isHovered || Date() < rimUntil) && (LiquidMetalSetting.isOn || LiquidMetalSetting.outlinesOn) && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if on, rimHost == nil {
             let rim = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 3, veil: false))
             let sheen = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 0, veil: false))
@@ -139,7 +140,7 @@ final class NotchTriggerView: NSView {
             NSAnimationContext.runAnimationGroup { $0.duration = 0.18; rim.animator().alphaValue = 1; sheen.animator().alphaValue = 0.2 }
         } else {
             NSAnimationContext.runAnimationGroup({ $0.duration = 0.18; rim.animator().alphaValue = 0; sheen.animator().alphaValue = 0 }, completionHandler: { [weak self] in
-                guard let self, !self.isHovered, !LiquidMetalSetting.outlinesOn, self.activity == nil else { return }
+                guard let self, !self.isHovered, Date() >= self.rimUntil else { return }
                 self.rimHost?.removeFromSuperview(); self.rimHost = nil
                 self.sheenHost?.removeFromSuperview(); self.sheenHost = nil
             })
@@ -168,7 +169,15 @@ final class NotchTriggerView: NSView {
     /// What to show beside the closed notch (charging, focus timer, unread dot, volume/brightness HUD).
     var activity: LiveActivity? {
         didSet {
-            if oldValue != activity { startTicker(); updateMetalRim() }
+            if oldValue != activity {
+                startTicker()
+                // A new activity (a notification, a flash) lights the rim for a few seconds; a steady one (music, a dot) does not keep it on.
+                if activity != nil, LiquidMetalSetting.isOn || LiquidMetalSetting.outlinesOn {
+                    rimUntil = Date().addingTimeInterval(4)
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 4.1) { [weak self] in self?.updateMetalRim() }
+                }
+                updateMetalRim()
+            }
             updateBarsTimer()
         }
     }

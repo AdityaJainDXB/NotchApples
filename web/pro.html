@@ -197,7 +197,7 @@ footer{border-top:1px solid var(--line);padding:30px 0 44px;color:var(--dim);fon
         <li>Audio, Voice Notes, Screen Time, Launcher, Snippets, Mirror, Focus, sync</li>
       </ul>
       <button class="btn" data-buy="pro" id="proBtn">Get Pro, $5</button>
-      <p class="muted whop-pay" style="font-size:13px;margin:8px 0 0;text-align:center"><a href="https://whop.com/checkout/ch_592NS3uitgEidbE/" target="_blank" rel="noopener" style="text-decoration:underline" data-whop-usd="https://whop.com/checkout/ch_592NS3uitgEidbE/" data-whop-aed="https://whop.com/checkout/plan_ebtYN1VAJeNt8">Or pay Pro ($5) on Whop</a> (card, Apple Pay, Google Pay). Your key is emailed to you.</p>
+      <p class="muted whop-pay" style="font-size:13px;margin:8px 0 0;text-align:center"><a href="https://whop.com/checkout/ch_592NS3uitgEidbE/" target="_blank" rel="noopener" style="text-decoration:underline" data-whop-usd="https://whop.com/checkout/ch_592NS3uitgEidbE/" data-whop-aed="https://whop.com/checkout/plan_ebtYN1VAJeNt8">Or pay Pro ($5.46) on Whop</a> (card, Apple Pay, Google Pay). Your key is emailed to you.</p>
     </div>
     <div class="plan best">
       <span class="badge">Best value</span>
@@ -544,7 +544,7 @@ function applyRegion(rg) {
   const sym = CUR === 'AED' ? 'AED ' : '$', m = (v) => (Number.isInteger(+v) ? String(v) : (+v).toFixed(2));
   $('#uaeBanner').hidden = CUR !== 'AED';
   // Whop has a USD plan and a UAE plan priced in AED: each visitor gets the one for their region.
-  document.querySelectorAll('.whop-pay a').forEach((e) => { const aed = CUR === 'AED'; e.href = aed ? e.dataset.whopAed : e.dataset.whopUsd; e.textContent = e.textContent.replace(/\((\$|AED )[^)]*\)/, aed ? (e.dataset.whopAed.endsWith('ebtYN1VAJeNt8') ? '(AED 4.40)' : '(AED 18)') : (e.dataset.whopUsd.includes('592NS') ? '($5)' : '($15)')); });
+  document.querySelectorAll('.whop-pay a').forEach((e) => { const aed = CUR === 'AED'; e.href = aed ? e.dataset.whopAed : e.dataset.whopUsd; e.textContent = e.textContent.replace(/\((\$|AED )[^)]*\)/, aed ? (e.dataset.whopAed.endsWith('ebtYN1VAJeNt8') ? '(AED 5.66)' : '(AED 19.67)') : (e.dataset.whopUsd.includes('592NS') ? '($5.46)' : '($15)')); });
   if (CUR === 'AED') $('#uaeBanner').innerHTML = `<b>UAE price</b> · a discount for all customers in the UAE: Pro AED ${m(aedP.pro)}, Ultimate AED ${m(aedP.ultimate)}`;
   document.querySelectorAll('[data-price]').forEach(e => { const v = e.dataset.price === 'free' ? 0 : m(aedP[e.dataset.price]); e.innerHTML = e.classList.contains('pr') && e.dataset.price !== 'free' ? `${sym}${v}<small>once</small>` : `${sym}${v}` });
   $('#proBtn').textContent = `Get Pro, ${sym}${m(aedP.pro)}`; $('#ultBtn').textContent = `Get Ultimate, ${sym}${m(aedP.ultimate)}`;
