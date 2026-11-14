@@ -127,6 +127,13 @@ final class PrivateGames: ObservableObject {
 
     /// Opens the game in its own window. Every few days the code is checked again first (and a newer game version is fetched).
     func open(_ id: String = PrivateGames.flightEconomy) async throws {
+        let (url, title) = try await prepare(id)
+        PrivateGameWindow.show(id: id, file: url, title: title)
+    }
+
+    /// Makes the game ready (unlocks it, re-checks the code, fetches a newer version) and returns the saved page and the game's name.
+    /// The notch shows it in its own panel; `open` puts it in a window.
+    func prepare(_ id: String = PrivateGames.flightEconomy) async throws -> (URL, String) {
         if state(id) == nil { try await unlockWithLicense(id) }
         guard var st = state(id) else { throw Failure.message("Enter your access code first.") }
         if Date().timeIntervalSince(st.checked) > recheck {
@@ -156,7 +163,7 @@ final class PrivateGames: ObservableObject {
             lock(id)
             throw Failure.message("The game isn't saved on this Mac any more. Enter your access code again.")
         }
-        PrivateGameWindow.show(id: id, file: url, title: st.name)
+        return (url, st.name)
     }
 }
 
@@ -165,7 +172,7 @@ final class PrivateGames: ObservableObject {
 final class PrivateGameWindow: NSObject, NSWindowDelegate {
     private static var windows: [String: PrivateGameWindow] = [:]
     /// The game checks a public GitHub file for newer versions; inside Notch Apple it never talks to GitHub (the server sends updates).
-    private static let noUpdateCheck = "(function(){var f=window.fetch;window.fetch=function(u){if(String(u).indexOf('raw.githubusercontent.com')>=0){return Promise.reject(new Error('offline'))}return f.apply(this,arguments)}})();"
+    static let noUpdateCheck = "(function(){var f=window.fetch;window.fetch=function(u){if(String(u).indexOf('raw.githubusercontent.com')>=0){return Promise.reject(new Error('offline'))}return f.apply(this,arguments)}})();"
 
     private let id: String
     private let window: NSWindow
@@ -201,4 +208,20 @@ final class PrivateGameWindow: NSObject, NSWindowDelegate {
     }
 
     func windowWillClose(_ notification: Notification) { Self.windows[id] = nil }
+}
+
+/// The game inside the notch: the same page as the window, in a web view that fills the panel (zoomed out a little so more of the game
+/// fits). It has no way into the app. The Pop out button opens the same game in its own window.
+struct PrivateGameNotchView: NSViewRepresentable {
+    let file: URL
+    func makeNSView(context: Context) -> WKWebView {
+        let config = WKWebViewConfiguration()
+        config.userContentController.addUserScript(WKUserScript(source: PrivateGameWindow.noUpdateCheck, injectionTime: .atDocumentStart, forMainFrameOnly: false))
+        let web = WKWebView(frame: .zero, configuration: config)
+        web.pageZoom = 0.72
+        web.setValue(false, forKey: "drawsBackground")
+        web.loadFileURL(file, allowingReadAccessTo: file.deletingLastPathComponent())
+        return web
+    }
+    func updateNSView(_ web: WKWebView, context: Context) {}
 }
