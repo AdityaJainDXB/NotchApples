@@ -858,6 +858,7 @@
   let WET = 0;          // how wet the track is now, 0 dry to 1 soaked (set by the race; read by the tyres)
   /// The grip a car's tyres have on this track surface right now (a puncture takes most of it away).
   const tyreGrip = (c) => {
+    if (c.f1) return c.f1.mods.gripK * (c.puncture ? 0.55 : 1);      // F1 Weekend: the f1/tyres module has already included the compound, temperatures, wear and wetness
     const t = TYRES[c.tyre] || TYRES.M, w = WET;
     const k = !t.rain ? t.grip * (1 - 0.55 * w) : t.rain === 1 ? t.grip * (1 + 0.12 * w - 0.25 * Math.max(0, w - 0.65)) : t.grip * (1 + 0.16 * w);
     return k * (c.puncture ? 0.55 : 1) * tyreTempK(c);
@@ -967,8 +968,11 @@
 
   /// One physics step. `inp` is { throttle 0..1, brake 0..1, steer -1..1 (+ is right), hand 0/1 }. `surf` is 1 on the road, less on grass.
   function stepCar(c, inp, dt, surf = 1, slope = 0, curv = 0, bankK = 1) {
+    // An F1-simulated car (c.f1, the F1 Weekend mode) takes its power, top speed, grip, downforce, balance and damage from the f1/ modules instead.
+    const f1m = c.f1 ? c.f1.mods : null;
     const sp0 = c.spec, dmgK = 1 - 0.4 * c.dmg;        // a damaged car is slower, and its steering pulls to one side
-    let sp = c.dmg > 0 ? { ...sp0, vmax: sp0.vmax * dmgK, accel: sp0.accel * (1 - 0.3 * c.dmg), grip: sp0.grip * (1 - 0.3 * c.dmg) } : sp0;
+    let sp = c.dmg > 0 && !f1m ? { ...sp0, vmax: sp0.vmax * dmgK, accel: sp0.accel * (1 - 0.3 * c.dmg), grip: sp0.grip * (1 - 0.3 * c.dmg) } : sp0;
+    if (f1m) sp = { ...sp, vmax: sp.vmax * f1m.vmaxK, accel: sp.accel * f1m.accelK };
     // Boost (the battery) and DRS (the open rear wing): more power and less drag. A puncture or a dead engine takes it away.
     if (c.vmaxK || c.accelAdd || c.puncture || c.engineDead) sp = { ...sp, vmax: sp.vmax * (c.vmaxK || 1) * (c.puncture ? 0.72 : 1), accel: c.engineDead ? 0 : sp.accel + (c.accelAdd || 0) };
     let fx = Math.cos(c.h), fy = Math.sin(c.h);
@@ -985,19 +989,20 @@
     c.vx += fx * a * dt; c.vy += fy * a * dt;
     // Steering: the wheel angle fades with speed. The tyres can only hold so much sideways push, which is what makes
     // the car run wide when you ask too much, and slide when the back lets go (a loose car under power, or the handbrake).
-    const target = clamp(clamp(inp.steer, -1, 1) + c.pull * (c.dmg * 1.8 + (c.puncture ? 1.2 : 0)), -1, 1) * sp.steer / (1 + (vf0 / 26) * (vf0 / 26));
+    const target = clamp(clamp(inp.steer, -1, 1) + c.pull * (c.dmg * 1.8 + (c.puncture ? 1.2 : 0)) + (f1m ? f1m.pull : 0), -1, 1) * sp.steer / (1 + (vf0 / 26) * (vf0 / 26));
     c.steerA += (target - c.steerA) * (1 - Math.exp(-dt * 9));
     const wd = vf0 * Math.tan(c.steerA) / WHEELBASE;
     const power = inp.throttle * Math.abs(c.steerA) / sp.steer;
-    let grip = sp.grip * tyreGrip(c) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - sp.loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1)) * clamp(1 + 0.8 * (vf0 * vf0 * curv) / 9.8, 0.35, 1.9) * clamp(bankK, 0.5, 3);      // pressed into a dip (more grip), light over a crest (less)
+    const loose = sp.loose + (f1m ? 0.45 * f1m.snap : 0);        // a blistered rear snaps loose
+    let grip = sp.grip * tyreGrip(c) * (f1m ? 1 : 1 - 0.32 * clamp(c.wear || 0, 0, 1)) * surf * (f1m ? f1m.downK : 1 + (sp.down || 0) * (vf0 * vf0) / (sp.vmax * sp.vmax)) * (1 - loose * 0.5 * power * clamp(Math.abs(vf0) / 30, 0, 1)) * clamp(1 + 0.8 * (vf0 * vf0 * curv) / 9.8, 0.35, 1.9) * clamp(bankK, 0.5, 3);      // pressed into a dip (more grip), light over a crest (less)
     let w;
     const slip = c.vl / Math.max(Math.abs(c.vf), 5);        // how far sideways the car is travelling (last step)
     if (inp.hand) { w = clamp(wd * 1.25, -2, 2); grip *= 0.3; }
-    else { const wMax = grip / Math.max(Math.abs(vf0), 6), lim = wMax * (1.2 + 1.5 * sp.loose * power); w = clamp(wd, -lim, lim); }
+    else { const wMax = grip / Math.max(Math.abs(vf0), 6), lim = wMax * (1.2 + 1.5 * loose * power) * (f1m ? 1 - f1m.understeer : 1); w = clamp(wd, -lim, lim); }
     // Turning further into a slide is held back (the car does not spin), and with the wheel and the handbrake let go the
     // car straightens itself out along the way it is travelling.
     if (w * slip < 0 && Math.abs(slip) > 0.45) w *= clamp(1 - (Math.abs(slip) - 0.45) / 0.45, 0, 1);
-    if (!inp.hand && Math.abs(vf0) > 8) w += clamp(slip, -0.6, 0.6) * 2.5 * (1 - 0.6 * sp.loose);
+    if (!inp.hand && Math.abs(vf0) > 8) w += clamp(slip, -0.6, 0.6) * 2.5 * (1 - 0.6 * loose);
     c.yaw = w + c.spin;
     c.h += (w + c.spin) * dt;
     c.spin *= Math.exp(-dt * 2.6);        // a spin from a knock dies away as the tyres bite
@@ -1020,6 +1025,7 @@
     c.hit = Math.max(0, c.hit - dt * 3);
     gearbox(c, dt, inp.throttle);
     thermal(c, inp, dt);
+    if (f1m && f1m.surface.length) { c.t0 = f1m.surface[0]; c.t1 = f1m.surface[1]; c.t2 = f1m.surface[2]; c.t3 = f1m.surface[3]; }      // the tyre rings show the simulated surface temperatures
     return c;
   }
 
@@ -1050,8 +1056,8 @@
     // Corner speed: the slowest the road ahead lets it go at what the tyres hold.
     // The fastest each bend allows: the tyres hold up to grip x (1 + downforce x (v / vmax)^2) sideways, and the driver uses
     // `corner` of that (the car can turn at up to 1.2 x grip before it slides). Worn tyres and damage are allowed for.
-    let vt = c.spec.vmax * st.skill;
-    const sp = c.spec, g0 = sp.grip * tyreGrip(c) * 1.2 * (st.corner ?? 0.88) * (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * (1 - 0.15 * c.dmg), dn = (sp.down || 0) / (sp.vmax * sp.vmax);
+    let vt = c.spec.vmax * st.skill * (c.f1 ? c.f1.mods.vmaxK : 1);
+    const sp = c.spec, g0 = sp.grip * tyreGrip(c) * 1.2 * (st.corner ?? 0.88) * (c.f1 ? 1 : (1 - 0.32 * clamp(c.wear || 0, 0, 1)) * (1 - 0.15 * c.dmg)), dn = c.f1 ? Math.max(0, c.f1.mods.downK - 1) / Math.max(400, speed * speed) : (sp.down || 0) / (sp.vmax * sp.vmax);      // an F1 car knows the downforce it really has (damage included)
     const dec = sp.brake * (st.brakes ?? 0.8) * (st.tr ? 0.85 : 1);        // in traffic, a little earlier on the brakes
     for (let d = 0; d <= 30 + speed * speed / (2 * dec); d += T.step * 2) {
       const sa = ahead(d), k = Math.abs(sa.k) * 0.85, gb = g0;      // the racing line opens the bend out a little; a bank adds to what the tyres hold, below

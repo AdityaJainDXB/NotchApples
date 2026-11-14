@@ -1,6 +1,6 @@
 # PLAN: full F1 simulation on top of the existing Racing game
 
-Status: **audit done, plan proposed, no game code changed. Waiting for confirmation of Phase 1.**
+Status: **confirmed by the owner (all four phases, F1-only opt-in, own numbers, spec tyre windows and track limits, no R&D / cost cap). Phase 1 modules done and tested; Phases 2 to 4 and the game integration in progress.**
 Branch for the work: `main-fxaehg`. Mac and Windows share one version (docs/VERSIONING.md); each phase would be its own PR and release.
 
 ## 1. What the audit found
@@ -67,18 +67,18 @@ for multipliers when the F1 model is on; `raceCtl` becomes a view over `racecont
 ## 3. Phases (each is a PR with tests green and a release)
 
 ### Phase 1: core physics, aero, power unit, tyres, damage
-- [ ] `era.js`: `RegulationEra` config + a menu toggle (default 2025), saved with the other settings
-- [ ] `aero.js`: ρ from altitude/temperature (add per-track altitude to the real-circuit data: Mexico City, São Paulo, Spa… where known), quadratic downforce and drag,
+- [x] `era.js`: `RegulationEra` config + a menu toggle (default 2025), saved with the other settings
+- [x] `aero.js`: ρ from altitude/temperature (add per-track altitude to the real-circuit data: Mexico City, São Paulo, Spa… where known), quadratic downforce and drag,
       ground-effect downforce rising as ride height falls, aerodynamic stall below the critical height at speed, porpoising oscillation, dirty air −15..35 % front
       downforce within 1.5 s (gap taken from the existing position data), front tyre surface heating while following
-- [ ] 2025 DRS (zone + < 1.0 s at the detection point, flap open) and 2026 Z/X mode on designated straights regardless of gap; zone data per track
-- [ ] `powerunit.js`: ICE ~400 kW + MGU-K ~350 kW (2026) vs the 2025 split; SoC in MJ; harvesting incl. lift-and-coast and super clipping; 8.5 MJ/lap cap; Overtake Mode above 290 km/h within 1.0 s
-- [ ] `tyres.js`: two-zone temperatures, windows Soft 90–110 / Medium 100–120 / Hard 110–135 °C, graining below the window, blistering + snap oversteer when the surface overheats,
+- [x] 2025 DRS (zone + < 1.0 s at the detection point, flap open) and 2026 Z/X mode on designated straights regardless of gap; zone data per track
+- [x] `powerunit.js`: ICE ~400 kW + MGU-K ~350 kW (2026) vs the 2025 split; SoC in MJ; harvesting incl. lift-and-coast and super clipping; 8.5 MJ/lap cap; Overtake Mode above 290 km/h within 1.0 s
+- [x] `tyres.js`: two-zone temperatures, windows Soft 90–110 / Medium 100–120 / Hard 110–135 °C, graining below the window, blistering + snap oversteer when the surface overheats,
       wear curve with a cliff below 30 % life; Inter/Wet keep their own windows
-- [ ] `damage.js`: front-wing endplate breakaway, floor edge (downforce loss), sidepod blockage (engine temperature), terminal suspension failure
-- [ ] Tests: downforce/drag scale with v² and with ρ; ride-height curve and stall threshold; porpoising only below threshold at speed; dirty-air loss within 15–35 % and zero beyond 1.5 s;
+- [x] `damage.js`: front-wing endplate breakaway, floor edge (downforce loss), sidepod blockage (engine temperature), terminal suspension failure
+- [x] Tests: downforce/drag scale with v² and with ρ; ride-height curve and stall threshold; porpoising only below threshold at speed; dirty-air loss within 15–35 % and zero beyond 1.5 s;
       SoC conservation (never below 0 or above the cap, harvest ≤ 8.5 MJ/lap); tyre grip curve with the cliff; damage effects; determinism (same inputs, same outputs at 60 and 120 Hz)
-- [ ] Integration: `stepCar` uses the multipliers for the F1 car only; existing 6 cars and 51 tests unchanged
+- [x] Integration: `stepCar` / `tyreGrip` / the computer driver use the multipliers when a car has `c.f1` (set only in the F1 Weekend mode); the other cars and the 51 existing tests are unchanged. `f1/sim.js` joins the modules per car. (Wiring the sim into the race loop: with the F1 Weekend mode, below.)
 
 ### Phase 2: race control state machine
 - [ ] Extract `racecontrol.js`: states `GREEN, YELLOW_SINGLE, YELLOW_DOUBLE` (per mini-sector), `VSC, SAFETY_CAR, RED_FLAG, CHEQUERED`, plus driver flags `BLUE, BLACK_AND_ORANGE, BLACK_AND_WHITE, BLACK`
