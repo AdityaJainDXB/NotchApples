@@ -13,7 +13,7 @@ packages:
 settings:
   base:
     SWIFT_VERSION: "5.0"
-    MARKETING_VERSION: "2.2.70"
+    MARKETING_VERSION: "2.2.71"
     CURRENT_PROJECT_VERSION: "248"
     CODE_SIGN_IDENTITY: "-"
     CODE_SIGN_STYLE: Manual
@@ -40,6 +40,10 @@ targets:
         buildPhase: resources
       # The Racing game's engine is shared with the Windows app too.
       - path: NotchWindows/src/js/games/racing.js
+        buildPhase: resources
+      # The F1 Weekend simulation of the Racing game (era, aero, power unit, tyres, damage, race control, stewards, weekend rules, track evolution, strategy, MFD): shared with the Windows app.
+      - path: NotchWindows/src/js/games/f1
+        type: folder
         buildPhase: resources
       # Capture the Flag (ctf.js and its rules) is shared with the Windows app too.
       - path: NotchWindows/src/js/games/ctf-logic.js
@@ -170,6 +174,7 @@ targets:
       - NotchApple/Core/NotchAIOfficeReader.swift
       - NotchApple/Core/NotchAIDocumentLogic.swift
       - NotchApple/Core/NotchAIOAuth.swift
+      - NotchApple/Core/DesktopWidgetLogic.swift
       - NotchApple/Core/NotchAIConnectorCatalog.swift
       - NotchApple/Core/NotchAIDiagramLogic.swift
       - NotchApple/Core/NotchAIDrawingLogic.swift

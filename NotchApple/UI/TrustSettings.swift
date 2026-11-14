@@ -430,7 +430,7 @@ struct ReportSettings: View {
                 HStack {
                     Text("\(text.count)/\(ReportLogic.maxDescription)").font(.caption).foregroundStyle(.secondary).monospacedDigit()
                     Spacer()
-                    Button("Open on GitHub…") { send() }.buttonStyle(.borderedProminent).disabled(!ReportLogic.isReady(text))
+                    Button("Open on GitHub…") { send() }.buttonStyle(.borderedProminent).metalHover().disabled(!ReportLogic.isReady(text))
                 }
             } header: {
                 Text("Report a problem or an idea")

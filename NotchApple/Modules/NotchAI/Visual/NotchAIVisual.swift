@@ -266,7 +266,7 @@ struct NotchAIVisualView: View {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 2) {
                                 ForEach(visual.fileParts, id: \.self) { name in
-                                    Button(name) { visual.selectedFilePart = name }.buttonStyle(.plain)
+                                    Button(name) { visual.selectedFilePart = name }.buttonStyle(MetalPlainStyle())
                                         .font(.system(size: 10)).foregroundStyle(visual.selectedFilePart == name ? NotchAIView.green : Theme.textSecondary)
                                 }
                             }.frame(maxWidth: .infinity, alignment: .leading)
@@ -350,7 +350,7 @@ struct DiagramView: View {
                                 .background(fill(n.kind), in: shape(n.kind))
                                 .overlay(shape(n.kind).stroke(selected == n.id ? NotchAIView.green : Color.white.opacity(0.25), lineWidth: selected == n.id ? 2 : 1))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(MetalPlainStyle())
                         .position(c)
                     }
                 }

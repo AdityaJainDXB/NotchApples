@@ -285,10 +285,22 @@ struct AppearanceSettings: View {
     private let manager = ThemeManager.shared
     @ObservedObject private var entitlements = Entitlements.shared
     @AppStorage("appearance.settingsWindow") private var windowMode = "system"
+    @AppStorage("appearance.liquidMetal") private var liquidMetal = false
+    @AppStorage("appearance.liquidMetalColour") private var liquidMetalColour = 0
 
     var body: some View {
         let current = manager.currentTheme
         Form {
+            Section {
+                Toggle("Liquid metal (recommended)", isOn: $liquidMetal)
+                if liquidMetal {
+                    Picker("Liquid metal colour", selection: $liquidMetalColour) {
+                        Text("Theme colour").tag(0); Text("Purple").tag(3); Text("Rainbow").tag(1); Text("Gold").tag(2)
+                    }.pickerStyle(.segmented)
+                }
+            } footer: {
+                Text("Recommended. A flowing liquid-metal look for the open tab, the closed notch, and every button when you point at it or click it. It uses the graphics chip a little and holds still with Reduce Motion.")
+            }
             Section {
                 Picker("Settings window", selection: $windowMode) {
                     Text("System").tag("system"); Text("Light").tag("light"); Text("Dark").tag("dark")
@@ -419,7 +431,7 @@ private struct ThemeSwatchCard: View {
                 .fill(isSelected ? theme.primaryAccent.opacity(0.18) : Color.clear))
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .help(locked ? "Pro theme. \(Feature.proThemes.benefit)" : theme.name)
         .accessibilityLabel(locked ? "\(theme.name), needs Pro" : theme.name)
         .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)

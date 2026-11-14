@@ -165,7 +165,7 @@ struct NotesView: View {
                             HStack(spacing: 4) {
                                 ForEach(allTags, id: \.self) { t in
                                     Button("#\(t)") { tag = tag == t ? nil : t }
-                                        .buttonStyle(.plain).font(.system(size: 10, weight: .semibold))
+                                        .buttonStyle(MetalPlainStyle()).font(.system(size: 10, weight: .semibold))
                                         .padding(.horizontal, 6).padding(.vertical, 2)
                                         .background(Capsule().fill(tag == t ? Theme.accent : Theme.surface))
                                         .foregroundStyle(.white)

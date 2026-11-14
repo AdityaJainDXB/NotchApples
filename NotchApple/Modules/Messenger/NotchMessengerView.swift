@@ -69,7 +69,7 @@ struct NotchMessengerView: View {
                 .foregroundStyle(on ? Theme.onAccent : Theme.textPrimary)
                 .background(on ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Color.clear), in: Capsule())
         }
-        .buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
+        .buttonStyle(MetalPlainStyle()).accessibilityAddTraits(on ? .isSelected : [])
     }
 
     private var header: some View {
@@ -225,12 +225,12 @@ struct NotchMessengerView: View {
             Button { selectFile() } label: {
                 Image(systemName: "paperclip").font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle())
             }
-            .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Attach file")
+            .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).help("Attach file")
             ForEach(Self.emoji, id: \.self) { e in
                 Button { draft += e } label: {
                     Text(e).font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle())
                 }
-                .buttonStyle(.plain).help("Insert \(e)")
+                .buttonStyle(MetalPlainStyle()).help("Insert \(e)")
             }
             TextField(canSend ? "Message" : (mode == .nearby ? "Waiting for someone nearby…" : "Join a room to chat"),
                       text: $draft)
@@ -288,7 +288,7 @@ private struct MessengerBubble: View {
                                     .padding(.horizontal, 8).padding(.vertical, 4)
                                     .background(Theme.accent.opacity(0.5), in: Capsule())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(MetalPlainStyle())
                         }
                         if !message.text.isEmpty {
                             Text(message.text)
@@ -453,7 +453,7 @@ struct TicTacToeCard: View {
                 .background(win ? AnyShapeStyle(Theme.accentGradient) : AnyShapeStyle(Theme.surfaceHover),
                             in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .disabled(!TicTacToe.canMove(game, id: myID, cell: i))
         .accessibilityLabel("Cell \(i + 1)" + (mark.map { ", \($0.rawValue)" } ?? ""))
     }

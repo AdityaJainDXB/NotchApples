@@ -74,7 +74,7 @@ private struct CodeBlock: View {
                     copied = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { copied = false }
                 }
-                .buttonStyle(.plain).font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                .buttonStyle(MetalPlainStyle()).font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
                 .accessibilityLabel("Copy code")
             }
             .padding(.horizontal, 10).padding(.vertical, 5)

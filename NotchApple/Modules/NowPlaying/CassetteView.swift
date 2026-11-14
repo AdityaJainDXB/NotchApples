@@ -80,6 +80,6 @@ struct CassetteView: View {
                 .frame(width: big ? 28 : 22, height: big ? 28 : 22)
                 .background(Circle().fill(Color(white: big ? 0.5 : 0.38)))
         }
-        .buttonStyle(.plain).help(label).accessibilityLabel(label)
+        .buttonStyle(MetalPlainStyle()).help(label).accessibilityLabel(label)
     }
 }

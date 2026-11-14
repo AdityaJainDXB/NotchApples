@@ -73,7 +73,7 @@ private struct UndoCountdownButton: View {
                         .mask(alignment: .leading) { GeometryReader { g in Rectangle().frame(width: g.size.width * left) } }
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .id(id)
         .onAppear { left = 1; withAnimation(reduceMotion ? nil : .linear(duration: UndoCenter.duration)) { left = 0 } }
     }

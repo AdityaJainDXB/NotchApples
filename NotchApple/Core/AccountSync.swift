@@ -494,7 +494,7 @@ struct SignInButtons: View {
                 .foregroundStyle(.black)
                 .background(.white, in: RoundedRectangle(cornerRadius: 8))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             Button { account.signInWithApple() } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "apple.logo").font(.system(size: 14, weight: .semibold))
@@ -505,7 +505,7 @@ struct SignInButtons: View {
                 .background(.black, in: RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.white.opacity(0.25)))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             if account.busy { ProgressView().controlSize(.small) }
         }
         .padding(.vertical, 4)

@@ -54,7 +54,7 @@ struct GamesMenuView: View {
                 Button { soundOn.toggle() } label: {
                     Image(systemName: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill").font(.system(size: 12)).foregroundStyle(Theme.textSecondary)
                 }
-                .buttonStyle(.plain).help("Game sound")
+                .buttonStyle(MetalPlainStyle()).help("Game sound")
             }
             if let notice { Text(notice).font(.system(size: 11)).foregroundStyle(Color(hex: "#ff8a9a")) }
             ScrollView(.vertical, showsIndicators: false) {
@@ -94,11 +94,11 @@ struct GamesMenuView: View {
                 Text(c.name).font(.system(size: 12, weight: .semibold))
                 Text("\(n)").font(.system(size: 10.5)).opacity(0.55)
             }
-            .foregroundStyle(on ? Color(hex: "#14121c") : Color.white.opacity(0.78))
+            .foregroundStyle(on ? LiquidMetalSetting.selectedText : Color.white.opacity(0.78))
             .padding(.horizontal, 11).padding(.vertical, 5)
-            .background(Capsule().fill(on ? Color.white : Color.white.opacity(0.07)))
+            .background(ChoiceCapsule(on: on))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
     }
 
     private func recentCard(_ g: GamesCatalog.Entry) -> some View {
@@ -114,7 +114,7 @@ struct GamesMenuView: View {
             .padding(.horizontal, 10).padding(.vertical, 8)
             .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(Color.white.opacity(0.06)))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
     }
 
     private func art(_ g: GamesCatalog.Entry) -> some View {
@@ -122,7 +122,7 @@ struct GamesMenuView: View {
     }
 
     private func card(_ g: GamesCatalog.Entry) -> some View {
-        let locked = g.locked && !access.isUnlocked()
+        let locked = g.locked && !access.isUnlocked() && Entitlements.shared.tier != .ultimate   // an Ultimate key opens it without a code
         let hover = hovered == g.id
         return Button { launch(g) } label: {
             VStack(spacing: 0) {
@@ -136,8 +136,9 @@ struct GamesMenuView: View {
                     }
                     if hover {
                         Color.black.opacity(0.5)
-                        Text(locked ? "Enter code" : "Play").font(.system(size: 12, weight: .bold)).foregroundStyle(Color(hex: "#14121c"))
-                            .padding(.horizontal, 14).padding(.vertical, 4).background(Capsule().fill(locked ? Color(hex: "#cdbfff") : Color.white))
+                        Text(locked ? "Enter code" : "Play").font(.system(size: 12, weight: .bold)).foregroundStyle(LiquidMetalSetting.isOn ? Color.white : Color(hex: "#14121c"))
+                            .padding(.horizontal, 14).padding(.vertical, 4)
+                            .background { if LiquidMetalSetting.isOn { LiquidMetalCapsule(hover: true, mode: 1) } else { Capsule().fill(locked ? Color(hex: "#cdbfff") : Color.white) } }
                     }
                 }
                 .frame(height: 64).saturation(locked ? 0.55 : 1).clipped()
@@ -153,7 +154,7 @@ struct GamesMenuView: View {
             .offset(y: hover ? -3 : 0)
             .shadow(color: .black.opacity(hover ? 0.5 : 0), radius: 10, y: 6)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .onHover { inside in
             if inside { hovered = g.id } else if hovered == g.id { hovered = nil }
         }
@@ -183,7 +184,7 @@ struct GamesMenuView: View {
     private func launch(_ g: GamesCatalog.Entry) {
         notice = nil
         if g.locked {
-            if access.isUnlocked() { launchPrivate() } else { codeFor = g }
+            if access.isUnlocked() || Entitlements.shared.tier == .ultimate { launchPrivate() } else { codeFor = g }   // an Ultimate key needs no code (open() unlocks it with the key)
         } else if let game = GamesView.Game(menuID: g.id) {
             open(game)
         }
@@ -224,7 +225,7 @@ private struct GameCodeDialog: View {
                     .onChange(of: code) { _, v in let p = GameCode.pretty(v); if p != v { code = p } }
                 Text(message).font(.system(size: 12)).foregroundStyle(good ? Color(hex: "#6ee7a8") : Color(hex: "#ff8a9a")).frame(minHeight: 16).multilineTextAlignment(.center)
                 HStack {
-                    Button("Cancel") { close() }.buttonStyle(.plain).foregroundStyle(Theme.textSecondary).font(.system(size: 12))
+                    Button("Cancel") { close() }.buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).font(.system(size: 12))
                     Spacer()
                     Button(busy ? "Checking…" : "Unlock") { go() }.buttonStyle(PurpleButtonStyle()).disabled(busy)
                 }

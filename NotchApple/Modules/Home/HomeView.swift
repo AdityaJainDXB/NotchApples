@@ -195,7 +195,7 @@ private struct WidgetCard: View {
                         UndoCenter.shared.offer("Widget removed") { layout.widgets = before }
                     } label: { Image(systemName: "minus.circle.fill").foregroundStyle(.red) }
                 }
-                .buttonStyle(.plain).font(.system(size: 11)).padding(4)
+                .buttonStyle(MetalPlainStyle()).font(.system(size: 11)).padding(4)
                 .background(.black.opacity(0.5), in: Capsule()).padding(4)
             }
         }
@@ -241,7 +241,7 @@ private struct WidgetCard: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(t.title).font(.system(size: 13, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
                         Text(t.artist).font(.system(size: 11)).foregroundStyle(Theme.textSecondary).lineLimit(1)
-                        Button { MediaControl.send(.playPause) } label: { Image(systemName: t.isPlaying ? "pause.fill" : "play.fill") }.buttonStyle(.plain).hitTarget().foregroundStyle(.white)
+                        Button { MediaControl.send(.playPause) } label: { Image(systemName: t.isPlaying ? "pause.fill" : "play.fill") }.buttonStyle(MetalPlainStyle()).hitTarget().foregroundStyle(.white)
                     }
                 }
             } else { placeholder("Now Playing", "Nothing playing") }
@@ -250,7 +250,7 @@ private struct WidgetCard: View {
                 Text(timer.timerRunning ? FocusTimer.format(timer.remaining) : "Timer").font(.system(size: 22, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(.white)
                 HStack(spacing: 6) {
                     ForEach([5, 15, 25], id: \.self) { m in
-                        Button("\(m)m") { timer.startTimer(seconds: Double(m * 60)) }.buttonStyle(.plain)
+                        Button("\(m)m") { timer.startTimer(seconds: Double(m * 60)) }.buttonStyle(MetalPlainStyle())
                             .font(.system(size: 11, weight: .semibold)).foregroundStyle(Theme.accentBright)
                     }
                 }
@@ -261,7 +261,7 @@ private struct WidgetCard: View {
                 Text("\(open.count) to do").font(.system(size: 13, weight: .semibold)).foregroundStyle(.white)
                 ForEach(open.prefix(widget.size == .large ? 3 : 2)) { t in
                     Button { todos.toggle(t) } label: { Label(t.text, systemImage: "circle").lineLimit(1) }
-                        .buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
+                        .buttonStyle(MetalPlainStyle()).font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 }
             }
         case .markets:

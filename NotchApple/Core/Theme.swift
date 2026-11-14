@@ -127,6 +127,7 @@ struct PurpleButtonStyle: ButtonStyle {
         let prominent: Bool
         @State private var hovering = false
         @Environment(\.isEnabled) private var isEnabled
+        @AppStorage(LiquidMetalSetting.key) private var metal = false
 
         var body: some View {
             configuration.label
@@ -134,10 +135,15 @@ struct PurpleButtonStyle: ButtonStyle {
                 .foregroundStyle(.white)
                 .padding(.horizontal, 14)
                 .frame(minWidth: Theme.minTarget, minHeight: Theme.minTarget)
-                .background(
-                    Capsule().fill(prominent ? AnyShapeStyle(Theme.accentGradient)
-                                             : AnyShapeStyle(hovering ? Theme.surfaceHover : Theme.surface))
-                )
+                .background {
+                    // Liquid metal (Settings → Appearance): the call-to-action is metal, the quiet button turns to metal under the pointer.
+                    if metal && (prominent || hovering) {
+                        LiquidMetalCapsule(hover: hovering || configuration.isPressed, mode: prominent ? 1 : 0)
+                    } else {
+                        Capsule().fill(prominent ? AnyShapeStyle(Theme.accentGradient)
+                                                 : AnyShapeStyle(hovering ? Theme.surfaceHover : Theme.surface))
+                    }
+                }
                 .overlay(Capsule().fill(Color.white.opacity(prominent && hovering ? 0.12 : 0)))
                 .contentShape(Capsule())
                 .opacity(isEnabled ? (configuration.isPressed ? 0.75 : 1) : 0.4)
@@ -161,7 +167,10 @@ struct IconButton: View {
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(hovering ? .white : Theme.textSecondary)
                 .frame(width: Theme.minTarget, height: Theme.minTarget)
-                .background(Circle().fill(hovering ? Theme.surfaceHover : .clear))
+                .background {
+                    if LiquidMetalSetting.isOn && hovering { LiquidMetalCapsule(hover: true).clipShape(Circle()) }
+                    else { Circle().fill(hovering ? Theme.surfaceHover : .clear) }
+                }
                 .contentShape(Circle())
         }
         .buttonStyle(PressDepthStyle())

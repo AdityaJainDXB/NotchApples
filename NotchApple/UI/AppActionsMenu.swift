@@ -59,7 +59,7 @@ private struct ActionRow: View {
             .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(color.opacity(hovering ? 0.16 : 0)))
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .onHover { hovering = $0 }
     }
 }

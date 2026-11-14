@@ -79,7 +79,7 @@ struct BrowserView: View {
                     .accessibilityLabel("Address and search")
                 if !model.addressText.isEmpty && addressFocused {
                     Button { model.addressText = "" } label: { Image(systemName: "xmark.circle.fill") }
-                        .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).help("Clear")
+                        .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).help("Clear")
                 }
             }
             .padding(.horizontal, 10).frame(height: 30)
@@ -107,7 +107,7 @@ struct BrowserView: View {
                         .frame(width: 84, height: 62)
                         .background(Theme.surface, in: RoundedRectangle(cornerRadius: 12))
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(MetalPlainStyle())
                 }
             }
         }

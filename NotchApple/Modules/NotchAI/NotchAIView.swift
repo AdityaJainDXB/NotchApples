@@ -44,7 +44,7 @@ struct NotchAIView: View {
                         .padding(.horizontal, 6).padding(.vertical, 2).background(Color.orange.opacity(0.15), in: Capsule())
                         .help("The microphone is open: NotchAI is listening for the wake word on this Mac. Turn it off in Voice.")
                 }
-                Button { NotchAIWorkspaceWindow.open() } label: { Image(systemName: "macwindow") }.buttonStyle(.plain).help("Open the NotchAI window")
+                Button { NotchAIWorkspaceWindow.open() } label: { Image(systemName: "macwindow") }.buttonStyle(MetalPlainStyle()).help("Open the NotchAI window")
                 Picker("", selection: Binding(get: { nav.section }, set: { nav.section = $0 })) { ForEach(Section.allCases) { Text($0.rawValue).tag($0) } }
                     .pickerStyle(.menu).labelsHidden().frame(width: 130)
             }

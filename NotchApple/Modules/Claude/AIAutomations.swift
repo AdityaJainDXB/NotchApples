@@ -91,7 +91,7 @@ struct AutomationsSettings: View {
                         Button(store.running.contains(a.id) ? "Running…" : "Run now") { store.run(a) }
                             .disabled(store.running.contains(a.id))
                         Button(role: .destructive) { store.items.removeAll { $0.id == a.id } } label: { Image(systemName: "trash") }
-                            .buttonStyle(.borderless)
+                            .buttonStyle(.borderless).metalHover()
                     }
                     TextField("What should the AI do?", text: $a.prompt, axis: .vertical).lineLimit(1...4)
                     HStack {
@@ -103,7 +103,7 @@ struct AutomationsSettings: View {
                             Button(days[d - 1]) {
                                 if a.weekdays.contains(d) { a.weekdays.remove(d) } else { a.weekdays.insert(d) }
                             }
-                            .buttonStyle(.bordered).tint(a.weekdays.contains(d) ? Theme.accent : .gray)
+                            .buttonStyle(.bordered).metalHover().tint(a.weekdays.contains(d) ? Theme.accent : .gray)
                             .controlSize(.small)
                             .accessibilityLabel(Calendar.current.weekdaySymbols[d - 1])
                             .accessibilityValue(a.weekdays.contains(d) ? "On" : "Off")

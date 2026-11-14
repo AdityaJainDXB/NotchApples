@@ -197,7 +197,7 @@ struct ChatLockOffer: View {
                 Button("Use \(BiometricAuth.methodName)") { lock() }.buttonStyle(PurpleButtonStyle())
                 Button("Use a code…") { settingCode = true }.buttonStyle(PurpleButtonStyle(prominent: false))
             }
-            Button("Not now") { settings.chatLockOfferDone = true; onDone() }.buttonStyle(.plain)
+            Button("Not now") { settings.chatLockOfferDone = true; onDone() }.buttonStyle(MetalPlainStyle())
                 .font(.caption).foregroundStyle(Theme.textSecondary).hitTarget()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

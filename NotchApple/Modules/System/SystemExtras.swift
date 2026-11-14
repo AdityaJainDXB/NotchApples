@@ -85,14 +85,14 @@ struct TopProcessesView: View {
                     Text(String(format: "%.0f MB", p.memMB)).monospacedDigit().foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
                     // Only real apps can be quit (asked politely, like ⌘Q); background processes just show.
                     if let app = Self.quittable(p) {
-                        Button { asking = p } label: { Image(systemName: "xmark.circle") }.buttonStyle(.plain).foregroundStyle(.secondary)
+                        Button { asking = p } label: { Image(systemName: "xmark.circle") }.buttonStyle(MetalPlainStyle()).foregroundStyle(.secondary)
                             .help("Quit \(app.localizedName ?? p.name)")
                     } else { Color.clear.frame(width: 14) }
                 }
                 .font(.callout)
             }
             Button("Open Activity Monitor") { NSWorkspace.shared.open(URL(fileURLWithPath: "/System/Applications/Utilities/Activity Monitor.app")) }
-                .buttonStyle(.link)
+                .buttonStyle(.link).metalHover()
         }
         .padding(14).frame(width: 340)
         .confirmationDialog("Quit \(asking?.name ?? "this app")?", isPresented: Binding(get: { asking != nil }, set: { if !$0 { asking = nil } })) {
@@ -123,7 +123,7 @@ struct MeetingPlanner: View {
             HStack {
                 Text("Your time: \(moment.formatted(date: .omitted, time: .shortened))").font(.headline)
                 Spacer()
-                Button("Now") { offset = 0 }.buttonStyle(.link)
+                Button("Now") { offset = 0 }.buttonStyle(.link).metalHover()
             }
             Slider(value: $offset, in: 0...47, step: 1)
             ForEach([TimeZone.current.identifier] + zones, id: \.self) { id in

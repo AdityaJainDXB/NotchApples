@@ -305,7 +305,7 @@ struct SportsView: View {
                                 Text(row.team).fontWeight(mine ? .bold : .medium).foregroundStyle(mine ? Theme.accentBright : .white)
                                     .lineLimit(1).frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain).help("Track \(row.team)")
+                            .buttonStyle(MetalPlainStyle()).help("Track \(row.team)")
                             Text(row.played).frame(width: 22).foregroundStyle(Theme.textSecondary)
                             Text(row.extra).frame(width: 38).foregroundStyle(Theme.textSecondary)
                             Text(row.points).fontWeight(.bold).frame(width: 26).foregroundStyle(.white)
@@ -325,7 +325,7 @@ struct SportsView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Button { sports.closeDetail() } label: { Label("Back", systemImage: "chevron.left").font(.system(size: 11, weight: .semibold)) }
-                    .buttonStyle(.plain).foregroundStyle(Theme.accentBright).keyboardShortcut(.cancelAction)
+                    .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.accentBright).keyboardShortcut(.cancelAction)
                 Spacer()
                 Text(d.match.competition).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
             }
@@ -472,7 +472,7 @@ struct SportsView: View {
                 .frame(maxWidth: .infinity, alignment: alignment)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .help(mine ? "You're tracking \(s.name)" : "Track \(s.name)")
     }
 }

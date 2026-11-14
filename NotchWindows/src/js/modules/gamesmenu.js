@@ -4,6 +4,7 @@ import { el, load, save } from '../store.js';
 import { modal, toast, button } from '../ui.js';
 import { GAMES, CATEGORIES, filterGames, counts, byId } from './gameslogic.js';
 import * as Private from '../services/privategame.js';
+import { can } from '../license.js';
 
 const PRIVATE_FOR = { fe: Private.GAME_ID };
 const art = (g) => `linear-gradient(135deg,${g.art[0]},${g.art[1]})`;
@@ -18,13 +19,13 @@ export function renderMenu(host, { onPick }) {
   const allTitle = el('div', { class: 'gm-h' });
   const grid = el('div', { class: 'gm-grid' });
 
-  const locked = (g) => g.locked && !Private.isUnlocked(PRIVATE_FOR[g.id]);
+  const locked = (g) => g.locked && !Private.isUnlocked(PRIVATE_FOR[g.id]) && !can(2);   // an Ultimate key opens it without a code
   const subtitle = (g) => (g.locked ? 'Private' : (load(`games.best.${g.id}`, 0) > 0 ? `Best ${load(`games.best.${g.id}`, 0)}` : 'Played recently'));
 
   async function launch(g) {
     if (!g.locked) return onPick(g.id);
     const id = PRIVATE_FOR[g.id];
-    if (!Private.isUnlocked(id)) return codeDialog(g);
+    if (!Private.isUnlocked(id) && !can(2)) return codeDialog(g);   // Private.open() unlocks it with the Ultimate key
     try { await Private.open(id); } catch (e) { toast(e.message || 'Could not open the game.', { error: true }); paint(); }
   }
 

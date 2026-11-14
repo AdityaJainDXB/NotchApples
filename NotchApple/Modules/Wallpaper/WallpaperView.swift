@@ -82,7 +82,7 @@ struct WallpaperView: View {
             .background(RoundedRectangle(cornerRadius: 10).fill(Theme.surface))
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Theme.accent.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [5])))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
     }
 
     private func card(_ item: WallpaperItem) -> some View {
@@ -100,7 +100,7 @@ struct WallpaperView: View {
             .background(RoundedRectangle(cornerRadius: 10).fill(chosen ? Theme.accent.opacity(0.25) : Theme.surface))
             .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(chosen ? Theme.accent : .clear, lineWidth: 1.2))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .contextMenu { Button("Remove", role: .destructive) { library.remove(item) } }
         .help("Use “\(item.name)”. Right-click to remove it.")
     }
@@ -131,7 +131,7 @@ struct WallpaperView: View {
             Toggle("Still picture on the lock screen", isOn: $engine.lockStill).toggleStyle(.switch).controlSize(.mini)
                 .help("macOS can't play video on the lock screen, so a still from the video becomes your wallpaper there. Turning the live wallpaper off puts your old wallpaper back.")
             Spacer()
-            if engine.running { Button("Turn off and restore my wallpaper") { engine.isOn = false }.buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(Theme.accentBright) }
+            if engine.running { Button("Turn off and restore my wallpaper") { engine.isOn = false }.buttonStyle(MetalPlainStyle()).font(.system(size: 10)).foregroundStyle(Theme.accentBright) }
         }
         .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
     }

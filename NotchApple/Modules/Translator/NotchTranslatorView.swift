@@ -36,7 +36,7 @@ struct NotchTranslatorView: View {
                     .frame(width: Theme.minTarget, height: Theme.minTarget)
                     .background(Theme.surface, in: Circle())
             }
-            .buttonStyle(.plain).help("Swap languages").accessibilityLabel("Swap languages")
+            .buttonStyle(MetalPlainStyle()).help("Swap languages").accessibilityLabel("Swap languages")
             picker("To", selection: $model.target)
             Spacer()
             if model.isTranslating { ProgressView().controlSize(.small) }
@@ -63,7 +63,7 @@ struct NotchTranslatorView: View {
                         .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                     if !model.input.isEmpty {
                         Button { model.input = "" } label: { Image(systemName: "xmark.circle.fill") }
-                            .buttonStyle(.plain).hitTarget().foregroundStyle(Theme.textSecondary).help("Clear")
+                            .buttonStyle(MetalPlainStyle()).hitTarget().foregroundStyle(Theme.textSecondary).help("Clear")
                     }
                 }
                 ZStack(alignment: .topLeading) {

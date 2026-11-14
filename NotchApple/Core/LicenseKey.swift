@@ -56,7 +56,7 @@ enum Feature: String, CaseIterable, Identifiable {
     // Ultimate: developers
     case claudeUsage
     // Ultimate: home
-    case smartHome
+    case smartHome, desktopWidgets
     // Ultimate: devices
     case clipboardLink
     // Pro: live activities
@@ -86,7 +86,7 @@ enum Feature: String, CaseIterable, Identifiable {
 
     var tier: Tier {
         switch self {
-        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .claudeUsage, .smartHome, .meetingSummaries, .clipboardLink, .convert, .doIt, .prioritySupport, .betaChannel: .ultimate
+        case .liveActivityAPI, .activityStacking, .automations, .scripting, .pluginSDK, .pluginGallery, .notesSync, .iphoneCompanion, .cacheCleaner, .claudeUsage, .smartHome, .desktopWidgets, .meetingSummaries, .clipboardLink, .convert, .doIt, .prioritySupport, .betaChannel: .ultimate
         default: .pro
         }
     }
@@ -134,6 +134,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .claudeUsage: "Claude usage tracker"
         case .habits: "Habit tracker"
         case .smartHome: "Smart Home"
+        case .desktopWidgets: "Desktop widgets"
         case .clipboardLink: "Clipboard Link"
         case .meetingAlert: "Meeting alerts"
         case .downloadProgress: "Download progress"
@@ -217,6 +218,7 @@ enum Feature: String, CaseIterable, Identifiable {
         case .claudeUsage: "How many tokens Claude Code has used in your 5-hour window, today and this week, with your own budgets."
         case .habits: "Build streaks: tick a habit each day and watch the run grow."
         case .clipboardLink: "Copy on one device and paste on another, between your Macs and PCs. Encrypted with a code only your devices know."
+        case .desktopWidgets: "Put a clock, your to-dos and Now Playing on the desktop as small panels you can drag anywhere."
         case .smartHome: "Control your Home Assistant lights, switches, scenes and more from the notch. Works with Hue, IKEA, Zigbee and Matter through Home Assistant."
         case .meetingAlert: "A heads-up before meetings, with a Join button."
         case .downloadProgress: "Watch downloads fill up beside the notch."

@@ -1,6 +1,6 @@
 <!doctype html>
 <!-- The Racing game in the Mac app's Games tab: RacingGameView loads this page in a web view. The game itself is
-     racing.js, the same file the Windows app uses (NotchWindows/src/js/games/racing.js, copied in as a resource). -->
+     racing.js and the f1/ folder, the same files the Windows app uses (NotchWindows/src/js/games/, copied in as resources). -->
 <html>
 <head>
   <meta charset="utf-8">
@@ -10,6 +10,19 @@
 <body>
   <div id="game"></div>
   <script src="leaderboard.js"></script>
+  <!-- The F1 Weekend simulation (f1/*.js): load before racing.js; each registers itself in window.NotchRaceF1. -->
+  <script src="f1/era.js"></script>
+  <script src="f1/aero.js"></script>
+  <script src="f1/powerunit.js"></script>
+  <script src="f1/tyres.js"></script>
+  <script src="f1/damage.js"></script>
+  <script src="f1/sim.js"></script>
+  <script src="f1/racecontrol.js"></script>
+  <script src="f1/penalties.js"></script>
+  <script src="f1/weekend.js"></script>
+  <script src="f1/evolution.js"></script>
+  <script src="f1/strategy.js"></script>
+  <script src="f1/mfd.js"></script>
   <script src="racing.js"></script>
   <script>window.NotchRaceGame.mount(document.getElementById('game'));</script>
 </body>

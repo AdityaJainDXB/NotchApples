@@ -83,7 +83,7 @@ struct AgentCards: View {
                         Text("\(t.agent) · \(t.title)").font(.system(size: 11, weight: .semibold)).foregroundStyle(.white).lineLimit(1)
                         Spacer()
                         Text(t.state.title).font(.system(size: 9)).foregroundStyle(Theme.textSecondary)
-                        Button { NotchAITaskStore.shared.cancel(t.id) } label: { Image(systemName: "stop.circle") }.buttonStyle(.plain).help("Stop this agent")
+                        Button { NotchAITaskStore.shared.cancel(t.id) } label: { Image(systemName: "stop.circle") }.buttonStyle(MetalPlainStyle()).help("Stop this agent")
                     }
                     Text(current(t)).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(1)
                     ProgressView(value: TaskLogic.progress(t)).tint(NotchAIView.green)
@@ -123,7 +123,7 @@ private struct AgentRow: View {
                         .font(.system(size: 9, design: .monospaced)).foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
-                if !agent.builtIn { Button { store.deleteCustom(agent.id) } label: { Image(systemName: "trash") }.buttonStyle(.plain).foregroundStyle(.red.opacity(0.8)) }
+                if !agent.builtIn { Button { store.deleteCustom(agent.id) } label: { Image(systemName: "trash") }.buttonStyle(MetalPlainStyle()).foregroundStyle(.red.opacity(0.8)) }
             }
             if agent.id != "voice" && agent.id != "computer" {
                 HStack(spacing: 6) {

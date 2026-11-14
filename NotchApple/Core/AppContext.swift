@@ -59,9 +59,9 @@ struct AppSuggestionChip: View {
                 Label("\(suggestion.appName): \(suggestion.offer)", systemImage: suggestion.tab.symbol)
                     .font(.system(size: 12, weight: .semibold)).foregroundStyle(.white)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             Button(action: dismiss) { Image(systemName: "xmark").font(.system(size: 9, weight: .bold)) }
-                .buttonStyle(.plain).foregroundStyle(Theme.textSecondary).hitTarget()
+                .buttonStyle(MetalPlainStyle()).foregroundStyle(Theme.textSecondary).hitTarget()
                 .accessibilityLabel("Dismiss suggestion")
         }
         .padding(.leading, 12).padding(.trailing, 4).frame(height: 30)

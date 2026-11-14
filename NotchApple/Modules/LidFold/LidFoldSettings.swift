@@ -32,7 +32,7 @@ struct LidFoldSettings: View {
                     Text(granted ? "Screen Recording is allowed" : "Screen Recording is not allowed")
                     Spacer()
                     if !granted {
-                        Button("Allow") { ScreenPermission.request() }.buttonStyle(.borderedProminent)
+                        Button("Allow") { ScreenPermission.request() }.buttonStyle(.borderedProminent).metalHover()
                         Button("Open Settings…") { ScreenPermission.openSettings() }
                         Button("Relaunch") { AppRelauncher.relaunch() }.help("macOS applies Screen Recording only after the app restarts")
                     }

@@ -168,7 +168,7 @@ struct TodoView: View {
                     .background(Capsule().fill(todos.sortByPriority ? AnyShapeStyle(TodoPriority.high.colour.opacity(0.28)) : AnyShapeStyle(Theme.surface)))
                     .foregroundStyle(todos.sortByPriority ? TodoPriority.high.colour : Theme.textSecondary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             .help(todos.sortByPriority ? "Sorted by priority, red first. Click to show newest first." : "Click to sort by priority, red first.")
         }
     }
@@ -235,7 +235,7 @@ struct TodoView: View {
                     .contentTransition(.symbolEffect(.replace))
             }
             .confetti(trigger: burst[item.id] ?? 0)
-            .buttonStyle(.plain)
+            .buttonStyle(MetalPlainStyle())
             .accessibilityLabel(item.done ? "Mark not done" : "Mark done")
             VStack(alignment: .leading, spacing: 0) {
                 Text(item.text).strikethrough(item.done)
@@ -276,7 +276,7 @@ struct TodoView: View {
                     Button { withAnimation(Theme.spring) { todos.complete(r) } } label: {
                         Image(systemName: "circle").foregroundStyle(Color(cgColor: r.calendar.cgColor))
                     }
-                    .buttonStyle(.plain).hitTarget().accessibilityLabel("Complete \(r.title ?? "reminder")")
+                    .buttonStyle(MetalPlainStyle()).hitTarget().accessibilityLabel("Complete \(r.title ?? "reminder")")
                     Text(r.title ?? "").font(.system(size: 13)).foregroundStyle(.white).lineLimit(2)
                     Spacer()
                     if let due = r.dueDateComponents?.date {

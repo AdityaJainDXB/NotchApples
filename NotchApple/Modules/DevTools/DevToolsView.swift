@@ -56,7 +56,7 @@ struct DevToolsView: View {
                                     .padding(.vertical, 6).padding(.horizontal, 8)
                                     .background(t == tool ? Theme.accent.opacity(0.35) : Color.clear, in: RoundedRectangle(cornerRadius: 8))
                             }
-                            .buttonStyle(.plain).foregroundStyle(.white)
+                            .buttonStyle(MetalPlainStyle()).foregroundStyle(.white)
                         }
                     }
                 }

@@ -87,7 +87,7 @@ struct CookieClickerView: View {
                 Text("\(e.cps.formatted(.number.precision(.fractionLength(0...1)))) per second").font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 ZStack {
                     Button { model.click() } label: { cookie }
-                        .buttonStyle(.plain)
+                        .buttonStyle(MetalPlainStyle())
                         .scaleEffect(pressed ? 0.93 : 1)
                         .animation(.spring(response: 0.18, dampingFraction: 0.5), value: pressed)
                         .simultaneousGesture(DragGesture(minimumDistance: 0).onChanged { _ in pressed = true }.onEnded { _ in pressed = false })
@@ -122,17 +122,17 @@ struct CookieClickerView: View {
                                 .font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                             Spacer(minLength: 0)
                             Button("Cancel") { confirmReset = false }
-                                .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                                .buttonStyle(MetalPlainStyle()).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                             Button("Start over", role: .destructive) {
                                 model.reset()
                                 confirmReset = false
                             }
-                            .buttonStyle(.plain).font(.system(size: 10, weight: .semibold)).foregroundStyle(.red)
+                            .buttonStyle(MetalPlainStyle()).font(.system(size: 10, weight: .semibold)).foregroundStyle(.red)
                         }
                         .padding(.top, 4)
                     } else {
                         Button("Start over…", role: .destructive) { confirmReset = true }
-                            .buttonStyle(.plain).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).padding(.top, 4)
+                            .buttonStyle(MetalPlainStyle()).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).padding(.top, 4)
                     }
                 }
             }
@@ -186,7 +186,7 @@ struct CookieClickerView: View {
             .opacity(affordable ? 1 : 0.65)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .disabled(!affordable)
     }
 }

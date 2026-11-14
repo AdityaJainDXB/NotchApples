@@ -97,7 +97,7 @@ struct NotchAIRoutinesView: View {
                 }
                 Spacer()
                 Button("Run now") { store.runNow(r.id) }.disabled(r.isPaused)
-                Button { store.remove(r.id) } label: { Image(systemName: "trash") }.buttonStyle(.plain).help("Delete this routine")
+                Button { store.remove(r.id) } label: { Image(systemName: "trash") }.buttonStyle(MetalPlainStyle()).help("Delete this routine")
             }
             Text(r.action.text).font(.system(size: 10)).foregroundStyle(Theme.textSecondary).lineLimit(2)
             if let why = r.pausedReason {

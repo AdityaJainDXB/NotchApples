@@ -26,7 +26,7 @@ struct PageChips<Item: Identifiable & Equatable>: View {
                             .background(Capsule().fill(on ? AnyShapeStyle(Theme.accent.opacity(0.45)) : AnyShapeStyle(Theme.surface)))
                             .foregroundStyle(.white)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(MetalPlainStyle())
                 }
             }
         }

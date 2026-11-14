@@ -132,6 +132,7 @@ struct NotchRootView: View {
             }
         }
         .frame(width: size.width, height: size.height, alignment: .top)
+        .metalButtons()   // liquid metal (opt-in): every button with no style of its own gets it
         // A file dropped anywhere on the open notch (not just inside a tab's own drop area) goes to the Shelf, or to
         // Convert when that is the tab showing. The tabs' own drop areas still take their drops first.
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
@@ -384,13 +385,12 @@ private struct TabButton: View {
                 .background {
                     if active {
                         if let pillSpace {
-                            Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
-                                .matchedGeometryEffect(id: "duoPill", in: pillSpace)
+                            tabFill.matchedGeometryEffect(id: "duoPill", in: pillSpace)
                         } else {
-                            Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
+                            tabFill
                         }
                     } else if hovering {
-                        Capsule().fill(Theme.surfaceHover)
+                        if liquidMetal { LiquidMetalCapsule(hover: true).opacity(0.55) } else { Capsule().fill(Theme.surfaceHover) }
                     }
                 }
                 .contentShape(Capsule())
@@ -406,11 +406,22 @@ private struct TabButton: View {
                     }
                 }
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .onHover { hovering = $0 }
         .help(module == .messenger && notifier.unread > 0 ? "Messenger · \(notifier.unread) unread" : module.title)
         .accessibilityLabel(module.title)
         .accessibilityAddTraits(active ? .isSelected : [])
+    }
+
+    @AppStorage(LiquidMetalSetting.key) private var liquidMetal = false
+
+    /// The highlight behind the open tab: the theme gradient, or flowing liquid metal when that is switched on.
+    @ViewBuilder private var tabFill: some View {
+        if liquidMetal {
+            LiquidMetalCapsule().shadow(color: Theme.accent.opacity(0.45), radius: 8)
+        } else {
+            Capsule().fill(Theme.accentGradient).shadow(color: Theme.accent.opacity(0.5), radius: 8)
+        }
     }
 }
 

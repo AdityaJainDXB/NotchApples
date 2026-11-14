@@ -202,7 +202,7 @@ struct FileShelfView: View {
 
     private func folderChip(_ folder: String?, _ title: String) -> some View {
         Button(title) { store.currentFolder = folder }
-            .buttonStyle(.plain).font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
+            .buttonStyle(MetalPlainStyle()).font(.system(size: 11, weight: .semibold)).foregroundStyle(.white)
             .padding(.horizontal, 8).padding(.vertical, 3)
             .background(Capsule().fill(store.currentFolder == folder ? Theme.accent : Theme.surface))
     }

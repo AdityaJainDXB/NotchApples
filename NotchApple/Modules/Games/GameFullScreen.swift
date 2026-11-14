@@ -101,7 +101,7 @@ struct GameFullScreenButton: View {
                 .frame(width: 20, height: 20).background(Circle().fill(Color.black.opacity(0.35)))
                 .foregroundStyle(Theme.textSecondary)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(MetalPlainStyle())
         .help("Full screen: opens \(game.rawValue) in a big window that fills the screen")
         .accessibilityLabel("Full screen")
     }
