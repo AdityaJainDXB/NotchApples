@@ -6,14 +6,9 @@ For the next agent (or person) picking this up. Read `CLAUDE.md` first: its rele
 
 All four phases of `PLAN.md` are built (`NotchWindows/src/js/games/f1/*.js`, glued into `racing.js`, opt-in via Menu → F1 Weekend, F1 car only). 660 node tests pass (`node --test NotchWindows/tests/*.test.mjs`); headless Chromium runs of a race, the Safety Car / Medical Car / VSC scenarios and the weekend hub were clean. **Not done:** real-device play on a Mac or Windows PC, a full 60-minute practice or 18-minute qualifying played through by hand (tested only up to starting the sessions), pit-lane starters after parc fermé breaks, and driving the Safety Car / Medical Car by hand in a browser (logic is unit-tested). Keys: U telemetry, I MFD, C race control messages, J (old) steering panel.
 
-## Open pull requests (draft, not merged, not released)
+## 2.2.71 is ready to release (not yet released)
 
-- **#85** Flight Economy opens with an Ultimate key without the code box (Mac and Windows).
-- **#83** Desktop widgets (Ultimate), Mac and Windows: clock, to-do, Now Playing.
-- **#84** Mac liquid metal, marked Recommended in Settings → Appearance (stacked on #83: merge #83 first).
-- **#82** Windows liquid metal, marked Recommended in Settings.
-
-None needs more code; each needs the owner's go-ahead to merge, and a look on a real desktop (Windows: the UTM VM on the owner's second Mac). Check the newest "Module test build" run for #84 first: `gh run list --workflow module-build.yml --branch mac-liquid-metal`. Mac builds need Xcode's Metal toolchain.
+Merged into `main` on 14 Nov 2026 (squash): Flight Economy opens with an Ultimate key (#85), desktop widgets (#83), Mac liquid metal (#84), Windows liquid metal (#82), liquid glass buttons (#87, Mac, Settings → Appearance). Version, release notes (`release-notes/2.2.71.md`, `win-2.2.71.md`), WhatsNew, CHANGELOG and README already say 2.2.71 and include all of it. **Nothing is tagged.** The release must be run on the owner's signing Mac (`scripts/release.sh`, then tag `win-v2.2.71`, mark the Windows release a pre-release, prune, install); the Mac that merged these has no signing certificate. Liquid glass has been built and tested but never seen on screen; liquid metal and widgets have not been seen on a real Windows desktop. Other open PRs (#71 NotchAI stacked on #64, #80 and #81 old docs) were left alone.
 
 ## Not done / needs a human
 

@@ -5,4 +5,7 @@
 - New: stewards. Track limits (strike 4 is +5 s, strike 5 is +10 s), pit-lane speeding, unsafe release, and drive-through, stop-and-go and time penalties served or added after the race
 - New: the weekend. Open it from the menu for practice, qualifying with the 107% rule and 22, 16, 10 knockouts, the Sprint, and the Grand Prix, with 13 dry tyre sets (one Soft kept for Q3), the two-compound rule, a season pool of engine parts with 10 and 5 place grid penalties, and track rubber that builds up and rain that washes away
 - New: a race engineer who calls the undercut, the tyres and the fuel, and an MFD for brake bias, differentials and ERS. Nothing is added to the screen until you turn it on: U is the F1 telemetry panel, I the MFD (O, comma, full stop, minus, equals to change it), C cycles race control messages. J is still the steering panel
+- New: liquid metal (recommended). Settings → Liquid metal gives the open tab, the notch rim and buttons a flowing metal look. It is off in Lite performance mode and with Reduce Motion
+- New: desktop widgets (Ultimate). Clock, To-do and Now Playing as small windows on your desktop; drag them and Notch Apple remembers where you put them
+- Fixed: Flight Economy opens with your Ultimate key, no code needed
 - Other racing modes and cars are unchanged
