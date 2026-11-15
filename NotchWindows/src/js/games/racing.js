@@ -1142,6 +1142,16 @@
     hurt(c, vn, 6, 40);
     return vn;
   }
+  /// After you cross the line the cars still racing get this long to finish before the results show.
+  const FINISH_WAIT = 30;
+  /// The time column of the results: a finisher's time, DNF only for a car that really retired, and for a car still on the road when
+  /// the results came up how many laps short it is (it has not crossed the line, so it is not a DNF).
+  function resultText(r, T, fmt) {
+    if (r.finished) return fmt(r.finishT + (r.pen || 0)) + (r.pen ? ` (incl. +${r.pen}s)` : '');
+    if (r.dnf) return 'DNF';
+    const down = T && T.closed ? Math.max(1, T.laps - Math.max(0, r.lap || 0)) : 1;
+    return `+${down} lap${down === 1 ? '' : 's'}`;
+  }
   /// Finishers by their time plus any penalty, then everyone else by how far they got.
   function ranking(racers) {
     const ft = (r) => r.finishT + (r.pen || 0);
@@ -3482,9 +3492,9 @@
       if (me && me.car.shifted !== lastShift) { lastShift = me.car.shifted; paddle = 0.18; }
       if (net && screen === 'race' && me) { net.sendAcc = (net.sendAcc || 0) + dt; if (net.sendAcc > 0.05) { net.sendAcc = 0; net.link.send(NET.packState(myId, me)); } }
       const racing = racers.filter((r) => !r.official && !r.dnf);
-      if (screen === 'race' && racing.length && racing.every((r) => r.finished) || (screen === 'race' && me && me.finished && racing.filter((r) => !r.remote && !r.ai).every((r) => r.finished) && clock - me.finishT > 6 && !net)) showResults();
+      if (screen === 'race' && racing.length && racing.every((r) => r.finished) || (screen === 'race' && me && me.finished && racing.filter((r) => !r.remote && !r.ai).every((r) => r.finished) && clock - me.finishT > FINISH_WAIT && !net)) showResults();
       if (screen === 'race' && net && me && me.finished && clock - me.finishT > 14) showResults();
-      if (screen === 'race' && me && me.finished && !net && clock - me.finishT > 2.5) showResults();
+      if (screen === 'race' && me && me.finished && !net && clock - me.finishT > FINISH_WAIT) showResults();
       if (screen === 'race' && me && me.dnf && me.retiredT != null && clock - me.retiredT > 3) showResults();
     }
     function finishedMe() {
@@ -3502,7 +3512,7 @@
       if (wk && wk.cur && f1on !== 'off' && !net && me && !me.official) wkRaceDone();
       const order = ranking(racers), tbl = document.createElement('table'); tbl.className = 'rc-tbl';
       if (me && me.official) { card(head(role === 'sc' ? `🚓 Safety Car: ${raceCtl.score} points` : `🚑 Medical Car: ${raceCtl.score} points`), hint(`${raceCtl.done} ${role === 'sc' ? 'Safety Car period' : 'rescue'}${raceCtl.done === 1 ? '' : 's'} handled. Thank you, race control!`), row('', btn('Again', 'go', startLocalRace), btn('Menu', '', () => { closeNet(); showMenu(); }))); screen = 'done'; doneT = clock; big.textContent = ''; return; }
-      order.forEach((r, i) => { const tr = tbl.insertRow(); tr.className = r === me ? 'me' : ''; tr.insertCell().textContent = String(i + 1); tr.insertCell().textContent = r.name; tr.insertCell().textContent = r.finished ? fmt(r.finishT + (r.pen || 0)) + (r.pen ? ` (incl. +${r.pen}s)` : '') : 'DNF'; tr.insertCell().textContent = r.bestLap ? 'best lap ' + fmt(r.bestLap) : ''; });
+      order.forEach((r, i) => { const tr = tbl.insertRow(); tr.className = r === me ? 'me' : ''; tr.insertCell().textContent = String(i + 1); tr.insertCell().textContent = r.name; tr.insertCell().textContent = resultText(r, T, fmt); tr.insertCell().textContent = r.bestLap ? 'best lap ' + fmt(r.bestLap) : ''; });
       const mePos = order.indexOf(me) + 1;
       card(head(mePos === 1 ? '🏆 You won!' : `You finished ${mePos}${['st', 'nd', 'rd'][mePos - 1] || 'th'}`), tbl,
         hint(`${me.newBest ? 'New best time! ' : ''}${me.drift > 1 ? 'Drift score ' + Math.round(me.drift * 10) : ''}`),
@@ -4900,6 +4910,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { condScale, tyreWearRate, tyreWearGrip, pitTyreChoice, pitServiceTime, drsEligible, trackLimitStep, flagForCrash, ersStep, F1_2025, gridRivals, stepOnRoad, ELEV_INTENT, F1_ELEV, TRACK_ELEV, spokenTimes, buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { resultText, FINISH_WAIT, condScale, tyreWearRate, tyreWearGrip, pitTyreChoice, pitServiceTime, drsEligible, trackLimitStep, flagForCrash, ersStep, F1_2025, gridRivals, stepOnRoad, ELEV_INTENT, F1_ELEV, TRACK_ELEV, spokenTimes, buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();

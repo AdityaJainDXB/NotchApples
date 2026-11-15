@@ -654,3 +654,13 @@ test('the tyre and damage panel never covers the battery gauge: full size on a w
   assert.equal(R.condScale(1600, 900 / 400), 1, 'a wide window keeps the full size panel');
   for (const [W, H] of [[1024, 768], [800, 600], [1280, 800], [1920, 1080], [2048, 1536]]) assert.ok(panelRight(W, H) < gaugeLeft(W, H), `${W}x${H}: the panel ends before the gauge begins`);
 });
+
+test('results: a car still on the road when the results come up is not a DNF; only a car that retired is', () => {
+  const fmt = (t) => `${t.toFixed(1)}s`, T = { closed: true, laps: 3 };
+  assert.equal(R.resultText({ finished: true, finishT: 100.04 }, T, fmt), '100.0s');
+  assert.equal(R.resultText({ finished: true, finishT: 100, pen: 5 }, T, fmt), '105.0s (incl. +5s)');
+  assert.equal(R.resultText({ finished: false, dnf: true, lap: 1 }, T, fmt), 'DNF');
+  assert.equal(R.resultText({ finished: false, dnf: false, lap: 2 }, T, fmt), '+1 lap', 'one lap short: still running, not DNF');
+  assert.equal(R.resultText({ finished: false, dnf: false, lap: 0 }, T, fmt), '+3 laps');
+  assert.ok(R.FINISH_WAIT >= 20, 'the cars still racing get time to cross the line before the results show');
+});

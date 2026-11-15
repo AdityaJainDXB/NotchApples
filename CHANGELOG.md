@@ -11,6 +11,8 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 - New: liquid metal outliners. Settings → Appearance → Liquid metal outliners outlines only the open tab and whatever you point at with flowing metal, one thing at a time, and the closed notch rim lights up when you point at it or a notification arrives. It is the look of the original prototype
 - New: desktop widgets (Ultimate). Clock, To-do and Now Playing as small windows on your desktop that you can drag; they stay under your other windows. Turn them on in Settings → Widget
 - Fixed: Flight Economy opens with your Ultimate key, no code needed
+- Fixed: in the F1 game the battery gauge no longer reads 0% on a 4:3 window (the tyre panel was drawn over it), and the telemetry panel no longer shows NaN kW before the race starts
+- Fixed: in Racing, cars still on the road when you finish are no longer listed as DNF. The results now wait for them to cross the line (up to 30 seconds), and only a car that really retired shows DNF
 
 ### Mac 2.2.71 · Windows 2.2.71 BETA · 14 November 2026 · Racing: the full F1 simulation (opt-in F1 Weekend)
 

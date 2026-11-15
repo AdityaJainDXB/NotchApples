@@ -25,7 +25,9 @@ enum WhatsNew {
             "- New: liquid glass buttons. Settings → Appearance → Liquid glass buttons turns every button into a pane of frosted glass that lights up when you point at it. It works alone or together with liquid metal",
             "- New: liquid metal outliners. Settings → Appearance → Liquid metal outliners outlines only the open tab and whatever you point at with flowing metal, one thing at a time, and the closed notch rim lights up when you point at it or a notification arrives. It is the look of the original prototype",
             "- New: desktop widgets (Ultimate). Clock, To-do and Now Playing as small windows on your desktop that you can drag; they stay under your other windows. Turn them on in Settings → Widget",
-            "- Fixed: Flight Economy opens with your Ultimate key, no code needed"
+            "- Fixed: Flight Economy opens with your Ultimate key, no code needed",
+            "- Fixed: in the F1 game the battery gauge no longer reads 0% on a 4:3 window (the tyre panel was drawn over it), and the telemetry panel no longer shows NaN kW before the race starts",
+            "- Fixed: in Racing, cars still on the road when you finish are no longer listed as DNF. The results now wait for them to cross the line (up to 30 seconds), and only a car that really retired shows DNF"
         ]),
         ReleaseNote(version: "2.2.71", date: "14 November 2026", headline: "Racing: the full F1 simulation (opt-in F1 Weekend)", items: [
             "- New: Racing has an F1 Weekend mode for the F1 car (Menu → F1 Weekend → Standard or Sprint). Switch it on and the F1 car is simulated properly: ground effect and porpoising, dirty air, DRS (2025) or active aero (2026), the hybrid power unit and battery, fuel burn, tyre surface and carcass temperatures with graining and blistering, and damage to the wings, floor and sidepods. Pick the 2025 or the 2026 regulations in the menu",
