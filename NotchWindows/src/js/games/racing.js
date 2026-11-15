@@ -1253,6 +1253,9 @@
   const trackLimitStep = (count) => { const n = (count || 0) + 1; return { count: n, action: n >= 4 ? 'penalty' : n === 3 ? 'blackwhite' : 'warning' }; };
   /// The flag a crash calls: its speed, the number of wrecked cars and the damage decide it.
   const flagForCrash = (speed, wrecks, damage) => speed > 42 || wrecks >= 4 ? 'red' : speed > 28 || wrecks >= 2 ? 'sc' : damage >= 0.9 ? 'vsc' : 'yellow';
+  /// How much to shrink the condition panel (bottom left, 168 wide) so it never covers the battery gauge in the dash: the gauge starts
+  /// 119 units left of the middle. On a wide window the panel is full size; on a 4:3 one it shrinks to fit.
+  const condScale = (W, s) => Math.min(1, Math.max(0.62, (W / 2 - 119 * s - 14 * s) / (168 * s)));
   /// ERS: the battery drains while deploying (14 s from full), refills hard under braking and slowly otherwise.
   const ersStep = (ers, deploy, braking, dt) => { const e = deploy && ers > 0 ? Math.max(0, ers - dt / 14) : ers; return braking ? Math.min(1, e + dt * 0.14) : Math.min(1, e + dt * 0.006); };
   /// The 2025 grid: ten teams, two drivers each, in their livery colours. The F1 car's rivals are drawn from it.
@@ -3936,7 +3939,7 @@
       g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 2 * s; g.beginPath(); T.S.forEach((q, i) => { const p = mp(q.x, q.y); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); if (T.closed) g.closePath(); g.stroke();
       for (const r of racers) { const p = mp(r.car.x, r.car.y); g.fillStyle = r === me ? '#fff' : (r.color || '#aaa'); g.beginPath(); g.arc(p[0], p[1], (r === me ? 3.6 : 2.6) * s, 0, 7); g.fill(); }
       // The car's condition (the four tyres and the damage), bottom left.
-      if ((screen === 'race' || screen === 'done' || screen === 'formation' || screen === 'setup' || screen === 'quali' || screen === 'qbreak' || screen === 'countdown') && !me.official) drawCondition(s);
+      if ((screen === 'race' || screen === 'done' || screen === 'formation' || screen === 'setup' || screen === 'quali' || screen === 'qbreak' || screen === 'countdown') && !me.official) drawCondition(s * condScale(W, s));
       // Where a car has crashed: a red map pin (pulsing) while race control deals with it.
       const pins = []; if (raceCtl.at && raceCtl.flag !== 'green' && !raceCtl.at.r.dnf) pins.push([raceCtl.at.x, raceCtl.at.y]); for (const k of cranes) if (!k.done) pins.push([k.r.car.x, k.r.car.y]);
       for (const [px, py] of pins) {
@@ -4897,6 +4900,6 @@
     setSoundEnabled: (on) => { window.NotchHostSound = !!on; const c = window.NotchRaceGame.current; if (c) c.setSoundEnabled(on); },
     resume: () => { const c = window.NotchRaceGame.current; if (c) c.resume(); },
     current: null,
-    _test: { tyreWearRate, tyreWearGrip, pitTyreChoice, pitServiceTime, drsEligible, trackLimitStep, flagForCrash, ersStep, F1_2025, gridRivals, stepOnRoad, ELEV_INTENT, F1_ELEV, TRACK_ELEV, spokenTimes, buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
+    _test: { condScale, tyreWearRate, tyreWearGrip, pitTyreChoice, pitServiceTime, drsEligible, trackLimitStep, flagForCrash, ersStep, F1_2025, gridRivals, stepOnRoad, ELEV_INTENT, F1_ELEV, TRACK_ELEV, spokenTimes, buildLandmarks, F1_LM, qualiSizes, qualiOrder, qualiKnockout, qualiGrid, parseRequest, generateTrack, traceImage, simplifyPts, pitInfo, relS, fence, checkTrack, encodeTrack, decodeTrack, customDef, GROUNDS, TRACKS, F1_CAL, matchF1, CARS, buildTrack, locate, trackHeight, trackSlope, roadCurv, roadBank, F1_BANK, gridSlot, newCar, stepCar, driveAI, newRacer, progress, ranking, collide, wallHit, hurt, gearbox, NET, fmt, LEVELS },
   };
 })();
