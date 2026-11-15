@@ -88,3 +88,11 @@ test('the game\'s other cars are untouched: without c.f1 the physics is exactly 
   const run = () => { const q = T.S[0], c = R.newCar(gt, q.x, q.y, Math.atan2(q.ty, q.tx)); for (let i = 0; i < 600; i++) R.stepOnRoad(T, c, { throttle: 1, brake: 0, steer: i % 120 < 60 ? 0.3 : -0.3, hand: 0 }, 1 / 120, 1, R.locate(T, c.x, c.y)); return [c.x, c.y, c.vx, c.vy, c.h]; };
   assert.deepEqual(run(), run());
 });
+
+test('before the first step (countdown, formation lap) the telemetry panel has real numbers: kW are 0, not undefined, and each tyre has its temperature', () => {
+  const sim = F1.sim.create({ era: F1.era.getEra('2025'), compound: 'M' }), m = sim.mods;
+  assert.equal(m.deployKw, 0); assert.equal(m.harvestKw, 0);
+  assert.equal(m.carcass.length, 4); assert.equal(m.surface.length, 4);
+  for (const t of [...m.carcass, ...m.surface]) assert.ok(Number.isFinite(t) && t > 0, 'a tyre temperature is a positive number');
+  assert.ok(Number.isFinite(Math.round(m.deployKw)) && Number.isFinite(Math.round(m.harvestKw)), 'the panel rounds these and prints them');
+});

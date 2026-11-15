@@ -647,3 +647,10 @@ test('the 2025 grid: ten teams of two, each with a livery, and rivals come two t
   const g = R.gridRivals(20); assert.equal(g.length, 20); assert.equal(new Set(g.map((d) => d.name)).size, 20);
   assert.equal(g[0].team, g[1].team); assert.notEqual(g[1].team, g[2].team); assert.equal(R.gridRivals(3).length, 3);
 });
+
+test('the tyre and damage panel never covers the battery gauge: full size on a wide window, shrunk to fit on 4:3', () => {
+  const panelRight = (W, H) => { const s = Math.min(W, H) / 400, k = R.condScale(W, s); return 8 * s * k + 168 * s * k; };
+  const gaugeLeft = (W, H) => { const s = Math.min(W, H) / 400; return W / 2 - 86 * s - 33 * s; };
+  assert.equal(R.condScale(1600, 900 / 400), 1, 'a wide window keeps the full size panel');
+  for (const [W, H] of [[1024, 768], [800, 600], [1280, 800], [1920, 1080], [2048, 1536]]) assert.ok(panelRight(W, H) < gaugeLeft(W, H), `${W}x${H}: the panel ends before the gauge begins`);
+});

@@ -34,7 +34,7 @@
     sim.mods = neutral(sim);
     return sim;
   }
-  const neutral = (sim) => ({ accelK: 1, vmaxK: 1, gripK: 1, downK: 1, understeer: 0, snap: 0, pull: 0, dnf: null, engineDead: false, needsPit: false, meatballWhy: null, porpoise: 0, rideHeightMm: sim.setup.rideHeightMm, flap: 0, overtakeActive: false, clipping: false, soc: sim.pu.soc, socFraction: sim.pu.soc / sim.era.batteryMJ, fuelKg: sim.pu.fuel, derate: 1, massKg: sim.era.massKg + sim.pu.fuel, tyreState: 'ok', life: 1, carcass: [], surface: [], wearCliff: false, blistering: 0, graining: 0, engineC: 100, downforceN: 0, dragN: 0, brakeK: 1 });
+  const neutral = (sim) => ({ accelK: 1, vmaxK: 1, gripK: 1, downK: 1, understeer: 0, snap: 0, pull: 0, dnf: null, engineDead: false, needsPit: false, meatballWhy: null, porpoise: 0, rideHeightMm: sim.setup.rideHeightMm, flap: 0, overtakeActive: false, clipping: false, soc: sim.pu.soc, socFraction: sim.pu.soc / sim.era.batteryMJ, fuelKg: sim.pu.fuel, derate: 1, massKg: sim.era.massKg + sim.pu.fuel, tyreState: 'ok', life: 1, carcass: sim.tyres.w.map((x) => x.Tc), surface: sim.tyres.w.map((x) => x.Ts), deployKw: 0, harvestKw: 0, wearCliff: false, blistering: 0, graining: 0, engineC: 100, downforceN: 0, dragN: 0, brakeK: 1 });
 
   /// One physics step. `p`: v, vf (signed forward speed), vl (sideways speed), yaw (rad/s), throttle, brake, steer (−1..1), gapAheadS (seconds to the
   /// car ahead, or null), wingOpenWanted, wingOpenAllowed (the rules say the flap / X-mode may open), overtakeWanted, inPit, flagOk, wet (0..1),
