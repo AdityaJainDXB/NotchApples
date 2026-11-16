@@ -1402,7 +1402,7 @@ const publicRecord = (id, r, revokedList) => ({
 // MARK: Audit log
 // Every change made in the panel is written down: when, what, which key. Never an email address, a full key
 // or the admin token. Entries live in KV metadata (newest first) and are kept for 180 days.
-const AUDITED = new Set(['/admin/issue', '/admin/suspend', '/admin/unsuspend', '/admin/revoke', '/admin/reissue', '/admin/note',
+const AUDITED = new Set(['/admin/issue', '/admin/suspend', '/admin/unsuspend', '/admin/revoke', '/admin/reissue', '/admin/migrate', '/admin/note',
   '/admin/devices', '/admin/email', '/admin/promo-create', '/admin/promo-delete', '/admin/test-payment', '/admin/asset-put', '/admin/asset-delete', '/admin/plane-clear', '/admin/game-create', '/admin/game-revoke', '/admin/game-delete', '/admin/game-put']);
 
 async function audit(env, path, body, result) {
@@ -1414,6 +1414,7 @@ async function audit(env, path, body, result) {
       '/admin/suspend': () => String(body.reason || '').slice(0, 80),
       '/admin/revoke': () => String(body.reason || '').slice(0, 80),
       '/admin/reissue': () => `replaced by ${result?.keyId || '?'}`,
+      '/admin/migrate': () => `made an admin key ${result?.keyId || '?'}`,
       '/admin/devices': () => (body.device ? 'one device freed' : 'all devices freed'),
       '/admin/email': () => 'key emailed',
       '/admin/note': () => 'note changed',
@@ -1648,6 +1649,22 @@ async function admin(env, path, body) {
     if (!tier) throw new HTTPError(400, 'Unknown key; pass the full key to reissue');
     const r = await issueKey(env, tier, 'reissue', body.email || null, { replaces: id });
     const emailed = body.email ? await sendMail(env, body.email, `Your new Notch Apple ${TIER_NAME[tier]} key`, keyMail([{ tier, key: r.key }])) : false;
+    return { revoked: id, ...r, emailed };
+  }
+  if (path === '/admin/migrate') {
+    // Turns an existing Pro or Ultimate key into an admin key for the same buyer: the old key is revoked, the admin key is new.
+    const id = String(body.keyId || (body.key && parseKey(body.key)?.keyId) || '');
+    if (!/^[0-9a-f]{16}$/.test(id)) throw new HTTPError(400, 'keyId or key needed');
+    const rec = await getJSON(env, `key:${id}`);
+    if (!rec) throw new HTTPError(404, 'No such key');
+    if (rec.tier === ADMIN_TIER) throw new HTTPError(400, 'That key is already an admin key');
+    if ((await activeAdminKeys(env)) >= MAX_ADMIN_KEYS) throw adminFull();   // checked before anything is revoked
+    const ids = await revokedIds(env);
+    if (!ids.includes(id)) { ids.push(id); await putJSON(env, 'revoked', ids); }
+    rec.revoked = { at: Date.now(), reason: `migrated to an admin key: ${String(body.reason || '').slice(0, 160)}` };
+    await putJSON(env, `key:${id}`, rec);
+    const r = await issueKey(env, ADMIN_TIER, 'migrated', body.email || null, { replaces: id });
+    const emailed = body.email ? await sendMail(env, body.email, `Your new Notch Apple ${TIER_NAME[ADMIN_TIER]} key`, keyMail([{ tier: ADMIN_TIER, key: r.key }])) : false;
     return { revoked: id, ...r, emailed };
   }
   throw new HTTPError(404, 'Not found');

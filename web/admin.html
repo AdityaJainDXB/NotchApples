@@ -357,6 +357,7 @@ async function openKey(ref) {
     + '</div>'
     + '<div class="sect"><h2>Send or replace</h2><div class="row"><input id="dEmail" class="field" style="flex:1" type="email" placeholder="buyer@example.com"><button class="btn sm" id="dSend">Email this key</button></div>'
     + '<p class="dim small" style="margin-top:8px">Reissue suspends this key and creates a new one of the same tier (for a leaked key). The new key is emailed if you entered an address above.</p><button class="btn sm bad" id="dReissue">Reissue</button>'
+    + (r.tier === 'Admin' ? '' : '<div class="sect"><h2>Upgrade to admin</h2><p class="dim small">Revokes this key and gives the same buyer an admin key: no limits at all, and it counts toward the four live admin keys. Send them the new key.</p><button class="btn sm bad" id="dMigrate">Migrate key to admin key</button></div>')
     + '<div class="out" id="dOut"></div></div>';
   const id = r.keyId, again = () => { openKey({ keyId: id }); loadStats(); loadKeys(true); };
   const act = async (fn) => { try { await fn(); } catch (e) { toast(e.message); } };
@@ -373,6 +374,13 @@ async function openKey(ref) {
     const j = await api('reissue', { keyId: id, key: r.key || undefined, email: em || undefined });
     $('dOut').style.display = 'block';
     $('dOut').innerHTML = 'New key:<br>' + esc(j.key) + (j.emailed ? '<br><span class="st-ok">Emailed</span>' : '');
+    loadStats(); loadKeys(true);
+  });
+  if ($('dMigrate')) $('dMigrate').onclick = () => confirm('Revoke ' + id + ' and make an ADMIN key for the same buyer? Admin keys have no limits and count toward the four.') && act(async () => {
+    const em = $('dEmail').value.trim();
+    const j = await api('migrate', { keyId: id, key: r.key || undefined, email: em || undefined });
+    $('dOut').style.display = 'block';
+    $('dOut').innerHTML = 'Admin key:<br>' + esc(j.key) + (j.emailed ? '<br><span class="st-ok">Emailed</span>' : '');
     loadStats(); loadKeys(true);
   });
 }

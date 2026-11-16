@@ -653,6 +653,27 @@ await test('Admin keys: only the admin route makes one, at most four live at a t
   globalThis.__adminFixture = e.key;
 });
 
+
+await test('Migrate: turns a Pro key into an admin key for the same buyer, revokes the old one, and obeys the four-key cap', async () => {
+  const pro = (await call('/admin/issue', { tier: 'pro', note: 'to migrate' }, { authorization: 'Bearer admin-test' })).key;
+  const proId = parseKey(pro).keyId;
+  // Four admin keys are live from the test above, so the migration is refused and the Pro key keeps working.
+  const full = await call('/admin/migrate', { keyId: proId }, { authorization: 'Bearer admin-test' });
+  assert.equal(full.status, 409);
+  assert.equal((await call('/entitle', { key: pro, device: devn(710) })).status, 200, 'the Pro key still works after a refused migration');
+  // Free one admin slot, then migrate.
+  const freed = await call('/admin/list', {}, { authorization: 'Bearer admin-test' });
+  const someAdmin = freed.rows.find((r) => r.tier === 'Admin' && !r.suspended);
+  await call('/admin/revoke', { keyId: someAdmin.keyId, reason: 'slot for migrate test' }, { authorization: 'Bearer admin-test' });
+  const m = await call('/admin/migrate', { keyId: proId, reason: 'owner upgrade' }, { authorization: 'Bearer admin-test' });
+  assert.equal(m.revoked, proId);
+  assert.ok(m.key && m.key.startsWith('NTCH-ADMN-'), 'the new key is an admin key');
+  assert.ok((await JSON.parse(await env.KV.get(`key:${proId}`))).revoked, 'the old Pro key is revoked');
+  assert.equal((await call('/entitle', { key: m.key, device: devn(712) })).status, 200, 'the new admin key works');
+  // An admin key cannot be migrated again.
+  assert.equal((await call('/admin/migrate', { keyId: parseKey(m.key).keyId }, { authorization: 'Bearer admin-test' })).status, 400);
+});
+
 // ---- The Plane game's world leaderboard
 
 const fakeDO = (Cls) => { const objs = new Map(); return { idFromName: (n) => n, get: (id) => { if (!objs.has(id)) { const m = new Map(); objs.set(id, new Cls({ storage: { get: async (k) => m.get(k), put: async (k, v) => { m.set(k, v); } } })); } const o = objs.get(id); return { fetch: (url, init) => o.fetch(new Request(url, init)) }; } }; };
