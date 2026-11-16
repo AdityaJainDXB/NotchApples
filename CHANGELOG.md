@@ -4,6 +4,16 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.73 · Windows 2.2.73 BETA · 16 November 2026 · ✍️ Humanizer
+
+**Mac**
+
+- New: Humanizer. Tools → Humanizer rewrites text so it reads like a person wrote it, and every NotchAI reply has a Humanize button (with Show original). Free humanizes up to 500 words at a time and 3,000 a month, Pro 1,000 at a time and 15,000 a month, Ultimate any length and 40,000 a month. The words are counted on your own computer and renew on the 1st. Buying extra words is coming soon
+
+**Windows**
+
+- New: Humanizer. Tools → Humanizer rewrites text so it reads like a person wrote it, and every AI reply has a Humanize button. Free humanizes up to 500 words at a time and 3,000 a month, Pro 1,000 at a time and 15,000 a month, Ultimate any length and 40,000 a month. The words are counted on your own computer and renew on the 1st. Buying extra words is coming soon
+
 ### Mac 2.2.72 · Windows 2.2.72 BETA · 14 November 2026 · Liquid metal, liquid glass buttons, desktop widgets and the F1 simulation
 
 - New: liquid metal (recommended). Settings → Appearance → Liquid metal gives the open tab, the closed notch and every button a flowing metal look when you point at it or click it, in your theme colour, Purple, Rainbow or Gold. The AI start screen has a new "Ready when you are" look. It holds still with Reduce Motion

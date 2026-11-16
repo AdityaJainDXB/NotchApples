@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.73", date: "16 November 2026", headline: "Humanizer", items: [
+            "- New: Humanizer. Tools → Humanizer rewrites text so it reads like a person wrote it, and every NotchAI reply has a Humanize button (with Show original). Free humanizes up to 500 words at a time and 3,000 a month, Pro 1,000 at a time and 15,000 a month, Ultimate any length and 40,000 a month. The words are counted on your own computer and renew on the 1st. Buying extra words is coming soon",
+        ]),
         ReleaseNote(version: "2.2.72", date: "14 November 2026", headline: "Liquid metal, liquid glass buttons, desktop widgets", items: [
             "- New: liquid metal (recommended). Settings → Appearance → Liquid metal gives the open tab, the closed notch and every button a flowing metal look when you point at it or click it, in your theme colour, Purple, Rainbow or Gold. The AI start screen has a new \"Ready when you are\" look. It holds still with Reduce Motion",
             "- New: liquid glass buttons. Settings → Appearance → Liquid glass buttons turns every button into a pane of frosted glass that lights up when you point at it. It works alone or together with liquid metal",

@@ -150,13 +150,16 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.73 · Windows 2.2.73 · 16 November 2026 · ✍️ Humanizer
+
+- New: Humanizer. Tools → Humanizer rewrites text so it reads like a person wrote it, and every NotchAI reply has a Humanize button (with Show original). Free humanizes up to 500 words at a time and 3,000 a month, Pro 1,000 at a time and 15,000 a month, Ultimate any length and 40,000 a month. The words are counted on your own computer and renew on the 1st. Buying extra words is coming soon
+
 ### Mac 2.2.72 · Windows 2.2.72 · 14 November 2026 · Liquid metal, liquid glass buttons, desktop widgets and the F1 simulation
 
 - New: liquid metal (recommended). Settings → Appearance → Liquid metal gives the open tab, the closed notch and every button a flowing metal look when you point at it or click it, in your theme colour, Purple, Rainbow or Gold. The AI start screen has a new "Ready when you are" look. It holds still with Reduce Motion
 - New: liquid glass buttons. Settings → Appearance → Liquid glass buttons turns every button into a pane of frosted glass that lights up when you point at it. It works alone or together with liquid metal
 - New: liquid metal outliners. Settings → Appearance → Liquid metal outliners outlines only the open tab and whatever you point at with flowing metal, one thing at a time, and the closed notch rim lights up when you point at it or a notification arrives. It is the look of the original prototype
 - New: desktop widgets (Ultimate). Clock, To-do and Now Playing as small windows on your desktop that you can drag; they stay under your other windows. Turn them on in Settings → Widget
-- New: Humanizer. Tools → Humanizer rewrites text so it reads like a person wrote it, and every NotchAI reply has a Humanize button (with Show original). Free humanizes up to 500 words at a time and 3,000 a month, Pro 1,000 at a time and 15,000 a month, Ultimate any length and 40,000 a month. The words are counted on your own computer and renew on the 1st. Buying extra words is coming soon
 - Fixed: Flight Economy opens with your Ultimate key, no code needed
 - Fixed: in the F1 game the battery gauge no longer reads 0% on a 4:3 window (the tyre panel was drawn over it), and the telemetry panel no longer shows NaN kW before the race starts
 - Fixed: in Racing, cars still on the road when you finish are no longer listed as DNF. The results now wait for them to cross the line (up to 30 seconds), and only a car that really retired shows DNF
@@ -169,22 +172,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New: the weekend. Open it from the menu for practice, qualifying with the 107% rule and 22, 16, 10 knockouts, the Sprint, and the Grand Prix, with 13 dry tyre sets (one Soft kept for Q3), the two-compound rule, a season pool of engine parts with 10 and 5 place grid penalties, and track rubber that builds up and rain that washes away
 - New: a race engineer who calls the undercut, the tyres and the fuel, and an MFD for brake bias, differentials and ERS. Nothing is added to the screen until you turn it on: U is the F1 telemetry panel, I the MFD (O, comma, full stop, minus, equals to change it), C cycles race control messages. J is still the steering panel
 - Other racing modes and cars are unchanged
-
-### Mac 2.2.70 · Windows 2.2.70 · 12 November 2026 · NotchAI: more voices, drawing, diagrams, and a Windows chat
-
-- New: NotchAI Voice has more engines. Piper (a natural voice) and Whisper (speech to text) run on your Mac once you install them and set their paths in Voice. OpenAI's voice is there too and, like every cloud voice, stays blocked while Local first is on
-- New: hands-free talking. Turn it on in Voice and a pause ends your sentence, and NotchAI listens again after it answers. A wake word ("Hey Notch") is also there: it is off by default, is recognised on your Mac only, shows when the microphone is open, and is experimental
-- New (Pro): draw on your screen. Turn it on in Screen, hold Control and Option and move the pointer to draw, then ask NotchAI to explain what you drew around. NotchAI's own arrows, circles and boxes can use a hand-drawn style
-- New: Visual can draw a diagram of boxes and arrows for a topic, and can open your own 3D files (USDZ, OBJ, STL and others) to turn around and click
-- New (Pro): Documents takes whole folders, searches inside your files, and reads old Word (.doc) and rich text files
-- New (Pro): one-press connectors for Notion, Linear and Sentry that sign in through your browser, GitHub with a token, and more than one account for each
-- New (Pro): dictation can draft from the screen. Say what you want written, press Draft from the screen, and NotchAI reads the window you were using and writes it for you to check before it is inserted
-- Windows: New: a NotchAI tab (beta). It is a chat that stays on this PC: with Local first on, it only uses a model Ollama has installed here and refuses anything else before it is sent. It has Stop, Regenerate, New chat and can read answers aloud. Voice questions, screen reading, files and agents are on the Mac only for now
-
-### Mac 2.2.69 · Windows 2.2.69 · 12 November 2026 · 🪶 Lighter in the background, Screen buttons work
-
-- Fixed: the Now Playing helper could be left running after Notch Apple quit or restarted for an update, one more each time, all polling in the background. It now stops with the app, ends by itself if the app is gone, and leftovers from older runs are ended when Notch Apple starts
-- Fixed: in NotchAI's Screen section the buttons stayed greyed out until you found the switch. Pressing one now turns Screen awareness on and asks for Screen Recording if it is missing. After you allow it in System Settings, quit and reopen Notch Apple; macOS only applies it after a restart
 
 ## Plugins
 
