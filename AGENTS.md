@@ -47,5 +47,6 @@ The README is the front page, not the history. For every release:
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 16 Nov 2026: fixed the Windows smoke test, which still expected three Tools pages (Humanizer made four). The Windows 2.2.73 build needs a rerun.
 - 16 Nov 2026: Humanizer (from Sumin Sethi's branch, PR #98) merged and released as 2.2.73, with its Windows test still failing on this Node setup (the same as five other Windows tests). The Humanizer's paid extra words are still coming soon.
 - 16 Nov 2026: added this rule, the Commit log, and AGENTS.md (a copy of this file). The license worker's chat retry and refund (PR #96) is deployed; the stray Worker from an earlier deploy was deleted.
