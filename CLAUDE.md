@@ -43,10 +43,17 @@ The README is the front page, not the history. For every release:
 
 `CLAUDE.md` and `AGENTS.md` are kept identical. After every commit you make here, add one line to the **Commit log** at the bottom of **both** files, in the same commit: the date, what changed, and what is left open. Do not add the commit's own hash (you do not have it yet). If you change either file, make the other match it.
 
+## Admin key: bypasses every paywall and cap (standing rule from the owner, 16 November 2026)
+
+There are Pro and Ultimate keys, and there will be one **admin key** above them. An admin key unlocks every paywalled feature with no limits: the Humanizer's word caps, the messages cap for messaging, and any future feature that has a cap, a paywall or a usage allowance. When you add a new paywall, cap or metered feature, make sure an admin key bypasses it. Do not add a limit that an admin key cannot pass.
+
+Not built yet. Do not add an admin tier to the licence or entitlement code without the owner's go-ahead, and never put an admin key, its secret or its signing material in the repository or in a message. Keys are issued on the licence server (`server/license-worker`), not in the apps.
+
 ## Commit log
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 16 Nov 2026: added the admin-key rule (an admin key bypasses every paywall and cap). Not built: the admin tier is not in the licence code yet.
 - 16 Nov 2026: fixed the Windows smoke test, which still expected three Tools pages (Humanizer made four). The Windows 2.2.73 build needs a rerun.
 - 16 Nov 2026: Humanizer (from Sumin Sethi's branch, PR #98) merged and released as 2.2.73, with its Windows test still failing on this Node setup (the same as five other Windows tests). The Humanizer's paid extra words are still coming soon.
 - 16 Nov 2026: added this rule, the Commit log, and AGENTS.md (a copy of this file). The license worker's chat retry and refund (PR #96) is deployed; the stray Worker from an earlier deploy was deleted.
