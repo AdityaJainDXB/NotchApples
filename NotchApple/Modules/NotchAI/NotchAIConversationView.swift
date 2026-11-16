@@ -14,6 +14,10 @@ struct NotchAIConversationView: View {
     var compact = false
     @ObservedObject private var convo = NotchAIConversation.shared
     @ObservedObject private var config = AIConfig.shared
+    @ObservedObject private var humanizer = HumanizerService.shared
+    /// The first wording of a reply that was humanized, so Show original can put it back.
+    @State private var originals: [UUID: String] = [:]
+    @State private var humanizeError: String?
     @State private var input = ""
     @FocusState private var focused: Bool
 
@@ -92,10 +96,43 @@ struct NotchAIConversationView: View {
         } else if m.text.isEmpty {
             Text("…").font(.system(size: fontSize)).foregroundStyle(Theme.textSecondary).padding(8)
         } else {
-            RichTextView(markdown: m.text, fontSize: fontSize).textSelection(.enabled)
-                .padding(8)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+            VStack(alignment: .leading, spacing: 4) {
+                RichTextView(markdown: m.text, fontSize: fontSize).textSelection(.enabled)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8))
+                if !(convo.busy && m.id == convo.messages.last?.id) { humanizeRow(m) }
+            }
+        }
+    }
+
+    /// The Humanize button under a finished reply: rewrites it so it reads like a person wrote it (the Humanizer, with its word limits).
+    @ViewBuilder
+    private func humanizeRow(_ m: ChatMessage) -> some View {
+        HStack(spacing: 8) {
+            if let original = originals[m.id] {
+                Button { convo.replaceText(id: m.id, with: original); originals[m.id] = nil } label: { Label("Show original", systemImage: "arrow.uturn.backward") }
+                    .help("Put the first wording back")
+            } else {
+                Button { humanize(m) } label: { Label(humanizer.busy ? "Humanizing…" : "Humanize", systemImage: "person.wave.2") }
+                    .help("Rewrite this so it reads like a person wrote it. \(humanizer.summary).")
+                    .disabled(humanizer.busy)
+            }
+            if let humanizeError, humanizer.busy == false { Text(humanizeError).font(.system(size: 10)).foregroundStyle(.orange).lineLimit(2) }
+        }
+        .buttonStyle(MetalPlainStyle())
+        .font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.textSecondary)
+        .padding(.leading, 4)
+    }
+
+    private func humanize(_ m: ChatMessage) {
+        humanizeError = nil
+        Task {
+            do {
+                let out = try await HumanizerService.shared.humanize(m.text)
+                originals[m.id] = m.text
+                convo.replaceText(id: m.id, with: out)
+            } catch { humanizeError = error.localizedDescription }
         }
     }
 

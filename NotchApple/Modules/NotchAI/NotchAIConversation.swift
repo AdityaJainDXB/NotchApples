@@ -129,6 +129,13 @@ final class NotchAIConversation: ObservableObject {
         }
     }
 
+    /// Swaps one reply's text for another (the Humanize button). Not saved to AI History: the history keeps what the model said.
+    func replaceText(id: UUID, with text: String) {
+        guard let i = messages.firstIndex(where: { $0.id == id }) else { return }
+        messages[i].text = text
+        tick &+= 1
+    }
+
     private func updateReply(_ text: String) {
         guard let i = messages.indices.last, messages[i].role == .assistant else { return }
         messages[i].text = text

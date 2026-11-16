@@ -12,6 +12,7 @@ import { el, load, save } from '../store.js';
 import { http } from '../native.js';
 import { markdown, toast } from '../ui.js';
 import * as AI from '../services/ai.js';
+import * as H from '../services/humanizer.js';
 import * as L from '../services/notchailogic.js';
 
 const GREEN = '#22C55E';
@@ -79,6 +80,12 @@ export function render(root) {
         ? 'align-self:flex-end;background:rgba(34,197,94,.18)' : 'align-self:flex-start;background:var(--surface)'}` });
       if (t.role === 'assistant') bubble.append(markdown(t.text)); else bubble.textContent = t.text;
       log.append(bubble);
+      if (t.role === 'assistant' && t.text) {
+        log.append(el('button', { class: 'quiet', style: 'align-self:flex-start;font-size:11px;padding:0 4px', title: H.summary(), onclick: async (e) => {
+          e.target.disabled = true;
+          try { t.text = await H.humanize(t.text); keep(); paintLog(); } catch (err) { toast(err.message); e.target.disabled = false; }
+        } }, '✍ Humanize'));
+      }
     }
     if (busy) log.append(el('div', { class: 'small dim', style: 'align-self:flex-start;padding:4px 2px' }, 'Thinking…'));
     log.scrollTop = log.scrollHeight;

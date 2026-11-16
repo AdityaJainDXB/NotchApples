@@ -111,17 +111,20 @@ function calculatorPage(converter) {
 
 export function render(root) {
   let page = load('tools.page', 'utilities');
-  if (!['utilities', 'calculator', 'translator'].includes(page)) page = 'utilities';
+  if (!['utilities', 'calculator', 'translator', 'humanizer'].includes(page)) page = 'utilities';
   const { utilities, converter } = utilitiesAndConverter();
   const calc = calculatorPage(converter);
   const host = el('div', { class: 'col fill', style: 'min-height:0' });
   let translatorBuilt = false;
   const translator = el('div', { class: 'col fill' });
+  let humanizerBuilt = false;
+  const humanizer = el('div', { class: 'col fill' });
   function paint() {
-    host.replaceChildren(page === 'utilities' ? utilities : page === 'calculator' ? calc : translator);
+    host.replaceChildren(page === 'utilities' ? utilities : page === 'calculator' ? calc : page === 'humanizer' ? humanizer : translator);
+    if (page === 'humanizer' && !humanizerBuilt) { humanizerBuilt = true; import('./humanizer.js').then((m) => m.render(humanizer)); }
     if (page === 'translator' && !translatorBuilt) { translatorBuilt = true; import('./translator.js').then((m) => m.render(translator)); }
   }
-  const pages = segmented([{ value: 'utilities', label: 'Utilities' }, { value: 'calculator', label: 'Calculator' }, { value: 'translator', label: 'Translator' }], page, (v) => { page = v; save('tools.page', v); paint(); });
+  const pages = segmented([{ value: 'utilities', label: 'Utilities' }, { value: 'calculator', label: 'Calculator' }, { value: 'translator', label: 'Translator' }, { value: 'humanizer', label: 'Humanizer' }], page, (v) => { page = v; save('tools.page', v); paint(); });
   root.append(el('div', { class: 'col fill', style: 'gap:8px' }, el('div', { class: 'hstack', style: 'flex:none' }, pages), host));
   paint();
 }
