@@ -1,18 +1,18 @@
 {
-  "version": "2.2.50",
-  "title": "Notch Apple 2.2.50 · Flight Economy opens with your Ultimate key",
-  "notes": "## Notch Apple 2.2.50\n\n- New: Flight Economy opens with your Ultimate license key. No access code needed, on Mac and Windows; existing Ultimate keys get it too. Pro keys do not open it.\n",
-  "published": "2026-11-09T14:06:40Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.2.50/NotchApple-2.2.50.dmg",
-  "dmgSize": 55369271,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.2.50",
-  "stars": 3,
+  "version": "2.2.74",
+  "title": "Notch Apple 2.2.74 · Admin keys",
+  "notes": "## Notch Apple 2.2.74\n\n- New: admin keys. A higher key tier with no limits at all: every paid feature unlocked and no word or message caps. Only the owner can issue one, and at most four can be live at a time.\n- Fixed: Humanizer and the Ultimate-only screens now open for the admin tier, and the Windows key check accepts admin keys\n",
+  "published": "2026-11-16T14:57:50Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.2.74/NotchApple-2.2.74.dmg",
+  "dmgSize": 31058788,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.2.74",
+  "stars": 4,
   "windows": {
-    "version": "2.2.50",
+    "version": "2.2.74",
     "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.2.50/Notch.apple_2.2.50_x64-setup.exe",
-    "sha256": "7abea29a2475be0aa3a5fedd1e584fcde3c383f1f604fc96457aed378a721d3f",
-    "size": 6557274,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.2.50"
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.2.74/Notch.apple_2.2.74_x64-setup.exe",
+    "sha256": "0bf19687f7a16bc4ff503a8c66b025973cf1fe6a9e085df949e156f89660dc3a",
+    "size": 6794970,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.2.74"
   }
 }
