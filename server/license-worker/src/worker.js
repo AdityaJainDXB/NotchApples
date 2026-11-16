@@ -1771,9 +1771,11 @@ export const aiOn = (env) => !!env.AI_API_KEY;
 export class AiQuota {
   constructor(state) { this.state = state; }
   async fetch(request) {
-    const { limit } = await request.json();
+    const { limit, refund } = await request.json();
     const day = new Date().toISOString().slice(0, 10);
     const used = (await this.state.storage.get(day)) || 0;
+    // The provider did not answer: give the message back, so an outage does not use up anyone's day.
+    if (refund) { if (used > 0) await this.state.storage.put(day, used - 1); return Response.json({ ok: true, used: Math.max(0, used - 1) }); }
     if (used >= limit) return Response.json({ ok: false, used, limit });
     await this.state.storage.put(day, used + 1);
     await this.state.storage.delete(new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10));
@@ -1803,6 +1805,24 @@ export function cleanAiRequest(body, env) {
   return out;
 }
 
+/** The providers to try, in order: the main one, the main one again after a short pause, then (only if set) a fallback model on the
+ *  same provider (AI_FALLBACK_MODEL), then another provider (AI_ALT_BASE, AI_ALT_KEY and AI_ALT_MODEL). */
+export function aiAttempts(env) {
+  const base = env.AI_BASE || AI_DEFAULT_BASE, key = env.AI_API_KEY, model = env.AI_MODEL || AI_DEFAULT_MODEL;
+  const list = [{ base, key, model }, { base, key, model, wait: 700 }];
+  if (env.AI_FALLBACK_MODEL && env.AI_FALLBACK_MODEL !== model) list.push({ base, key, model: env.AI_FALLBACK_MODEL });
+  if (env.AI_ALT_BASE && env.AI_ALT_KEY && env.AI_ALT_MODEL) list.push({ base: env.AI_ALT_BASE, key: env.AI_ALT_KEY, model: env.AI_ALT_MODEL });
+  return list;
+}
+/** One try at a provider. It gives up if no answer has started within `ms` (an answer that has started is never cut off). */
+async function aiTry(a, upstream, ms) {
+  const ac = new AbortController(), timer = setTimeout(() => ac.abort(), ms);
+  try {
+    return await fetch(`${a.base.replace(/\/+$/, '')}/chat/completions`, {
+      method: 'POST', signal: ac.signal, headers: { 'content-type': 'application/json', authorization: `Bearer ${a.key}` }, body: JSON.stringify({ ...upstream, model: a.model }) });
+  } finally { clearTimeout(timer); }
+}
+
 async function aiChat(env, request) {
   if (!aiOn(env)) throw new HTTPError(503, "Notch Apple AI isn't switched on yet.");
   const token = (request.headers.get('authorization') || '').replace(/^Bearer /, '');
@@ -1814,17 +1834,26 @@ async function aiChat(env, request) {
   let body; try { body = JSON.parse(text); } catch { throw new HTTPError(400, 'Bad JSON'); }
   const upstream = cleanAiRequest(body, env);
   const limit = aiLimit(env, p.t);
-  const q = await (await env.AI_QUOTA.get(env.AI_QUOTA.idFromName(p.k)).fetch('https://quota/', { method: 'POST', body: JSON.stringify({ limit }) })).json();
+  const quota = env.AI_QUOTA.get(env.AI_QUOTA.idFromName(p.k));
+  // If the counter itself is unreachable, let the message through (a short gap in counting beats chat failing for everyone).
+  const q = await quota.fetch('https://quota/', { method: 'POST', body: JSON.stringify({ limit }) }).then((x) => x.json()).catch((e) => { console.error('AI quota unreachable', String(e)); return { ok: true, used: 0 }; });
   if (!q.ok) throw new HTTPError(429, `You've used today's ${limit} Notch Apple AI messages. They reset at midnight UTC; you can also use your own key in Settings → AI.`, { limit });
-  let r;
-  try {
-    r = await fetch(`${(env.AI_BASE || AI_DEFAULT_BASE).replace(/\/+$/, '')}/chat/completions`, {
-      method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${env.AI_API_KEY}` }, body: JSON.stringify(upstream) });
-  } catch { throw new HTTPError(503, 'Notch Apple AI is busy. Try again in a minute.'); }
-  if (!r.ok) {
-    // The provider's reason goes to the server log (never to the app, which only hears "busy"), so a wrong model or key can be found.
-    console.error('AI provider answered', r.status, (await r.text()).slice(0, 300));
-    throw new HTTPError(r.status === 429 || r.status >= 500 ? 503 : 502, 'Notch Apple AI is busy. Try again in a minute.');
+  let r = null, last = 0;
+  const t0 = Date.now();
+  for (const a of aiAttempts(env)) {
+    if (Date.now() - t0 > 45000) break;                       // never keep the app waiting more than about 45 s in all
+    if (a.wait) await new Promise((res) => setTimeout(res, a.wait));
+    try {
+      const x = await aiTry(a, upstream, Number(env.AI_TIMEOUT_MS) || 15000);
+      if (x.ok) { r = x; break; }
+      last = x.status;
+      // The provider's reason goes to the server log (never to the app, which only hears "busy"), so a wrong model or key can be found.
+      console.error('AI provider answered', x.status, a.model, (await x.text()).slice(0, 300));
+    } catch (e) { last = 0; console.error('AI provider unreachable', a.model, String((e && e.name) || e)); }
+  }
+  if (!r) {
+    await quota.fetch('https://quota/', { method: 'POST', body: JSON.stringify({ refund: true }) }).catch(() => {});
+    throw new HTTPError(last === 0 || last === 429 || last >= 500 ? 503 : 502, 'Notch Apple AI is busy. Try again in a minute.');
   }
   return new Response(r.body, { headers: { 'content-type': r.headers.get('content-type') || 'application/json', 'x-ai-remaining': String(Math.max(0, limit - q.used)), 'cache-control': 'no-store', ...CORS } });
 }
