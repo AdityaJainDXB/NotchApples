@@ -3,6 +3,7 @@
 // attach images and PDFs, search the web with sources, personas, slash commands,
 // saved chats, read aloud and voice typing.
 
+import * as H from '../services/humanizer.js';
 import { magnet } from '../services/magnet.js';
 import { el, load, save, timeAgo } from '../store.js';
 import { invoke, listen, openUrl } from '../native.js';
@@ -123,6 +124,9 @@ export function render(root, opts = {}) {
       iconBtn('⧉', 'Copy', () => invoke('clipboard_copy_text', { text: m.text }).then(() => toast('Copied'))),
       iconBtn('⤵', 'Paste into the app you were using', async () => { await collapse(); invoke('paste_text', { text: m.text }); }),
       iconBtn('🔊', 'Read aloud', () => say(m.text)),
+      iconBtn('✍', 'Humanize: rewrite this so it reads like a person wrote it', async () => {
+        try { m.text = await H.humanize(m.text); toast('Humanized'); paint(); } catch (e) { toast(e.message); }
+      }),
       i === chat.messages.length - 1 ? iconBtn('↻', 'Try again', retry) : null,
     ];
     return el('div', { style: `display:flex;flex-direction:column;align-items:${mine ? 'flex-end' : 'flex-start'};gap:3px` },
