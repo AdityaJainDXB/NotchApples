@@ -6,7 +6,7 @@
 
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
-import worker, { turnstileOk as worker_turnstile, cardQuote, sendReminders, parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore, cleanAskRequest, totpCode, rfc4648 } from '../src/worker.js';
+import worker, { turnstileOk as worker_turnstile, cardQuote, sendReminders, parseKey, verifyKey, verifyToken, mintToken, b32encode, b32decode, AiQuota, cleanAiRequest, aiAttempts, PlaneBoard, PlaneRate, PlaneSky, cleanPilotName, cleanPlaneScore, cleanAskRequest, totpCode, rfc4648 } from '../src/worker.js';
 
 const pair = await crypto.subtle.generateKey({ name: 'Ed25519' }, true, ['sign', 'verify']);
 const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
@@ -598,6 +598,30 @@ await test('AI: a revoked key stops at once, and provider trouble is reported wi
   upstreamStatus = 200;
   await call('/admin/revoke', { keyId: parseKey(k).keyId, reason: 'test' }, { authorization: 'Bearer admin-test' });
   assert.equal((await aiCall(tok, chatBody)).status, 403);
+});
+
+await test('AI: a provider blip is retried, then a fallback model and another provider are tried, and a failed message is not charged', async () => {
+  const tok = await aiToken('pro', 607);                       // allowance: 3 a day
+  // 1. One failure, then it answers: the app never sees it.
+  upstreamLog = []; upstreamPlan = (m, n) => (n === 1 ? 503 : 200);
+  assert.equal((await aiCall(tok, chatBody)).status, 200); assert.equal(upstreamLog.length, 2);
+  // 2. The main model is down: the fallback model on the same provider answers.
+  env.AI_FALLBACK_MODEL = 'fallback-model';
+  upstreamLog = []; upstreamPlan = (m) => (m === 'fallback-model' ? 200 : 503);
+  assert.equal((await aiCall(tok, chatBody)).status, 200); assert.deepEqual(upstreamLog, ['server-chosen-model', 'server-chosen-model', 'fallback-model']);
+  // 3. The whole provider is down: another provider answers.
+  env.AI_ALT_BASE = 'https://alt.test/v1'; env.AI_ALT_KEY = 'alt-secret'; env.AI_ALT_MODEL = 'alt-model';
+  upstreamLog = []; upstreamPlan = (m) => (m === 'alt-model' ? 200 : 500);
+  assert.equal((await aiCall(tok, chatBody)).status, 200); assert.equal(upstreamSeen.url, 'https://alt.test/v1/chat/completions'); assert.equal(upstreamSeen.headers.authorization, 'Bearer alt-secret');
+  // 4. Everything is down: 503 for the app, and none of those messages used up the day (3 failures, then 3 answers still fit in the allowance of 3).
+  const tok2 = await aiToken('pro', 608);
+  upstreamPlan = () => 503;
+  for (let i = 0; i < 3; i++) assert.equal((await aiCall(tok2, chatBody)).status, 503);
+  upstreamPlan = null;
+  const left = await aiCall(tok2, chatBody);
+  assert.equal(left.status, 200); assert.equal(left.remaining, '2', 'the three failed messages were given back: a full allowance of 3 minus this one');
+  delete env.AI_FALLBACK_MODEL; delete env.AI_ALT_BASE; delete env.AI_ALT_KEY; delete env.AI_ALT_MODEL; upstreamPlan = null;
+  assert.deepEqual(aiAttempts({ AI_API_KEY: 'k' }).map((a) => a.model), ['gemini-3.5-flash-lite', 'gemini-3.5-flash-lite']);
 });
 
 // ---- The Plane game's world leaderboard
