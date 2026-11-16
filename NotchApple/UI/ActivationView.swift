@@ -195,7 +195,7 @@ struct TierBadge: View {
         }
         .foregroundStyle(.white)
         .padding(.horizontal, 6).padding(.vertical, 2)
-        .background(LinearGradient(colors: tier == .ultimate ? [.purple, .indigo] : [.orange, .pink],
+        .background(LinearGradient(colors: tier >= .ultimate ? [.purple, .indigo] : [.orange, .pink],
                                    startPoint: .leading, endPoint: .trailing), in: Capsule())
         .accessibilityLabel(locked ? "Needs \(tier.name)" : tier.name)
     }

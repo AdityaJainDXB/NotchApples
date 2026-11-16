@@ -51,9 +51,11 @@ const FLIGHT_ECONOMY = await import('../private/flight-economy.js').then((m) => 
 import * as Insights from './insights.js';
 import { SkyRoom, SkyError } from './sky.js';
 import KNOWLEDGE from './knowledge.js';
-const TIER = { pro: 1, ultimate: 2 };
-const TIER_LABEL = { 1: 'PRO', 2: 'ULTM' };
-const TIER_NAME = { 1: 'Pro', 2: 'Ultimate' };
+const TIER = { pro: 1, ultimate: 2 };          // what can be bought (orders, cards, Whop)
+const ADMIN_TIER = 3;                           // never sold: only /admin/issue and a reissue of an admin key can make one
+const MAX_ADMIN_KEYS = 4;                       // at most this many live admin keys at any time
+const TIER_LABEL = { 1: 'PRO', 2: 'ULTM', 3: 'ADMN' };
+const TIER_NAME = { 1: 'Pro', 2: 'Ultimate', 3: 'Admin' };
 const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';   // Crockford: no I, L, O or U
 const EPOCH = Date.UTC(2026, 0, 1);
 const ORDER_TTL = 48 * 3600;
@@ -97,7 +99,7 @@ export function formatKey(tier, bytes) {
 /** Parses a key into { tier, keyId, day, payload, sig } or null. Doesn't check the signature. */
 export function parseKey(input) {
   const s = String(input || '').toUpperCase().replace(/\s+/g, '');
-  const m = s.match(/^NTCH-?(PRO|ULTM)-?([0-9A-Z-]+)$/);
+  const m = s.match(/^NTCH-?(PRO|ULTM|ADMN)-?([0-9A-Z-]+)$/);
   if (!m) return null;
   const bytes = b32decode(m[2].replace(/-/g, ''));
   if (!bytes || bytes.length !== 76 || bytes[0] !== 1) return null;
@@ -171,7 +173,27 @@ const emailHash = (env, email) => sha256((env.EMAIL_PEPPER || '') + '|' + email.
 async function revokedIds(env) { return (await getJSON(env, 'revoked')) || []; }
 
 /** Mints a key and records it (plus the buyer's email hash for recovery). */
+/** How many admin keys are live (not revoked, not suspended). `exclude` leaves one key out of the count. */
+async function activeAdminKeys(env, exclude = null) {
+  const revoked = await revokedIds(env);
+  let n = 0, cursor;
+  do {
+    const page = await env.KV.list({ prefix: 'key:', cursor: cursor || undefined, limit: 1000 });
+    for (const k of page.keys) {
+      const id = k.name.slice(4);
+      if (id === exclude) continue;
+      let m = k.metadata;
+      if (!m) { const r = await getJSON(env, k.name); if (!r) continue; m = keyMeta(r); }
+      if (m.t === ADMIN_TIER && !m.r && !revoked.includes(id)) n++;
+    }
+    cursor = page.list_complete ? null : page.cursor;
+  } while (cursor);
+  return n;
+}
+const adminFull = () => new HTTPError(409, `There are already ${MAX_ADMIN_KEYS} admin keys. Revoke one before making another.`);
+
 async function issueKey(env, tier, source, email, extra = {}) {
+  if (tier === ADMIN_TIER && (await activeAdminKeys(env)) >= MAX_ADMIN_KEYS) throw adminFull();
   const { key, keyId } = await mintKey(env, tier);
   const eh = email ? await emailHash(env, email) : null;
   await putJSON(env, `key:${keyId}`, { tier, source, created: Date.now(), devices: [], emailHash: eh, key, ...extra });
@@ -1410,9 +1432,10 @@ async function audit(env, path, body, result) {
 
 async function admin(env, path, body) {
   if (path === '/admin/issue') {
-    const tier = TIER[body.tier];
-    if (!tier) throw new HTTPError(400, 'tier must be pro or ultimate');
+    const tier = body.tier === 'admin' ? ADMIN_TIER : TIER[body.tier];
+    if (!tier) throw new HTTPError(400, 'tier must be pro, ultimate or admin');
     const count = Math.max(1, Math.min(50, Number(body.count) || 1));
+    if (tier === ADMIN_TIER && count > 1 && (await activeAdminKeys(env)) + count > MAX_ADMIN_KEYS) throw adminFull();
     if (count > 1 && body.email) throw new HTTPError(400, 'Email can only be sent for a single key');
     const note = String(body.note || '').slice(0, 200);
     const keys = [];
@@ -1615,6 +1638,8 @@ async function admin(env, path, body) {
     const id = String(body.keyId || (body.key && parseKey(body.key)?.keyId) || '');
     if (!/^[0-9a-f]{16}$/.test(id)) throw new HTTPError(400, 'keyId or key needed');
     const rec = await getJSON(env, `key:${id}`);
+    const oldTier = rec?.tier || parseKey(body.key)?.tier;
+    if (oldTier === ADMIN_TIER && (await activeAdminKeys(env, id)) >= MAX_ADMIN_KEYS) throw adminFull();
     const ids = await revokedIds(env);
     if (!ids.includes(id)) { ids.push(id); await putJSON(env, 'revoked', ids); }
     if (rec) { rec.revoked = { at: Date.now(), reason: String(body.reason || '').slice(0, 200) }; await putJSON(env, `key:${id}`, rec); }
@@ -1764,7 +1789,7 @@ async function gamePut(env, request, url) {
 
 const AI_DEFAULT_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
 const AI_DEFAULT_MODEL = 'gemini-3.5-flash-lite';
-const aiLimit = (env, tier) => Number(tier === 2 ? env.AI_LIMIT_ULTIMATE || 200 : env.AI_LIMIT_PRO || 60);
+const aiLimit = (env, tier) => tier >= ADMIN_TIER ? Number.MAX_SAFE_INTEGER : Number(tier === 2 ? env.AI_LIMIT_ULTIMATE || 200 : env.AI_LIMIT_PRO || 60);
 export const aiOn = (env) => !!env.AI_API_KEY;
 
 /** Counts requests per key per UTC day (one Durable Object per key, so it needs no KV writes). */

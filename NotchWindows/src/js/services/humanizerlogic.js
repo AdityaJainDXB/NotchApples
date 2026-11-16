@@ -8,7 +8,7 @@
 export const WORDS_PER_DOLLAR = 50000;
 /** Most words in one request for a tier (0 Free, 1 Pro, 2 Ultimate); null for no limit. */
 export const perRequestLimit = (tier) => (tier >= 2 ? null : tier === 1 ? 1000 : 500);
-export const monthlyAllowance = (tier) => (tier >= 2 ? 40000 : tier === 1 ? 15000 : 3000);
+export const monthlyAllowance = (tier) => (tier >= 3 ? Number.MAX_SAFE_INTEGER : tier === 2 ? 40000 : tier === 1 ? 15000 : 3000);
 export const wordCount = (text) => String(text || '').split(/\s+/).filter(Boolean).length;
 export const monthKey = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 

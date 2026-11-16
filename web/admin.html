@@ -119,7 +119,7 @@ tr.k:hover td{background:rgba(255,255,255,.025)}
     <section class="card">
       <h2>Generate keys</h2>
       <label>Tier</label>
-      <div class="seg" id="genTier"><button class="on" data-v="pro">Pro</button><button data-v="ultimate">Ultimate</button></div>
+      <div class="seg" id="genTier"><button class="on" data-v="pro">Pro</button><button data-v="ultimate">Ultimate</button><button data-v="admin" title="Unlimited everything. At most four live admin keys.">Admin</button></div>
       <label for="genCount">How many (1-50)</label>
       <input id="genCount" class="field" type="number" min="1" max="50" value="1" style="width:100%">
       <label for="genNote">Note (who it's for, e.g. "cash, Rahul")</label>
@@ -139,7 +139,7 @@ tr.k:hover td{background:rgba(255,255,255,.025)}
       <h2>Keys</h2>
       <div class="toolbar">
         <input id="q" class="field" placeholder="Search key ID or note, or paste a full key">
-        <select id="fTier" class="field"><option value="">All tiers</option><option>Pro</option><option>Ultimate</option></select>
+        <select id="fTier" class="field"><option value="">All tiers</option><option>Pro</option><option>Ultimate</option><option>Admin</option></select>
         <select id="fStat" class="field"><option value="">Any status</option><option value="active">Active</option><option value="unused">Never activated</option><option value="susp">Suspended</option></select>
       </div>
       <div class="tablewrap">
@@ -211,7 +211,7 @@ async function api(path, body) {
   return j;
 }
 const fmtDate = (t) => t ? new Date(t).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
-const tierPill = (t) => '<span class="pill ' + (t === 'Ultimate' ? 'ultm' : 'pro') + '">' + esc(t) + '</span>';
+const tierPill = (t) => '<span class="pill ' + (t === 'Ultimate' || t === 'Admin' ? 'ultm' : 'pro') + '">' + esc(t) + '</span>';
 const status = (r) => r.suspended ? '<span class="st-bad">Suspended</span>' : (r.devices > 0 ? '<span class="st-ok">Active</span>' : '<span class="dim">Unused</span>');
 async function copy(t) { try { await navigator.clipboard.writeText(t); toast('Copied'); } catch (e) { toast('Copy failed'); } }
 
@@ -317,7 +317,7 @@ $('genBtn').onclick = async () => {
   $('genBtn').disabled = true;
   try {
     const r = await api('issue', { tier: genTier, count, note: $('genNote').value.trim(), email: email || undefined });
-    lastKeys = (r.keys || [r]).map((k) => ({ tier: genTier === 'pro' ? 'Pro' : 'Ultimate', key: k.key, keyId: k.keyId }));
+    lastKeys = (r.keys || [r]).map((k) => ({ tier: { pro: 'Pro', ultimate: 'Ultimate', admin: 'Admin' }[genTier], key: k.key, keyId: k.keyId }));
     $('genOut').style.display = 'block'; $('genActs').style.display = 'flex';
     $('genOut').innerHTML = lastKeys.map((k) => esc(k.key)).join('<br><br>') + (r.emailed ? '<br><br><span class="st-ok">Emailed to ' + esc(email) + '</span>' : '');
     toast(lastKeys.length + (lastKeys.length === 1 ? ' key' : ' keys') + ' generated');

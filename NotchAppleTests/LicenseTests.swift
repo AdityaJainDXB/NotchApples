@@ -11,7 +11,7 @@
 import XCTest
 
 final class LicenseTests: XCTestCase {
-    private struct Fixture: Decodable { let publicKey: String; let pro: String; let ultimate: String }
+    private struct Fixture: Decodable { let publicKey: String; let pro: String; let ultimate: String; let admin: String }
 
     private lazy var fixture: Fixture = {
         let url = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
@@ -29,6 +29,15 @@ final class LicenseTests: XCTestCase {
         // Pasting with spaces, line breaks or lower case still works.
         let messy = fixture.pro.lowercased().replacingOccurrences(of: "-", with: "- \n")
         XCTAssertEqual(try LicenseKey.parse(messy, publicKey: pub).get().keyID, pro.keyID)
+    }
+
+    func testAdminKeyParsesAsAdminAndItsLabelMustMatch() throws {
+        let admin = try LicenseKey.parse(fixture.admin, publicKey: pub).get()
+        XCTAssertEqual(admin.tier, .admin)
+        XCTAssertTrue(fixture.admin.uppercased().hasPrefix("NTCH-ADMN-"))
+        // An admin key relabelled as Ultimate is refused, so a label cannot be swapped to change the tier.
+        let relabelled = fixture.admin.replacingOccurrences(of: "NTCH-ADMN-", with: "NTCH-ULTM-")
+        XCTAssertThrowsError(try LicenseKey.parse(relabelled, publicKey: pub).get())
     }
 
     func testTamperedKeyFails() {

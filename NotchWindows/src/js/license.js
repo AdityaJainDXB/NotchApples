@@ -57,7 +57,7 @@ const VALID = new Set([
   'f9f5e70844c9eb34aa35830f02f94fad77b0f75b01a5e1be516cfd8f7d3d435a',
 ]);
 
-export const TIERS = ['Free', 'Pro', 'Ultimate'];
+export const TIERS = ['Free', 'Pro', 'Ultimate', 'Admin'];
 export const WORKER = 'https://notchapple-licenses.adityajain1225.workers.dev';
 const PUBLIC_KEY = 'HmCtNtd+sFaJO+8TQ57od7pptH3dhEx00SO16I1fhvs=';
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
@@ -116,6 +116,7 @@ export async function parseKey(input) {
   let label, rest;
   if (s.startsWith('NTCH-PRO-')) { label = 'PRO'; rest = s.slice(9); }
   else if (s.startsWith('NTCH-ULTM-')) { label = 'ULTM'; rest = s.slice(10); }
+  else if (s.startsWith('NTCH-ADMN-')) { label = 'ADMN'; rest = s.slice(10); }
   else return { error: "That doesn't look like a Notch Apple key. Copy the whole key, from NTCH- to the end." };
   const body = rest.replace(/-/g, '');
   const bytes = decode(body);
@@ -125,8 +126,8 @@ export async function parseKey(input) {
   catch { return { error: "This version of Windows can't check keys yet. Update Microsoft Edge WebView2 and try again." }; }
   if (!ok) return { error: "This key has been changed or wasn't copied completely." };
   const tier = bytes[1];
-  if (tier !== 1 && tier !== 2) return { error: "This key has been changed or wasn't copied completely." };
-  if ((tier === 1 ? 'PRO' : 'ULTM') !== label) return { error: 'The start of this key doesn\'t match its tier.' };
+  if (tier !== 1 && tier !== 2 && tier !== 3) return { error: "This key has been changed or wasn't copied completely." };
+  if (({ 1: 'PRO', 2: 'ULTM', 3: 'ADMN' })[tier] !== label) return { error: 'The start of this key doesn\'t match its tier.' };
   const id = [...bytes.slice(2, 10)].map((b) => b.toString(16).padStart(2, '0')).join('');
   const groups = body.match(/.{1,6}/g);
   return { tier, id, issued: new Date(EPOCH + ((bytes[10] << 8) | bytes[11]) * 86400000),

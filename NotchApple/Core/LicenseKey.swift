@@ -17,7 +17,7 @@ import CryptoKit
 import Foundation
 
 enum Tier: Int, Comparable, CaseIterable, Codable {
-    case free = 0, pro = 1, ultimate = 2
+    case free = 0, pro = 1, ultimate = 2, admin = 3   // admin: never sold; unlocks everything with no limits
 
     static func < (a: Tier, b: Tier) -> Bool { a.rawValue < b.rawValue }
 
@@ -26,6 +26,7 @@ enum Tier: Int, Comparable, CaseIterable, Codable {
         case .free: "Free"
         case .pro: "Pro"
         case .ultimate: "Ultimate"
+        case .admin: "Admin"
         }
     }
 
@@ -34,6 +35,7 @@ enum Tier: Int, Comparable, CaseIterable, Codable {
         case .free: "$0"
         case .pro: "$5 once"
         case .ultimate: "$15 once"
+        case .admin: "Not for sale"
         }
     }
 }
@@ -309,6 +311,7 @@ struct LicenseKey: Equatable {
         let label: String, rest: Substring
         if s.hasPrefix("NTCH-PRO-") { label = "PRO"; rest = s.dropFirst(9) }
         else if s.hasPrefix("NTCH-ULTM-") { label = "ULTM"; rest = s.dropFirst(10) }
+        else if s.hasPrefix("NTCH-ADMN-") { label = "ADMN"; rest = s.dropFirst(10) }
         else if s.hasPrefix("NTCH") { return .failure(s.count > 40 ? .wrongTier : .notAKey) }
         else { return .failure(.notAKey) }
         guard let bytes = decode(rest.filter { $0 != "-" }), bytes.count == 76, bytes[0] == 1 else { return .failure(.tampered) }
@@ -316,7 +319,7 @@ struct LicenseKey: Equatable {
         guard let key = try? Curve25519.Signing.PublicKey(rawRepresentation: publicKey),
               key.isValidSignature(signature, for: payload) else { return .failure(.tampered) }
         guard let tier = Tier(rawValue: Int(bytes[1])), tier != .free else { return .failure(.tampered) }
-        guard (tier == .pro ? "PRO" : "ULTM") == label else { return .failure(.wrongTier) }
+        guard (tier == .pro ? "PRO" : tier == .admin ? "ADMN" : "ULTM") == label else { return .failure(.wrongTier) }
         let day = Int(bytes[10]) << 8 | Int(bytes[11])
         let id = bytes[2..<10].map { String(format: "%02x", $0) }.joined()
         let groups = stride(from: 0, to: rest.filter { $0 != "-" }.count, by: 6).map { i -> String in

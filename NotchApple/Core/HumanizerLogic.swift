@@ -21,7 +21,7 @@ enum HumanizerLogic {
         switch tier {
         case .free: 500
         case .pro: 1_000
-        case .ultimate: nil
+        case .ultimate, .admin: nil
         }
     }
 
@@ -31,6 +31,7 @@ enum HumanizerLogic {
         case .free: 3_000
         case .pro: 15_000
         case .ultimate: 40_000
+        case .admin: Int.max   // no monthly limit
         }
     }
 

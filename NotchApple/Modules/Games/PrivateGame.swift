@@ -107,7 +107,7 @@ final class PrivateGames: ObservableObject {
 
     /// Ultimate members: the game opens with their license key, no access code. Throws when this Mac has no Ultimate key.
     func unlockWithLicense(_ id: String = PrivateGames.flightEconomy) async throws {
-        guard let text = KeychainHelper.get(.licenseKey), case .success(let k) = LicenseKey.parse(text), k.tier == .ultimate else {
+        guard let text = KeychainHelper.get(.licenseKey), case .success(let k) = LicenseKey.parse(text), k.tier >= .ultimate else {
             throw Failure.message("Enter your access code first.")
         }
         let r = try await askUltimate(key: text, have: nil)

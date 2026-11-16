@@ -32,7 +32,7 @@ enum EntitlementLogic {
               let key = try? Curve25519.Signing.PublicKey(rawRepresentation: publicKey),
               key.isValidSignature(sig, for: Data("NOTCHAPPLE-\(kind)\n\(parts[1])".utf8)),
               let json = try? JSONSerialization.jsonObject(with: body) as? [String: Any],
-              let tier = (json["t"] as? NSNumber)?.intValue, [1, 2].contains(tier),
+              let tier = (json["t"] as? NSNumber)?.intValue, [1, 2, 3].contains(tier),
               let exp = (json["exp"] as? NSNumber)?.doubleValue else { return nil }
         let expires = Date(timeIntervalSince1970: exp)
         return expires > now ? Payload(tier: tier, expires: expires) : nil

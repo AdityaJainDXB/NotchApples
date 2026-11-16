@@ -62,4 +62,10 @@ final class HumanizerTests: XCTestCase {
         XCTAssertNotNil(HumanizerLogic.message(for: .outOfWords(needed: 10, left: 0), tier: .pro))
         XCTAssertNil(HumanizerLogic.message(for: .allowed(fromMonth: 1, fromCredits: 0), tier: .pro))
     }
+
+    func testAdminHasNoLimits() {
+        XCTAssertNil(HumanizerLogic.perRequestLimit(for: .admin))
+        XCTAssertEqual(HumanizerLogic.monthlyAllowance(for: .admin), Int.max)
+        XCTAssertNil(HumanizerLogic.message(for: .allowed(fromMonth: 999_999, fromCredits: 0), tier: .admin))
+    }
 }

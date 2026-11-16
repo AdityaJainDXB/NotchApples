@@ -624,6 +624,35 @@ await test('AI: a provider blip is retried, then a fallback model and another pr
   assert.deepEqual(aiAttempts({ AI_API_KEY: 'k' }).map((a) => a.model), ['gemini-3.5-flash-lite', 'gemini-3.5-flash-lite']);
 });
 
+
+await test('Admin keys: only the admin route makes one, at most four live at a time, and a reissue cannot leave a user without a key', async () => {
+  const admin = (note) => call('/admin/issue', { tier: 'admin', note }, { authorization: 'Bearer admin-test' });
+  // A public order can never ask for an admin key.
+  assert.equal((await call('/order', { tier: 'admin', email: 'x@example.com', coin: 'btc' })).status, 400, 'the public order refuses admin');
+  const a = await admin('one'), b = await admin('two'), c = await admin('three'), d = await admin('four');
+  for (const k of [a, b, c, d]) assert.ok(k.key && k.key.startsWith('NTCH-ADMN-'), 'an admin key has the ADMN label');
+  const fifth = await admin('five');
+  assert.equal(fifth.status, 409, 'a fifth live admin key is refused');
+  assert.ok(String(fifth.error || fifth.message || '').includes('4') || fifth.status === 409);
+  // Revoke one: a new one can be made again.
+  await call('/admin/revoke', { keyId: parseKey(a.key).keyId, reason: 'test' }, { authorization: 'Bearer admin-test' });
+  const e = await admin('five, after a revoke');
+  assert.ok(e.key, 'after revoking one, a new admin key can be made');
+  // Reissuing a live admin key keeps the count at four: the old key is replaced, not added to.
+  const re = await call('/admin/reissue', { keyId: parseKey(b.key).keyId, reason: 'leaked' }, { authorization: 'Bearer admin-test' });
+  assert.ok(re.key && re.key.startsWith('NTCH-ADMN-'), 'reissue makes an admin key');
+  // With four live, a reissue of a fifth is refused BEFORE anything is revoked, so the old key still works.
+  const beforeFull = await call('/admin/issue', { tier: 'admin' }, { authorization: 'Bearer admin-test' });
+  assert.equal(beforeFull.status, 409);
+  const stillLive = await call('/admin/list', {}, { authorization: 'Bearer admin-test' });
+  assert.ok(stillLive.rows.filter((r) => r.tier === 'Admin' && !r.suspended).length === 4, 'four admin keys are live');
+  // An admin key can use the AI past the Pro and Ultimate limits.
+  const tok = (await call('/entitle', { key: re.key, device: devn(700) })).token;
+  for (let i = 0; i < 5; i++) { const r = await aiCall(tok, chatBody); assert.equal(r.status, 200); assert.ok(Number(r.remaining) > 1000000, 'the allowance is unlimited'); }
+  // Keep e's key for the Swift fixture below.
+  globalThis.__adminFixture = e.key;
+});
+
 // ---- The Plane game's world leaderboard
 
 const fakeDO = (Cls) => { const objs = new Map(); return { idFromName: (n) => n, get: (id) => { if (!objs.has(id)) { const m = new Map(); objs.set(id, new Cls({ storage: { get: async (k) => m.get(k), put: async (k, v) => { m.set(k, v); } } })); } const o = objs.get(id); return { fetch: (url, init) => o.fetch(new Request(url, init)) }; } }; };
@@ -877,7 +906,7 @@ await test('Pilot names are normalised (look-alike letters) and cut by character
 
 // Fixture for the Swift tests: a Pro and an Ultimate key from this run, with this run's public key.
 const far = 4102444800;   // the year 2100, so the fixture never expires under the Swift tests
-const fx = { publicKey: btoa(String.fromCharCode(...pubRaw)), pro: leaked, ultimate: (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key,
+const fx = { publicKey: btoa(String.fromCharCode(...pubRaw)), pro: leaked, ultimate: (await call('/admin/issue', { tier: 'ultimate' }, { authorization: 'Bearer admin-test' })).key, admin: globalThis.__adminFixture,
   ent: await mintToken(env, 'ent1', { k: '0011223344556677', t: 2, d: 'abcdef0123456789', iat: 1, exp: far }),
   pass: await mintToken(env, 'pass1', { t: 2, exp: far, r: 'abc123' }),
   passPro: await mintToken(env, 'pass1', { t: 1, exp: far, r: 'abc123' }),

@@ -52,3 +52,12 @@ test('credits price, cleaning and messages', () => {
   assert.match(SYSTEM, /Signs of AI writing/);
   assert.doesNotMatch(SYSTEM, /\\\n/);
 });
+
+test('an admin key has no Humanizer limits at all', async () => {
+  const L = await import('../src/js/services/humanizerlogic.js');
+  assert.equal(L.perRequestLimit(3), null);
+  assert.equal(L.monthlyAllowance(3), Number.MAX_SAFE_INTEGER);
+  assert.equal(L.decide(5000, 3, L.current(null)).kind, 'allowed');
+  assert.equal(L.perRequestLimit(2), null, 'Ultimate is unchanged');
+  assert.equal(L.monthlyAllowance(2), 40000, 'Ultimate is unchanged');
+});
