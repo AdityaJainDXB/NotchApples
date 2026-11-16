@@ -4,6 +4,16 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.74 · Windows 2.2.74 BETA · 16 November 2026 · 🔑 Admin keys
+
+**Mac**
+
+- New: admin keys. A higher key tier with no limits at all: every paid feature unlocked and no word or message caps. Only the owner can issue one, and at most four can be live at a time.
+
+**Windows**
+
+- New: admin keys. A higher key tier with no limits at all: every paid feature unlocked and no word or message caps. Only the owner can issue one, and at most four can be live at a time.
+
 ### Mac 2.2.73 · Windows 2.2.73 BETA · 16 November 2026 · ✍️ Humanizer
 
 **Mac**

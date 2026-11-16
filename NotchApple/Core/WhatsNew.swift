@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.74", date: "16 November 2026", headline: "Admin keys", items: [
+            "- New: admin keys. A higher key tier with no limits at all: every paid feature unlocked and no word or message caps. Only the owner can issue one, and at most four can be live at a time.",
+        ]),
         ReleaseNote(version: "2.2.73", date: "16 November 2026", headline: "Humanizer", items: [
             "- New: Humanizer. Tools → Humanizer rewrites text so it reads like a person wrote it, and every NotchAI reply has a Humanize button (with Show original). Free humanizes up to 500 words at a time and 3,000 a month, Pro 1,000 at a time and 15,000 a month, Ultimate any length and 40,000 a month. The words are counted on your own computer and renew on the 1st. Buying extra words is coming soon",
         ]),

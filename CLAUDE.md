@@ -53,6 +53,7 @@ Not built yet. Do not add an admin tier to the licence or entitlement code witho
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 16 Nov 2026: released 2.2.74 (admin keys on both platforms; the worker is redeployed). Still open: issue the first admin key from the key generator page (Admin, max four).
 - 16 Nov 2026: admin key tier added (NTCH-ADMN-): at most four live, the only way to make one is the admin route, and admin skips every cap (AI, Humanizer words). Public orders still cannot ask for admin.
 - 16 Nov 2026: added the admin-key rule (an admin key bypasses every paywall and cap). Not built: the admin tier is not in the licence code yet.
 - 16 Nov 2026: fixed the Windows smoke test, which still expected three Tools pages (Humanizer made four). The Windows 2.2.73 build needs a rerun.
