@@ -10,6 +10,7 @@
 import { load, save, uid } from '../store.js';
 import { invoke, hasTauri, http, notify } from '../native.js';
 import { provide, refresh } from '../activity.js';
+import * as MQ from './messengerquota.js';
 import * as C from './friendscrypto.js';
 import * as L from './friendslogic.js';
 import * as TTT from '../games/tictactoe-logic.js';
@@ -435,6 +436,7 @@ const reachable = (g) => g.members.map((b) => L.record(vault, b)).filter((f) => 
 export function sendToGroup(text, key) {
   const t = String(text || '').trim(), g = L.group(vault, key);
   if (!t || L.charCount(t) > L.MAX_TEXT || !g) return;
+  if (!MQ.consume()) { st.lastProblem = MQ.state.notice; return; }
   const id = uid().toUpperCase(), to = reachable(g);
   L.addMineToGroup(vault, key, id, t); persist();
   if (!to.length) { L.setState(vault, key, id, 'failed'); st.lastProblem = 'No one in this group is your friend yet, so there is no one to send to.'; persist(); return; }
@@ -707,6 +709,7 @@ export function send(text, box) {
   const t = String(text || '').trim();
   const friend = L.record(vault, box);
   if (!t || L.charCount(t) > L.MAX_TEXT || !friend || friend.status !== 'active') return;
+  if (!MQ.consume()) { st.lastProblem = MQ.state.notice; return; }
   const id = uid().toUpperCase();
   L.addMine(vault, box, id, t); persist();
   deliver(id, t, friend);

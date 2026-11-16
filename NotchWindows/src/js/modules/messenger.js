@@ -3,6 +3,7 @@ import { el, load, save, timeAgo } from '../store.js';
 import { invoke } from '../native.js';
 import { toast, prompt, segmented, button } from '../ui.js';
 import * as MS from '../services/messenger.js';
+import * as MQ from '../services/messengerquota.js';
 import * as PUI from '../games/playui.js';
 
 /// Messenger has two modes: Rooms (join a chat by a shared code) and Friends (private chat with people you add by friend code).
@@ -43,7 +44,7 @@ function renderRooms(root) {
   }, el('span', { style: 'font-size:20px' }, '📄'), el('span', { style: 'overflow-wrap:anywhere' }, m.file.name,
     el('div', { class: 'tiny', style: 'opacity:.7' }, m.failed ? `${size(m.file.size)} · not sent` : m.progress !== undefined ? `${size(m.file.size)} · sending ${Math.round(m.progress * 100)}%` : size(m.file.size))));
   code.onkeydown = (e) => { if (e.key === 'Enter' && code.value.trim()) MS.join(code.value); };
-  input.onkeydown = (e) => { if (e.key === 'Enter') { MS.send(input.value); input.value = ''; } };
+  input.onkeydown = (e) => { if (e.key === 'Enter') { MS.send(input.value).then(() => { if (!MQ.state.blocked) input.value = ''; }); } };
   function paint(st) {
     if (!st.room) {
       PUI.grow('room', false);

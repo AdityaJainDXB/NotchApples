@@ -365,6 +365,7 @@ final class FriendsClient: ObservableObject {
     func send(_ text: String, to box: String) {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty, t.count <= 2000, let friend = book.record(box), friend.status == .active else { return }
+        guard MessengerQuota.shared.consume() else { lastProblem = MessengerQuota.shared.notice; return }
         let id = UUID().uuidString
         book.addMine(to: box, id: id, text: t); persist()
         Task { await deliver(id: id, text: t, to: friend) }
@@ -574,6 +575,7 @@ final class FriendsClient: ObservableObject {
     func sendToGroup(_ text: String, key: String) {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !t.isEmpty, t.count <= 2000, let g = book.group(key) else { return }
+        guard MessengerQuota.shared.consume() else { lastProblem = MessengerQuota.shared.notice; return }
         let to = g.members.compactMap { book.record($0) }.filter { $0.status == .active }
         let id = UUID().uuidString
         book.addMineToGroup(key, id: id, text: t); persist()

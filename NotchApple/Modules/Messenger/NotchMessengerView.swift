@@ -18,6 +18,7 @@ struct NotchMessengerView: View {
     @StateObject private var web = WebP2PManager.shared
     @StateObject private var identity = MessengerIdentity.shared
     @State private var draft = ""
+    @ObservedObject private var quota = MessengerQuota.shared
     @State private var roomDraft = ""
     @State private var copied = false
 
@@ -221,6 +222,13 @@ struct NotchMessengerView: View {
     // MARK: Input
 
     private var inputBar: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            if let n = quota.notice { Text(n).font(.system(size: 10)).foregroundStyle(.orange) }
+            inputRow
+        }
+    }
+
+    private var inputRow: some View {
         HStack(spacing: 6) {
             Button { selectFile() } label: {
                 Image(systemName: "paperclip").font(.system(size: 15)).frame(width: 28, height: 28).contentShape(Rectangle())
@@ -258,8 +266,9 @@ struct NotchMessengerView: View {
 
     private func send() {
         guard canSend else { return }
+        let before = quota.used
         mode == .nearby ? local.send(draft) : web.send(draft)
-        draft = ""
+        if quota.used != before || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { draft = "" }   // a stopped message stays in the box
     }
 }
 

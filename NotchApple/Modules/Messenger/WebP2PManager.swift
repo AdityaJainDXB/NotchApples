@@ -150,6 +150,7 @@ final class WebP2PManager: ObservableObject {
     // MARK: Messaging
 
     func send(_ text: String? = nil, fileData: Data? = nil, fileName: String? = nil) {
+        if let t = text, !t.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, fileData == nil, !MessengerQuota.shared.consume() { return }
         let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed != nil || fileData != nil, state == .joined else { return }
         if let fileData, fileData.count > RoomFiles.chunkSize { sendInPieces(fileData, name: fileName); return }

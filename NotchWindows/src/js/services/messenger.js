@@ -24,6 +24,7 @@
 import { load, save, uid } from '../store.js';
 import { http, notify, invoke } from '../native.js';
 import { provide, refresh } from '../activity.js';
+import * as MQ from './messengerquota.js';
 import * as G from '../games/tictactoe-logic.js';
 import * as P from '../games/twoplayer-logic.js';
 import * as RF from './roomfileslogic.js';
@@ -245,6 +246,7 @@ async function publish(kind, text, game, playMsg, file) {
 export async function send(text) {
   const t = text.trim();
   if (!t || st.state !== 'joined') return;
+  if (!MQ.consume()) { notice(MQ.state.notice); emit(); return; }
   const env = await publish('message', t.slice(0, 2000));
   if (!env) return;
   seen.add(env.id);

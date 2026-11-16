@@ -5,6 +5,7 @@ import { el, fmtTime } from '../store.js';
 import { invoke } from '../native.js';
 import { toast, prompt, confirm, modal, menu, button, toggle, setting } from '../ui.js';
 import * as FR from '../services/friends.js';
+import * as MQ from '../services/messengerquota.js';
 import * as L from '../services/friendslogic.js';
 import * as C from '../services/friendscrypto.js';
 import * as PUI from '../games/playui.js';
@@ -207,7 +208,7 @@ export function render(root) {
   const clip = button('📎', attach, { kind: 'quiet', title: `Send a file (up to ${L.MAX_FILE_TEXT}). It is encrypted like a message.` });
   function send() {
     const box = selected; if (!box || !draft.value.trim()) return;
-    FR.st.lastProblem = null; FR.send(draft.value, box); draft.value = '';
+    FR.st.lastProblem = null; FR.send(draft.value, box); if (!MQ.state.blocked) draft.value = '';
   }
   draft.onkeydown = (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } };
   draft.oninput = () => { if (draft.value && selected) FR.typingChanged(selected); };

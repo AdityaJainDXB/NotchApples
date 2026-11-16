@@ -329,7 +329,7 @@ struct FriendsView: View {
 
     private func sendToGroup(_ g: FriendGroup) {
         client.lastProblem = nil
-        client.sendToGroup(draft, key: g.key); draft = ""
+        client.sendToGroup(draft, key: g.key); if !MessengerQuota.shared.lastBlocked { draft = "" }
     }
 
     private func attach(to key: String) {
@@ -506,7 +506,7 @@ struct FriendsView: View {
 
     private func send(_ friend: FriendRecord) {
         client.lastProblem = nil
-        client.send(draft, to: friend.box); draft = ""
+        client.send(draft, to: friend.box); if !MessengerQuota.shared.lastBlocked { draft = "" }
     }
 
     private func safety(_ friend: FriendRecord) -> some View {

@@ -103,6 +103,7 @@ final class LocalP2PManager: NSObject, ObservableObject {
     func send(_ text: String? = nil, fileData: Data? = nil, fileName: String? = nil) {
         let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines)
         guard trimmed != nil || fileData != nil else { return }
+        if trimmed != nil, fileData == nil, !MessengerQuota.shared.consume() { return }
         let envelope = broadcast(kind: .message, text: trimmed != nil ? String(trimmed!.prefix(2000)) : nil, fileData: fileData, fileName: fileName)
         messages.append(MessengerMessage(id: envelope.id, senderID: identity.senderID, sender: identity.handle,
                                          text: trimmed ?? "", date: envelope.ts, isMine: true, fileData: fileData, fileName: fileName))
