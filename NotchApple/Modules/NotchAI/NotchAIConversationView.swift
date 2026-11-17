@@ -131,7 +131,7 @@ struct NotchAIConversationView: View {
             do {
                 let out = try await HumanizerService.shared.humanize(m.text)
                 originals[m.id] = m.text
-                convo.replaceText(id: m.id, with: out)
+                convo.replaceText(id: m.id, with: out.text)
             } catch { humanizeError = error.localizedDescription }
         }
     }

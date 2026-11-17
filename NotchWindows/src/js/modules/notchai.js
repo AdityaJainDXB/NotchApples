@@ -83,7 +83,7 @@ export function render(root) {
       if (t.role === 'assistant' && t.text) {
         log.append(el('button', { class: 'quiet', style: 'align-self:flex-start;font-size:11px;padding:0 4px', title: H.summary(), onclick: async (e) => {
           e.target.disabled = true;
-          try { t.text = await H.humanize(t.text); keep(); paintLog(); } catch (err) { toast(err.message); e.target.disabled = false; }
+          try { t.text = (await H.humanize(t.text)).text; keep(); paintLog(); } catch (err) { toast(err.message); e.target.disabled = false; }
         } }, '✍ Humanize'));
       }
     }
