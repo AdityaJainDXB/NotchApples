@@ -310,7 +310,7 @@ The first time, the AI tab walks you through it: pick free Gemini or private Oll
 
 | Provider | Cost | Get a key | Notes |
 | --- | --- | --- | --- |
-| **Notch Apple AI** | Included with Pro and Ultimate (Pro 60 messages a day, Ultimate 200) | No key: choose it in Settings → AI | Answered by Notch Apple's server with the project's own AI account; reads images. Your own keys below have no limit. |
+| **Notch Apple AI** | Included with Pro and Ultimate (no daily limit on Pro, Ultimate 200 a day) | No key: choose it in Settings → AI | Answered by Notch Apple's server with the project's own AI account; reads images. Your own keys below have no limit. |
 | **Google Gemini** | Free tier, no billing | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) | Fast; reads images. The default (`gemini-3.8-flash`). |
 | **Groq** | Free tier, no billing | [console.groq.com/keys](https://console.groq.com/keys) | Very fast open models (Llama, Qwen, DeepSeek-distilled and more). |
 | **OpenRouter** | Free models, no billing | [openrouter.ai/keys](https://openrouter.ai/keys) | Only the free models are listed. The selection changes over time. |

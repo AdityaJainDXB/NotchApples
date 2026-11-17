@@ -1806,7 +1806,15 @@ async function gamePut(env, request, url) {
 
 const AI_DEFAULT_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai';
 const AI_DEFAULT_MODEL = 'gemini-3.5-flash-lite';
-const aiLimit = (env, tier) => tier >= ADMIN_TIER ? Number.MAX_SAFE_INTEGER : Number(tier === 2 ? env.AI_LIMIT_ULTIMATE || 200 : env.AI_LIMIT_PRO || 60);
+// Messages a day per key. Pro has no limit: it only gets one if AI_LIMIT_PRO is set to a number above 0 (so a limit can be
+// switched back on from wrangler.toml without a code change). Ultimate keeps AI_LIMIT_ULTIMATE (200 by default).
+const NO_LIMIT = Number.MAX_SAFE_INTEGER;
+const aiLimit = (env, tier) => {
+  if (tier >= ADMIN_TIER) return NO_LIMIT;
+  const n = Number(tier === 2 ? env.AI_LIMIT_ULTIMATE || 200 : env.AI_LIMIT_PRO);
+  return n > 0 ? n : NO_LIMIT;
+};
+const aiLimitShown = (n) => (n >= NO_LIMIT ? null : n);   // null: no limit
 export const aiOn = (env) => !!env.AI_API_KEY;
 
 /** Counts requests per key per UTC day (one Durable Object per key, so it needs no KV writes). */
@@ -2165,7 +2173,7 @@ export default {
           const h = await sha256(`battle-net|${env.EMAIL_PEPPER || ''}|${net}`);
           return json({ code: Array.from({ length: 6 }, (_, i) => chars[parseInt(h.slice(i * 2, i * 2 + 2), 16) % chars.length]).join('') }, 200, { 'cache-control': 'no-store' });
         }
-        if (path === '/ai/status') return json({ on: aiOn(env), model: aiOn(env) ? 'notch-fast' : null, limits: { pro: aiLimit(env, 1), ultimate: aiLimit(env, 2) } });
+        if (path === '/ai/status') return json({ on: aiOn(env), model: aiOn(env) ? 'notch-fast' : null, limits: { pro: aiLimitShown(aiLimit(env, 1)), ultimate: aiLimitShown(aiLimit(env, 2)) } });
         throw new HTTPError(404, 'Not found');
       }
       if (request.method !== 'POST') throw new HTTPError(405, 'Method not allowed');

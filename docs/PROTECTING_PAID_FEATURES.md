@@ -91,7 +91,7 @@ cd server/license-worker && npx wrangler secret put AI_API_KEY      # paste a pr
 ```
 
 `AI_BASE` can point at any OpenAI-compatible provider, `AI_MODEL` picks the model, and `AI_LIMIT_PRO` / `AI_LIMIT_ULTIMATE` the daily
-allowance (in `wrangler.toml`). A free provider tier is shared by every user, so watch it and raise the limits only with a paid key.
+allowance (in `wrangler.toml`). Pro has **no daily limit** (`AI_LIMIT_PRO = "0"`; any number above 0 brings a limit back); Ultimate keeps 200. A free provider tier is shared by every user, so watch it and use a paid key now that Pro is unlimited.
 
 ## Next steps (in order of value)
 

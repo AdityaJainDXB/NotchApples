@@ -76,7 +76,8 @@ ULTIMATE_ON = "1"
 MAIL_PROVIDER = "brevo"
 # Notch Apple AI (Pro and Ultimate): leave off until the AI_API_KEY secret is set. AI_BASE is any OpenAI-compatible endpoint.
 AI_MODEL = "gemini-3.5-flash-lite"
-AI_LIMIT_PRO = "60"
+# Messages a day per key. 0 (or leaving it out) means no limit: Pro has none. Ultimate keeps 200.
+AI_LIMIT_PRO = "0"
 AI_LIMIT_ULTIMATE = "200"
 
 # Secrets (never in this file): AI_API_KEY (Notch Apple AI), SIGNING_KEY, ADMIN_TOKEN, EMAIL_PEPPER, MAIL_API_KEY, and MAIL_FROM

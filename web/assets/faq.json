@@ -25,7 +25,7 @@
  {
   "q": "What do Pro and Ultimate add?",
   "k": "pro ultimate features difference extra premium unlock",
-  "a": "Pro adds things like the included Notch Apple AI (60 messages a day), live wallpaper, Klick keyboard sounds, a bigger clipboard history and the command palette. Ultimate adds the Convert file converter, Smart Home (Home Assistant), Claude usage, Do It, two activities at once on the notch, more AI messages (200 a day) and more. The pricing page lists everything.",
+  "a": "Pro adds things like the included Notch Apple AI (no daily limit), live wallpaper, Klick keyboard sounds, a bigger clipboard history and the command palette. Ultimate adds the Convert file converter, Smart Home (Home Assistant), Claude usage, Do It, two activities at once on the notch, more AI messages (200 a day) and more. The pricing page lists everything.",
   "link": [
    "Pricing page",
    "pro.html"
@@ -96,7 +96,7 @@
  {
   "q": "What is Notch Apple AI?",
   "k": "included hosted ai no key quota messages daily limit pro ultimate 60 200",
-  "a": "An AI that is included with Pro (60 messages a day) and Ultimate (200 a day) so you can ask without setting up any key. Your own keys still work with no limit."
+  "a": "An AI that is included with Pro (no daily limit) and Ultimate (200 a day) so you can ask without setting up any key. Your own keys still work with no limit."
  },
  {
   "q": "Is my data private? Does it track me?",

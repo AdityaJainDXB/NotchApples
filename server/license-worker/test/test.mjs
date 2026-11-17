@@ -576,6 +576,24 @@ await test('AI: a daily allowance per key, and Ultimate gets more', async () => 
   assert.equal(r.status, 200); assert.equal(r.remaining, '2');
 });
 
+await test('AI: Pro has no daily limit unless one is set; a limit of 0 or none means unlimited', async () => {
+  const saved = env.AI_LIMIT_PRO;
+  try {
+    env.AI_LIMIT_PRO = '0';
+    const tok = await aiToken('pro', 607);
+    for (let i = 0; i < 70; i++) assert.equal((await aiCall(tok, chatBody)).status, 200, 'message ' + (i + 1));   // the old limit was 60
+    assert.equal((await call('/ai/status')).limits.pro, null, 'the status says there is no limit');
+    assert.equal((await call('/ai/status')).limits.ultimate, 5, 'Ultimate keeps its own limit');
+    delete env.AI_LIMIT_PRO;
+    assert.equal((await aiCall(await aiToken('pro', 608), chatBody)).status, 200);
+    assert.equal((await call('/ai/status')).limits.pro, null, 'not set at all is also no limit');
+    env.AI_LIMIT_PRO = '2';
+    const small = await aiToken('pro', 609);
+    assert.equal((await aiCall(small, chatBody)).status, 200); assert.equal((await aiCall(small, chatBody)).status, 200);
+    assert.equal((await aiCall(small, chatBody)).status, 429, 'a number above 0 still limits Pro');
+  } finally { env.AI_LIMIT_PRO = saved; }
+});
+
 await test('AI: refuses odd requests (remote images, empty, huge, bad roles)', async () => {
   const tok = await aiToken('ultimate', 605);
   const bad = (messages) => aiCall(tok, { messages });
