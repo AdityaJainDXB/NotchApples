@@ -17,6 +17,7 @@
 		037C7F0279D269A05969144A /* NotchAIWakeWord.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E69F4B2433F8A4D49BD2332 /* NotchAIWakeWord.swift */; };
 		03CA426E2F3ED3EFE9A5467C /* UpdateSigning.swift in Sources */ = {isa = PBXBuildFile; fileRef = A280B5F6BC95664645C9444F /* UpdateSigning.swift */; };
 		0443DCC9888EE720B7CE7E1F /* NotchAIAgentLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5792CE85AA6CB6DC3BEA6960 /* NotchAIAgentLogic.swift */; };
+		044ACFC2D9BC552EE3D9FBE8 /* VoxelWallLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F255D5C677462A6A673162 /* VoxelWallLogic.swift */; };
 		04684D26EDA66D2AAF6B69C0 /* tetris-logic.js in Resources */ = {isa = PBXBuildFile; fileRef = E54CA8A98C84920280698482 /* tetris-logic.js */; };
 		04777AA012CFE65D8B924505 /* NotchAISkillLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F5149BE1424AE1F89D6D10B /* NotchAISkillLogic.swift */; };
 		04DA84BD772511B028648D4E /* GlobalHotkeyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0ECABC7EEC9804BECB1923C7 /* GlobalHotkeyManager.swift */; };
@@ -361,6 +362,7 @@
 		8AC40DB03D2FC72A517DC2C8 /* NightShiftGame.html in Resources */ = {isa = PBXBuildFile; fileRef = E738586149316E4446F71A1A /* NightShiftGame.html */; };
 		8BCB6AEF7F4C85ABA9B85148 /* SportsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9AE3E9758D2882B557A695A /* SportsModel.swift */; };
 		8BCDBF7EFEEA5CE0C29DEB58 /* MascotGreeting.html in Resources */ = {isa = PBXBuildFile; fileRef = 7376B3DA30872E4F07E6DDE1 /* MascotGreeting.html */; };
+		8BE81E2314465BEE8E61EF8D /* VoxelWall.metal in Sources */ = {isa = PBXBuildFile; fileRef = C2166513CD48BCC707A22843 /* VoxelWall.metal */; };
 		8C27BC78398B102731018B42 /* ClaudeUsagePaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA637D9531681F5007585BF /* ClaudeUsagePaceTests.swift */; };
 		8C329389C8C1FAE5D6CD17CA /* leaderboard.js in Resources */ = {isa = PBXBuildFile; fileRef = A66CB935BCADED569CB8D3B2 /* leaderboard.js */; };
 		8C3F0D0E48E872177E7E9185 /* LidFoldSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32AC64225D56273C94C4F18F /* LidFoldSettings.swift */; };
@@ -378,6 +380,7 @@
 		91D37C4D542D774F3D65DE92 /* NotchAIOAuthTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFF38FA8BB2F0DBB9BC3114F /* NotchAIOAuthTests.swift */; };
 		92D6E8322DCEC6A2AE6A5795 /* HotCornerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D028DAE4C9C74C6193B75F /* HotCornerTests.swift */; };
 		92FA1F0A869CEDCC1DD5584D /* ChatHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 70487D33E613C8A9A0DFA36C /* ChatHistory.swift */; };
+		93156E37B74E8631201539BC /* VoxelWallTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2A8C57FF1A3C4077242882F /* VoxelWallTests.swift */; };
 		93711D06AFB52CE8586619D2 /* RadarLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0597034617E0E4011F1C53B0 /* RadarLogic.swift */; };
 		94134084A487BEB193A089C3 /* ctf.js in Resources */ = {isa = PBXBuildFile; fileRef = 22BC3DD953937929570782CA /* ctf.js */; };
 		94A1DAACE593691EEA463858 /* DailyWordGameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEB323B15181A7CBF33193DE /* DailyWordGameView.swift */; };
@@ -562,6 +565,7 @@
 		D9471C827EB0D4E0E9EDC578 /* TabChoicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE822B57A3ADD5354A35C10 /* TabChoicesView.swift */; };
 		D9CD0758EE2521191E344132 /* GameFullScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0C8A8EBFAB59EBC323417FC /* GameFullScreen.swift */; };
 		DA5229B3CFB7CA1F616DEFC3 /* FriendsStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F5EE7B4D611C86C168E30AF /* FriendsStore.swift */; };
+		DA7DD3C434986E542CE7E314 /* VoxelWall.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15765E30153F4089FDF34F5B /* VoxelWall.swift */; };
 		DA942A2703C5E752ABDEA8A4 /* NotchAITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AD83FE945F918CCA120DE27 /* NotchAITests.swift */; };
 		DC08A6340D30FAA2869AFE3E /* GamesMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98DEADF2D4778E65FB5AB640 /* GamesMenuView.swift */; };
 		DC37742E9DC53226546E0A45 /* WindowManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98A8EB2467586B8A5E087088 /* WindowManager.swift */; };
@@ -725,6 +729,7 @@
 		14C5EABD0E7B9A75B1F89B9B /* ResearchAgent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResearchAgent.swift; sourceTree = "<group>"; };
 		15058B968CAA74BE2AFB5D7C /* NotchAIDocumentLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIDocumentLogic.swift; sourceTree = "<group>"; };
 		15345A507ECD309839CCAA0F /* NotchAIMemory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIMemory.swift; sourceTree = "<group>"; };
+		15765E30153F4089FDF34F5B /* VoxelWall.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxelWall.swift; sourceTree = "<group>"; };
 		15E4C40B0E52107163ADD5B8 /* NotchGestures.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchGestures.swift; sourceTree = "<group>"; };
 		18329B6DF3C3AF37BA61B8B4 /* ProjectFocusTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFocusTests.swift; sourceTree = "<group>"; };
 		184056F8277C5D04D4AEA5F6 /* FullscreenLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullscreenLogicTests.swift; sourceTree = "<group>"; };
@@ -884,6 +889,7 @@
 		6284BA6BCADE6A64DB75D681 /* SnakeGameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnakeGameView.swift; sourceTree = "<group>"; };
 		643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchMessengerView.swift; sourceTree = "<group>"; };
 		6447E51386679AB2CE334197 /* NotchAIDocumentIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIDocumentIndex.swift; sourceTree = "<group>"; };
+		65F255D5C677462A6A673162 /* VoxelWallLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxelWallLogic.swift; sourceTree = "<group>"; };
 		66DBB35434CEBAA72E675AD4 /* OpenRouterFallback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenRouterFallback.swift; sourceTree = "<group>"; };
 		6747ADA828FF1D33683B30C8 /* ClaudeClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeClient.swift; sourceTree = "<group>"; };
 		67D16800EDB504F3DA0705BE /* SnapDropController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SnapDropController.swift; sourceTree = "<group>"; };
@@ -1075,6 +1081,7 @@
 		C093D41C88F5E6545DDD16BB /* NotchAIMemoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIMemoryTests.swift; sourceTree = "<group>"; };
 		C133B17318DC2CE2EC7B3A4E /* KeySecurityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeySecurityView.swift; sourceTree = "<group>"; };
 		C1B46C85D50EF864599EA96B /* BambuSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BambuSettingsView.swift; sourceTree = "<group>"; };
+		C2166513CD48BCC707A22843 /* VoxelWall.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; path = VoxelWall.metal; sourceTree = "<group>"; };
 		C2397F7A422C289191CBD379 /* AIAutomations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIAutomations.swift; sourceTree = "<group>"; };
 		C24E814F6A329830FB17BBDC /* NotchAIVisualTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIVisualTests.swift; sourceTree = "<group>"; };
 		C27D02B11E830B27979CC716 /* MagneticDrop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MagneticDrop.swift; sourceTree = "<group>"; };
@@ -1164,6 +1171,7 @@
 		E1906EBB95299F2C31001F04 /* scribble-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "scribble-logic.js"; sourceTree = "<group>"; };
 		E21A4DE323FB59B9A6B5D86C /* NotchAIDiagramLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIDiagramLogic.swift; sourceTree = "<group>"; };
 		E26901871B9937AEB263FD76 /* ConvertFormats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvertFormats.swift; sourceTree = "<group>"; };
+		E2A8C57FF1A3C4077242882F /* VoxelWallTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoxelWallTests.swift; sourceTree = "<group>"; };
 		E333C9ABF7AC014274F64237 /* RequiredSetup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequiredSetup.swift; sourceTree = "<group>"; };
 		E43BFD01B43AA99D60FB3B9D /* CompanionPairingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionPairingTests.swift; sourceTree = "<group>"; };
 		E54CA8A98C84920280698482 /* tetris-logic.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "tetris-logic.js"; sourceTree = "<group>"; };
@@ -1657,6 +1665,7 @@
 				C8FE35A81A2E2DCED5EAE8D1 /* UpdateCadenceLogicTests.swift */,
 				26E2CDCE2AD3600E816DD832 /* UpdateFeedTests.swift */,
 				828F805721C574A3258A44F8 /* UpdateSigningTests.swift */,
+				E2A8C57FF1A3C4077242882F /* VoxelWallTests.swift */,
 				E182D36E05020E0FB79C7EA1 /* WallpaperLogicTests.swift */,
 				1477CCE52DD2917B95D907D7 /* WellbeingTests.swift */,
 			);
@@ -2358,6 +2367,9 @@
 				426F46C6AD7DEAFB4B5D938E /* MusicSleepTimer.swift */,
 				ACD60817F03707C0A2A93064 /* NowPlayingMonitor.swift */,
 				3BE2B5EE8C3DF9E81757B5F2 /* SideLyrics.swift */,
+				C2166513CD48BCC707A22843 /* VoxelWall.metal */,
+				15765E30153F4089FDF34F5B /* VoxelWall.swift */,
+				65F255D5C677462A6A673162 /* VoxelWallLogic.swift */,
 			);
 			path = NowPlaying;
 			sourceTree = "<group>";
@@ -3046,6 +3058,9 @@
 				4D7D2117A636E748337CE0A7 /* UpdateSigning.swift in Sources */,
 				6ED1A24452AEE0581136A6E3 /* UtilitiesView.swift in Sources */,
 				219D17761C8C9DB4C03DCBCF /* VoiceNotesView.swift in Sources */,
+				8BE81E2314465BEE8E61EF8D /* VoxelWall.metal in Sources */,
+				DA7DD3C434986E542CE7E314 /* VoxelWall.swift in Sources */,
+				044ACFC2D9BC552EE3D9FBE8 /* VoxelWallLogic.swift in Sources */,
 				79EEF6851708FE25A5F5D52F /* WallpaperEngine.swift in Sources */,
 				D66E704382AB0D2A03526FE2 /* WallpaperLibrary.swift in Sources */,
 				78EA17E4D183FA6D44954626 /* WallpaperLogic.swift in Sources */,
@@ -3266,6 +3281,7 @@
 				65E49B470932813D55A3B43D /* UpdateFeedTests.swift in Sources */,
 				03CA426E2F3ED3EFE9A5467C /* UpdateSigning.swift in Sources */,
 				CED81247766CC71EBCA69C5C /* UpdateSigningTests.swift in Sources */,
+				93156E37B74E8631201539BC /* VoxelWallTests.swift in Sources */,
 				E319EE438B96439F305C073F /* WallpaperLogic.swift in Sources */,
 				CBDEBAF26B73CB33CD959731 /* WallpaperLogicTests.swift in Sources */,
 				09AFE68E8FB4460E02198C74 /* WellbeingLogic.swift in Sources */,
@@ -3392,7 +3408,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 252;
+				CURRENT_PROJECT_VERSION = 253;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3408,7 +3424,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.75;
+				MARKETING_VERSION = 2.2.76;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3526,7 +3542,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 252;
+				CURRENT_PROJECT_VERSION = 253;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3548,7 +3564,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.75;
+				MARKETING_VERSION = 2.2.76;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
