@@ -26,6 +26,8 @@ extension GamesView.Game {
 
 struct GamesMenuView: View {
     let open: (GamesView.Game) -> Void
+    /// Shows a private game (Flight Economy) inside the notch; when nil it opens in its own window.
+    var openPrivate: ((URL, String) -> Void)? = nil
     @ObservedObject private var access = PrivateGames.shared
     @AppStorage(GameSound.key) private var soundOn = true
     @State private var query = ""
@@ -192,7 +194,10 @@ struct GamesMenuView: View {
 
     private func launchPrivate() {
         Task {
-            do { try await PrivateGames.shared.open() } catch { notice = error.localizedDescription }
+            do {
+                if let openPrivate { let (url, title) = try await PrivateGames.shared.prepare(); openPrivate(url, title) }
+                else { try await PrivateGames.shared.open() }
+            } catch { notice = error.localizedDescription }
         }
     }
 }
