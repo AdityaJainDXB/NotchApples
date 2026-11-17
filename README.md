@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.76 · Windows 2.2.76 · 17 November 2026 · 🃏 Three-Card Poker
+
+- New: Three-Card Poker. Games → Poker has a Three-Card Poker table: you against one to three computer players with play-money chips you can see, a hand-rankings panel beside the table, and a scoreboard of wins, losses and draws
+- Windows: the tab bar looks like the Mac's: up to 12 tabs, the rest under a More button, with bolder icons
+- Mac: ⌘E opens the notch, not your messages: if Messenger was the last tab, the notch opens on the first tab instead
+
 ### Mac 2.2.75 · Windows 2.2.75 · 17 November 2026 · 🔍 AI Detector, a better Humanizer, and fixes
 
 - New: AI Detector. Tools → AI Detector shows how strongly a text shows chatbot writing habits, and which ones. It runs on your own computer, sends nothing, and is a guide, not proof
@@ -165,10 +171,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.74 · Windows 2.2.74 · 16 November 2026 · 🔑 Admin keys
 
 - New: admin keys. A higher key tier with no limits at all: every paid feature unlocked and no word or message caps. Only the owner can issue one, and at most four can be live at a time.
-
-### Mac 2.2.73 · Windows 2.2.73 · 16 November 2026 · ✍️ Humanizer
-
-- New: Humanizer. Tools → Humanizer rewrites text so it reads like a person wrote it, and every NotchAI reply has a Humanize button (with Show original). Free humanizes up to 500 words at a time and 3,000 a month, Pro 1,000 at a time and 15,000 a month, Ultimate any length and 40,000 a month. The words are counted on your own computer and renew on the 1st. Buying extra words is coming soon
 
 ## Plugins
 

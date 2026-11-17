@@ -57,6 +57,7 @@ Never run a Debug or test copy of the Mac app with the real bundle id (`com.notc
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 17 Nov 2026: Three-Card Poker on Mac and Windows (#101: chips, rankings panel, scoreboard, 1-3 computer players), ⌘E never opens on Messenger (#109), 2.2.76 notes and version; Windows 2.2.75 released from CI. Open: Mac 2.2.76 release on the signing Mac, #99, the rest of #111.
 - 17 Nov 2026: Windows tab bar closer to the Mac (issue #111): at most 12 tabs, the rest under a More button (the open tab always stays in the bar), bolder and brighter tab icons; smoke test expects the five Tools pages (AI Detector). Playwright pass over all 22 Windows tabs found no script errors. Open: deeper Windows/Mac parity (type sizes, emoji headings, card layouts), release 2.2.75 from the signing Mac.
 - 17 Nov 2026: merged #93, #105, #106, #110 and #112-#115 (Humanizer v2 + AI Detector, Translator languages, one hover outline, Friends re-add, Whop top-up link), prepared 2.2.75 (version, notes, handoff), and the Windows Humanizer now passes admin keys through (it capped them at Ultimate). Open: release 2.2.75 from the signing Mac; buying extra words does not credit the app yet; issues #99, #101, #109, #111.
 - 16 Nov 2026: added the Migrate button on the admin page (Pro or Ultimate key to an admin key for the same buyer; old key revoked; cap checked first). Worker and site only.

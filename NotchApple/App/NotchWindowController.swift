@@ -952,6 +952,15 @@ final class NotchWindowController {
 
     func toggle() { state.isExpanded ? collapse(force: true) : expand() }
 
+    /// The ⌘E shortcut. It opens the notch itself, not your messages (issue #109): if Messenger was the last tab, the notch opens on
+    /// the first tab in the bar instead, so a key press from any app never puts a chat on screen.
+    func toggleFromShortcut() {
+        if !state.isExpanded, state.selected == .messenger, let first = state.visibleTabs(SettingsManager.shared).first(where: { $0 != .messenger }) {
+            state.selected = first
+        }
+        toggle()
+    }
+
     /// Opens the notch on a given tab (the NotchAI dot uses this).
     func openModule(_ m: Module) {
         state.selected = m
