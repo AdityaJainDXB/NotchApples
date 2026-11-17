@@ -376,7 +376,13 @@ struct FriendsBook {
             case .outgoing:                              // we asked each other: that is agreement from both sides
                 vault.friends[i].status = .active; vault.friends[i].sendToken = token; vault.friends[i].nick = Self.clean(body.nick); vault.friends[i].lastActivity = now
                 return .mutual(vault.friends[i])
-            case .incoming, .active: return .ignored
+            case .incoming: return .ignored
+            case .active:
+                // A friend I still have asks again with the same keys: they lost their list (a reinstall, a wiped Mac) and could
+                // not add me back (issue #104). Show it as a request again; Accept sends them a fresh token and we are friends again.
+                vault.friends[i].status = .incoming; vault.friends[i].pendingToken = token; vault.friends[i].nick = Self.clean(body.nick)
+                vault.friends[i].lastActivity = now
+                return .added(vault.friends[i])
             }
         }
         let r = FriendRecord(box: box, sign: sign, dh: dh, nick: Self.clean(body.nick), alias: nil, status: .incoming, sendToken: nil,

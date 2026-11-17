@@ -134,6 +134,12 @@ export function receiveRequest(v, body, fp, now = Date.now()) {
       Object.assign(f, { status: 'active', sendToken: body.token, nick: clean(body.nick), lastActivity: now });
       return { kind: 'mutual', record: f };
     }
+    if (f.status === 'active') {
+      // A friend I still have asks again with the same keys: they lost their list and could not add me back (issue #104).
+      // Show it as a request again; Accept sends them a fresh token and we are friends again.
+      Object.assign(f, { status: 'incoming', pendingToken: body.token, nick: clean(body.nick), lastActivity: now });
+      return { kind: 'added', record: f };
+    }
     return ignored;
   }
   const r = { box: body.box, sign: body.sign, dh: body.dh, fp, nick: clean(body.nick), alias: null, status: 'incoming', sendToken: null, myTokenHash: null, pendingToken: body.token, added: now, unread: 0, lastActivity: now };
