@@ -761,3 +761,7 @@ body.liquid-metal .tab-pill .metal-fx-canvas { mix-blend-mode: overlay; opacity:
 .tab.icon-only { color: rgba(255, 255, 255, .82); }
 .tab.icon-only:hover { color: #fff; }
 .tab.locked.icon-only { color: var(--text-dim); }
+
+/* Issue #111: type sizes closer to the Mac (SwiftUI's 12–13 pt body, 13 pt semibold section headers). */
+.section-title { font-size: 13px; font-weight: 650; color: rgba(255, 255, 255, .78); letter-spacing: 0; }
+.small { font-size: 12px; } .tiny { font-size: 11px; }

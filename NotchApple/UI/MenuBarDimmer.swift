@@ -22,7 +22,9 @@ final class MenuBarDimmer {
 
     /// Fades the strip in over the menu bar of `screen`, just under the notch's own window (`level`). Does nothing when the menu bar
     /// is not showing there (a full-screen app, or "automatically hide the menu bar").
-    func show(on screen: NSScreen?, below level: NSWindow.Level) {
+    /// `under`: the closed notch's own window, which shares this level; the strip is kept beneath it so it can never cover the
+    /// album art and bars beside the notch (issue #99: the strip ended up on top of them and the music island seemed to vanish).
+    func show(on screen: NSScreen?, below level: NSWindow.Level, under: NSWindow? = nil) {
         guard Self.isOn, let screen else { hide(); return }
         let height = max(screen.safeAreaInsets.top, screen.frame.maxY - screen.visibleFrame.maxY)
         guard height >= 10 else { hide(); return }
@@ -34,6 +36,7 @@ final class MenuBarDimmer {
         p.contentView?.frame = NSRect(origin: .zero, size: frame.size)
         if !p.isVisible { p.alphaValue = 0 }
         p.orderFrontRegardless()
+        if let under { p.order(.below, relativeTo: under.windowNumber) }
         NSAnimationContext.runAnimationGroup { ctx in
             ctx.duration = 0.22
             p.animator().alphaValue = 1
