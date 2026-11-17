@@ -112,7 +112,11 @@ gone  {t:"gone"}                                        "I removed you"; optiona
 4. **Block:** B stores A's fingerprint on a local block list, never replies, never revokes anything on the server (A's
    `req` is simply dropped, nothing tells A). Later requests from the same fingerprint are dropped silently; a new identity (new
    install) would arrive as a new request, which is why the per-mailbox cap and the rate limits exist.
-5. **Remove friend:** revoke `tokenA`-equivalent: `DELETE /f/allow/{hash(tokenOfThatFriend)}`; delete the local
+5. **Asked again by a friend I still have** (issue #104): a `req` from a box that is already **Active** with the **same** `sign` and
+   `dh` means they lost their list (a reinstall, a wiped Mac). It is shown as a request again (status back to incoming, their new
+   token kept as pending) and **Accept** works exactly as in step 3, so the friendship comes back and the chat history stays. The
+   same box with different keys is still dropped.
+6. **Remove friend:** revoke `tokenA`-equivalent: `DELETE /f/allow/{hash(tokenOfThatFriend)}`; delete the local
    conversation; send `gone` if still allowed. **Delete all my chat data:** `POST /f/wipe`, delete the local history, friends,
    tokens and block list, and (optionally) the identity.
 

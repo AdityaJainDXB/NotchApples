@@ -219,3 +219,15 @@ test('any member can add their own friends to a group, but cannot rename it or r
   assert.equal(after.name, 'Trip', 'a member cannot rename');
   assert.equal(L.receiveGroup(w, me.box, { ...upd, gm: [me.box, viraj.box] }, viraj.box), null, 'a member cannot remove people');
 });
+
+// Issue #104: a friend who lost their list asks again with the same keys; it shows as a request again and can be accepted.
+test('a friend asking again is shown as a request, the same address with other keys is not', () => {
+  const alice = person(1), v = L.newVault();
+  L.receiveRequest(v, request(alice), alice.fp); L.accept(v, alice.box, 'h1');
+  const again = L.receiveRequest(v, { ...request(alice), token: 'tok2' }, alice.fp);
+  assert.equal(again.kind, 'added'); assert.equal(again.record.status, 'incoming');
+  const f = L.accept(v, alice.box, 'h2');
+  assert.equal(f.status, 'active'); assert.equal(f.sendToken, 'tok2');
+  const other = person(2);
+  assert.equal(L.receiveRequest(v, { ...request(other), box: alice.box }, other.fp).kind, 'ignored');
+});

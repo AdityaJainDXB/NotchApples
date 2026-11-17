@@ -287,7 +287,7 @@ final class FriendsClient: ObservableObject {
         guard let parsed = Friends.parse(input) else { return "That doesn't look like a friend code. It has 10 letters and numbers." }
         let box = Friends.box(for: parsed.code)
         if box == identity.box { return "That's your own code." }
-        if let existing = book.record(box) { return existing.status == .active ? "You're already friends." : "You already asked this person." }
+        if let existing = book.record(box) { return existing.status == .active ? "You're already friends. If they lost their friend list, ask them to add you: you'll get a request to accept." : "You already asked this person." }
         activate()
         var ready = claimed
         if !ready { ready = await claim() }

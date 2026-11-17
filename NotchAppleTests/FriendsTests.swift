@@ -111,6 +111,15 @@ final class FriendsTests: XCTestCase {
         XCTAssertNil(bob.receiveMessage(from: "stranger", id: "m2", text: "hi", ts: nil))
         XCTAssertNil(bob.receiveMessage(from: alice.box, id: "m3", text: String(repeating: "x", count: 2001), ts: nil))
         bob.markRead(box: alice.box); XCTAssertEqual(bob.record(alice.box)?.unread, 0)
+        // Issue #104: Alice lost her list and asks again with the same keys. Bob sees a request again and can accept it.
+        guard case .added(let again) = bob.receiveRequest(request(alice, token: "tok2")) else { return XCTFail("a friend asking again is shown as a request") }
+        XCTAssertEqual(again.status, .incoming)
+        let renewed = try XCTUnwrap(bob.accept(box: alice.box, myTokenHash: "h2"))
+        XCTAssertEqual(renewed.status, .active); XCTAssertEqual(renewed.sendToken, "tok2")
+        XCTAssertEqual(bob.vault.messages[alice.box]?.count, 1, "the chat history is kept")
+        let stranger = FriendIdentity.generate()
+        var forged = request(stranger); forged.box = alice.box
+        XCTAssertEqual(bob.receiveRequest(forged), .ignored, "the same address with other keys is still refused")
     }
 
     func testOutgoingRequestBecomesActiveOnAcceptance() throws {
