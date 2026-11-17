@@ -150,6 +150,18 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.75 · Windows 2.2.75 · 17 November 2026 · 🔍 AI Detector, a better Humanizer, and fixes
+
+- New: AI Detector. Tools → AI Detector shows how strongly a text shows chatbot writing habits, and which ones. It runs on your own computer, sends nothing, and is a guide, not proof
+- Better Humanizer. It checks its own rewrite for chatbot habits, fixes the safe ones itself, and makes a second pass on anything left. It shows "AI habits found: 9 → 1", and a Write like me box copies your own style.
+- Mac: Flight Economy opens inside the notch, with Pop out for its own window
+- Fixed: a friend who lost their friend list can add you back. Their request shows again and Accept restores the friendship and the chat
+- Fixed: the Translator remembers the languages you chose (it kept going back to Spanish)
+- Fixed: with liquid metal on, the closed notch showed two outlines on hover
+- Fixed: the notch hid itself on other desktops (Spaces) when the menu bar auto-hides, and could not be clicked there
+- Fixed: Settings search showed features it had no switch for
+- Windows: Scribble and Rocket League no longer overlap in the Games tab
+
 ### Mac 2.2.74 · Windows 2.2.74 · 16 November 2026 · 🔑 Admin keys
 
 - New: admin keys. A higher key tier with no limits at all: every paid feature unlocked and no word or message caps. Only the owner can issue one, and at most four can be live at a time.
@@ -157,17 +169,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.73 · Windows 2.2.73 · 16 November 2026 · ✍️ Humanizer
 
 - New: Humanizer. Tools → Humanizer rewrites text so it reads like a person wrote it, and every NotchAI reply has a Humanize button (with Show original). Free humanizes up to 500 words at a time and 3,000 a month, Pro 1,000 at a time and 15,000 a month, Ultimate any length and 40,000 a month. The words are counted on your own computer and renew on the 1st. Buying extra words is coming soon
-
-### Mac 2.2.72 · Windows 2.2.72 · 14 November 2026 · Liquid metal, liquid glass buttons, desktop widgets and the F1 simulation
-
-- New: liquid metal (recommended). Settings → Appearance → Liquid metal gives the open tab, the closed notch and every button a flowing metal look when you point at it or click it, in your theme colour, Purple, Rainbow or Gold. The AI start screen has a new "Ready when you are" look. It holds still with Reduce Motion
-- New: liquid glass buttons. Settings → Appearance → Liquid glass buttons turns every button into a pane of frosted glass that lights up when you point at it. It works alone or together with liquid metal
-- New: liquid metal outliners. Settings → Appearance → Liquid metal outliners outlines only the open tab and whatever you point at with flowing metal, one thing at a time, and the closed notch rim lights up when you point at it or a notification arrives. It is the look of the original prototype
-- New: desktop widgets (Ultimate). Clock, To-do and Now Playing as small windows on your desktop that you can drag; they stay under your other windows. Turn them on in Settings → Widget
-- Fixed: Flight Economy opens with your Ultimate key, no code needed
-- Fixed: in the F1 game the battery gauge no longer reads 0% on a 4:3 window (the tyre panel was drawn over it), and the telemetry panel no longer shows NaN kW before the race starts
-- Fixed: in Racing, cars still on the road when you finish are no longer listed as DNF. The results now wait for them to cross the line (up to 30 seconds), and only a car that really retired shows DNF
-
 
 ## Plugins
 
