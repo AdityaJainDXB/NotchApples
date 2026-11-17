@@ -14,6 +14,9 @@ struct HumanizerView: View {
     @State private var output = ""
     @State private var problem: String?
     @State private var copied = false
+    @State private var result: HumanizerService.Result?
+    @AppStorage(HumanizerService.styleKey) private var style = ""
+    @State private var showStyle = false
 
     private var words: Int { HumanizerLogic.wordCount(input) }
     private var limit: Int? { service.perRequestLimit }
@@ -45,12 +48,26 @@ struct HumanizerView: View {
                     }
                 }
             }
+            if showStyle {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Write like me: paste a few paragraphs you wrote yourself. The rewrite copies your sentence length and word choice. Kept on this Mac.").font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
+                    TextEditor(text: $style).font(.system(size: 11)).scrollContentBackground(.hidden).frame(height: 54)
+                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+            }
             HStack(spacing: 8) {
+                Button(showStyle ? "Hide write like me" : (style.isEmpty ? "Write like me…" : "Write like me (on)")) { showStyle.toggle() }
+                    .buttonStyle(MetalPlainStyle()).font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                if let r = result {
+                    Text("AI habits found: \(r.before.total) → \(r.after.total)").font(.system(size: 10, weight: .semibold)).foregroundStyle(r.after.total < r.before.total ? Color.green : Theme.textSecondary)
+                }
                 Text(service.summary).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 Spacer()
-                if service.monthlyLeft == 0 && service.credits == 0 {
-                    Text("Extra words (1 USD = 50,000, they never run out): coming soon").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                Link(destination: HumanizerLogic.topUpURL) {
+                    Label("Buy extra words: $1 for 50,000", systemImage: "plus.circle.fill").font(.system(size: 10, weight: .semibold))
                 }
+                .foregroundStyle(Theme.accentBright)
+                .help("Opens the Whop page. Extra words never run out.")
             }
             Text("Checklist: the Humanizer skill, from Wikipedia's “Signs of AI writing” guide (CC BY-SA 4.0).").font(.system(size: 9)).foregroundStyle(Theme.textSecondary.opacity(0.7))
             if let problem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }
@@ -70,7 +87,7 @@ struct HumanizerView: View {
         problem = nil
         let text = input
         Task {
-            do { output = try await HumanizerService.shared.humanize(text) }
+            do { let r = try await HumanizerService.shared.humanize(text); output = r.text; result = r }
             catch { problem = error.localizedDescription }
         }
     }

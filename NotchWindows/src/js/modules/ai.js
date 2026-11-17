@@ -125,7 +125,7 @@ export function render(root, opts = {}) {
       iconBtn('⤵', 'Paste into the app you were using', async () => { await collapse(); invoke('paste_text', { text: m.text }); }),
       iconBtn('🔊', 'Read aloud', () => say(m.text)),
       iconBtn('✍', 'Humanize: rewrite this so it reads like a person wrote it', async () => {
-        try { m.text = await H.humanize(m.text); toast('Humanized'); paint(); } catch (e) { toast(e.message); }
+        try { m.text = (await H.humanize(m.text)).text; toast('Humanized'); paint(); } catch (e) { toast(e.message); }
       }),
       i === chat.messages.length - 1 ? iconBtn('↻', 'Try again', retry) : null,
     ];

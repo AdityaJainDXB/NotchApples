@@ -46,8 +46,23 @@ final class HumanizerService: ObservableObject {
         var errorDescription: String? { if case .stopped(let m) = self { m } else { nil } }
     }
 
-    /// Rewrites `text`. Throws a sentence for the person when a limit or the model stops it; the words are counted only when a rewrite comes back.
-    func humanize(_ text: String) async throws -> String {
+    /// A rewrite and what the checker found before and after (the AI habits it counted in each).
+    struct Result { let text: String; let before: AITellChecker.Report; let after: AITellChecker.Report }
+
+    /// The person's own writing sample for "write like me" (kept on this Mac).
+    static let styleKey = "humanizer.style"
+    var style: String { UserDefaults.standard.string(forKey: Self.styleKey) ?? "" }
+
+    private func ask(_ user: String) async throws -> String {
+        let config = AIConfig.shared
+        var reply = ""
+        for try await piece in AIClient.stream([ChatMessage(role: .user, text: user)], provider: config.provider, model: config.model, system: HumanizerLogic.system) { reply += piece }
+        return HumanizerLogic.clean(reply)
+    }
+
+    /// Rewrites `text`: a first rewrite, a safe tidy in code, then (if the checker still finds habits) a second pass on only those.
+    /// Throws a sentence for the person when a limit or the model stops it; the words are counted only when a rewrite comes back.
+    func humanize(_ text: String) async throws -> Result {
         let words = HumanizerLogic.wordCount(text)
         let decision = HumanizerLogic.decide(words: words, tier: tier, usage: now)
         if let message = HumanizerLogic.message(for: decision, tier: tier) { throw Failure.stopped(message) }
@@ -57,13 +72,18 @@ final class HumanizerService: ObservableObject {
         busy = true
         defer { busy = false }
         try await NotchAIGuard.check(provider: config.provider, model: config.model)
-        var reply = ""
-        let asked = [ChatMessage(role: .user, text: HumanizerLogic.userMessage(text))]
-        for try await piece in AIClient.stream(asked, provider: config.provider, model: config.model, system: HumanizerLogic.system) { reply += piece }
-        let out = HumanizerLogic.clean(reply)
+        let before = AITellChecker.report(text)
+        var out = AITellChecker.autoFix(try await ask(HumanizerLogic.userMessage(text, style: style)))
         guard !out.isEmpty else { throw Failure.stopped("The model sent nothing back. Try again.") }
+        // Second pass: only if the checker still sees habits, and only about those. Kept only if it comes back clean enough and not shorter by half.
+        let hint = AITellChecker.remainingHint(out)
+        if !hint.isEmpty, let second = try? await ask(HumanizerLogic.editMessage(draft: out, habits: hint)) {
+            let fixed = AITellChecker.autoFix(second)
+            if !fixed.isEmpty, AITellChecker.report(fixed).total <= AITellChecker.report(out).total,
+               HumanizerLogic.wordCount(fixed) * 2 >= HumanizerLogic.wordCount(out) { out = fixed }
+        }
         usage = HumanizerLogic.applying(decision, to: now)
         if let data = try? JSONEncoder().encode(usage) { UserDefaults.standard.set(data, forKey: Self.key) }
-        return out
+        return Result(text: out, before: before, after: AITellChecker.report(out))
     }
 }

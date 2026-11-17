@@ -37,6 +37,8 @@ enum HumanizerLogic {
 
     /// Extra words: one US dollar buys this many, and they never expire.
     static let wordsPerDollar = 50_000
+    /// The Whop page that sells extra words.
+    static let topUpURL = URL(string: "https://whop.com/notch-bcc9/humanizer-top-up/")!
 
     static func wordCount(_ text: String) -> Int {
         text.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
@@ -113,14 +115,24 @@ enum HumanizerLogic {
     // MARK: The prompt
 
     /// Wraps the text to be rewritten so a model rewrites it and returns only the rewritten text.
-    static func userMessage(_ text: String) -> String {
-        "Rewrite the text between the markers so it reads like a person wrote it. Keep the meaning, the facts and any structure the task needs. Reply with the rewritten text only: no preface, no notes, no markers.\n\n<<<TEXT\n\(text)\nTEXT>>>"
+    /// `style`: a sample of the person's own writing, used to match their sentence length and word choice (optional).
+    static func userMessage(_ text: String, style: String? = nil) -> String {
+        var m = "Rewrite the text between the markers so it reads like a person wrote it. Keep the meaning, the facts, the names, the numbers and any structure the task needs. Keep it about the same length. Reply with the rewritten text only: no preface, no notes, no markers."
+        if let s = style?.trimmingCharacters(in: .whitespacesAndNewlines), !s.isEmpty {
+            m += "\n\nThe writer's own style, to copy (sentence length, how formal, the words they use, how they punctuate). Do not copy its subject:\n<<<STYLE\n\(s.prefix(2000))\nSTYLE>>>"
+        }
+        return m + "\n\n<<<TEXT\n\(text)\nTEXT>>>"
+    }
+
+    /// The second pass: fix only the habits a check still found in the first rewrite.
+    static func editMessage(draft: String, habits: String) -> String {
+        "Edit the draft between the markers. These habits are still in it: \(habits). Rewrite only the sentences that have them, in plain words, and leave every other sentence as it is. Keep the meaning, names and numbers. Reply with the full text only: no preface, no notes, no markers.\n\n<<<TEXT\n\(draft)\nTEXT>>>"
     }
 
     /// Takes any stray markers off a reply.
     static func clean(_ reply: String) -> String {
         var t = reply.trimmingCharacters(in: .whitespacesAndNewlines)
-        for marker in ["<<<TEXT", "TEXT>>>"] { t = t.replacingOccurrences(of: marker, with: "") }
+        for marker in ["<<<TEXT", "TEXT>>>", "<<<STYLE", "STYLE>>>"] { t = t.replacingOccurrences(of: marker, with: "") }
         return t.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
@@ -146,6 +158,16 @@ enum HumanizerLogic {
     - Title Case Headings (use sentence case), scattered bold, lists that start every item with a bold label and colon, emoji in formal text, small tables that could be a sentence, curly quotes where straight ones are used.
     - Em dashes used for drama. Prefer commas, full stops or brackets. One is fine; several is a tell.
     - Chatbot leftovers: "Certainly!", "Great question", "I hope this helps", "Let me know if you'd like", knowledge-cutoff talk, placeholders like [Name] or XX, Markdown symbols in plain text, made-up citations.
+
+    Examples of the change (copy the move, not the words):
+    Before: "Our platform serves as a testament to innovation, offering seamless, robust, and intuitive solutions that empower teams."
+    After: "The app lets a team share files and tasks in one place. It's quick to set up and doesn't need training."
+    Before: "It's not just a phone, it's a gateway to a world of possibilities. Additionally, it boasts an impressive camera."
+    After: "It's a good phone. The camera is the best part: photos at night come out sharper than on my old one."
+    Before: "In conclusion, remote work plays a pivotal role in modern business — highlighting the importance of flexibility."
+    After: "Remote work matters because people can fit work around their lives. Most teams I know have kept at least some of it."
+    Before: "Climate change is a multifaceted challenge. Experts argue that urgent action is crucial."
+    After: "Climate change has many causes, and the IPCC's 2023 report says emissions must fall by about half by 2030."
 
     Do not swap one tell for a fancier synonym: rewrite the sentence. Do not remove structure a school or work task requires. \
     Do not add facts. Return only the rewritten text.

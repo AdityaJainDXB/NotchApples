@@ -253,13 +253,13 @@ final class TextGrab: ObservableObject {
 // MARK: - View
 
 enum ToolsPage: String, CaseIterable, Identifiable {
-    case utilities, calculator, translator, humanizer
+    case utilities, calculator, translator, humanizer, detector
     var id: String { rawValue }
     var title: String {
-        switch self { case .utilities: "Utilities"; case .calculator: "Calculator"; case .translator: "Translator"; case .humanizer: "Humanizer" }
+        switch self { case .utilities: "Utilities"; case .calculator: "Calculator"; case .translator: "Translator"; case .humanizer: "Humanizer"; case .detector: "AI Detector" }
     }
     var symbol: String {
-        switch self { case .utilities: "wrench.and.screwdriver"; case .calculator: "plusminus"; case .translator: "character.bubble"; case .humanizer: "person.wave.2" }
+        switch self { case .utilities: "wrench.and.screwdriver"; case .calculator: "plusminus"; case .translator: "character.bubble"; case .humanizer: "person.wave.2"; case .detector: "magnifyingglass.circle" }
     }
 }
 
@@ -282,6 +282,8 @@ struct ToolsView: View {
                 NotchTranslatorView()
             case .humanizer:
                 HumanizerView()
+            case .detector:
+                AIDetectorView()
             }
         }
     }
