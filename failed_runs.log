@@ -1,0 +1,6 @@
+
+[2026-11-17] Issue #99 (music dynamic island disappears on notch open) - 2 attempts (Sonnet low, Opus medium), no code change committed.
+Could not reproduce or pin a root cause from static code reading alone; needs live repro with music playing + a real notch.
+Sonnet trace: NowPlayingMonitor -> LiveActivityCenter.recompute() -> onChange (NotchWindowController.swift:658) sets triggerView.activity, drawn in NotchTriggerView.draw (:365). expand()/collapse() (:996/:1211) never touch triggerView.activity directly; expand() calls hidePeek(), collapse() sets peekQuietUntil (time delay, not a latch). Ruled out: 10s self-restart, double-wrapped onChange, hudFlash/canShowHUD, ear/bars timers.
+Opus trace: suspects the menu-bar dimmer window (from "dim menu bar" / "keep notch visible in full-screen" features) staying ordered-in over the trigger strip after notch close, swallowing the compact indicator visually rather than the activity state itself being cleared. Needs reporter follow-up: (1) does the menu bar stay darker after closing the notch, (2) does disabling Settings > Notch Extras > dim menu bar fix it, (3) is "keep notch visible in full-screen apps" on, (4) which music app.
+No branch pushed, no PR opened. Needs reporter info before a confident fix can be written.
