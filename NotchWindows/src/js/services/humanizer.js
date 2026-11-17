@@ -9,7 +9,7 @@ import * as T from './aitells.js';
 
 const KEY = 'humanizer.usage';
 export const STYLE_KEY = 'humanizer.style';
-const tier = () => (can(2) ? 2 : can(1) ? 1 : 0);
+const tier = () => (can(3) ? 3 : can(2) ? 2 : can(1) ? 1 : 0);   // 3 = admin key: no word limits
 export const usage = () => L.current(load(KEY, null));
 export const perRequestLimit = () => L.perRequestLimit(tier());
 export const monthlyLeft = () => L.monthlyLeft(usage(), tier());
