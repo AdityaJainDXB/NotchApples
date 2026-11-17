@@ -57,7 +57,11 @@ export function setting(name, desc, control) {
     control);
 }
 
+/// Card titles read like the Mac's section headers: plain words, no emoji in front (issue #111).
+export const plainTitle = (t) => (typeof t === 'string' ? t.replace(/^\p{Extended_Pictographic}\uFE0F?\s+/u, '') : t);
+
 export function card(title, body, { actions = [], cls = '', style } = {}) {
+  title = plainTitle(title);
   return el('div', { class: `card col ${cls}`.trim(), style },
     title ? el('div', { class: 'card-title' }, el('div', { class: 'section-title' }, title), ...actions) : null,
     ...(Array.isArray(body) ? body : [body]));

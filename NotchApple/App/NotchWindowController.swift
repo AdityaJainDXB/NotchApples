@@ -1019,7 +1019,7 @@ final class NotchWindowController {
         // with the same curve that closing uses.
         hidePeek()
         withAnimation(Duo.open) { state.isExpanded = true }
-        MenuBarDimmer.shared.show(on: targetScreen, below: panel.level)     // the menu bar of the app you are in fades down
+        MenuBarDimmer.shared.show(on: targetScreen, below: panel.level, under: trigger)     // the menu bar of the app you are in fades down
         NotchFeedback.opened()
         installMonitors()
     }
@@ -1242,6 +1242,10 @@ final class NotchWindowController {
             // Stay ordered in (see show()), just invisible and click-through.
             self.panel.alphaValue = 0
             self.panel.ignoresMouseEvents = true
+            // Issue #99: bring the closed notch (and the music beside it) back on top and redraw it at its final size.
+            if !SettingsManager.shared.isNotchHidden && !self.state.isAutoHidden { self.trigger.orderFrontRegardless() }
+            self.triggerView.settle()
+            self.triggerView.needsDisplay = true
         }
     }
 
