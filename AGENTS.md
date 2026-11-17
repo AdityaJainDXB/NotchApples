@@ -47,12 +47,17 @@ The README is the front page, not the history. For every release:
 
 There are Pro and Ultimate keys, and there will be one **admin key** above them. An admin key unlocks every paywalled feature with no limits: the Humanizer's word caps, the messages cap for messaging, and any future feature that has a cap, a paywall or a usage allowance. When you add a new paywall, cap or metered feature, make sure an admin key bypasses it. Do not add a limit that an admin key cannot pass.
 
-Not built yet. Do not add an admin tier to the licence or entitlement code without the owner's go-ahead, and never put an admin key, its secret or its signing material in the repository or in a message. Keys are issued on the licence server (`server/license-worker`), not in the apps.
+Built in 2.2.74 (tier 3, `NTCH-ADMN-`, at most four live, issued only from the admin page). Never put an admin key, its secret or its signing material in the repository or in a message. Keys are issued on the licence server (`server/license-worker`), not in the apps.
+
+## Test copies of the Mac app (17 November 2026)
+
+Never run a Debug or test copy of the Mac app with the real bundle id (`com.notchapple.app`) next to, or instead of, the installed one. Both read and write `~/Library/Application Support/Notch apple` (secrets.json with the licence key, the Friends vault) and `UserDefaults`, so a test copy can overwrite or reset the owner's data. Give a test build its own bundle id.
 
 ## Commit log
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 17 Nov 2026: Windows tab bar closer to the Mac (issue #111): at most 12 tabs, the rest under a More button (the open tab always stays in the bar), bolder and brighter tab icons; smoke test expects the five Tools pages (AI Detector). Playwright pass over all 22 Windows tabs found no script errors. Open: deeper Windows/Mac parity (type sizes, emoji headings, card layouts), release 2.2.75 from the signing Mac.
 - 17 Nov 2026: merged #93, #105, #106, #110 and #112-#115 (Humanizer v2 + AI Detector, Translator languages, one hover outline, Friends re-add, Whop top-up link), prepared 2.2.75 (version, notes, handoff), and the Windows Humanizer now passes admin keys through (it capped them at Ultimate). Open: release 2.2.75 from the signing Mac; buying extra words does not credit the app yet; issues #99, #101, #109, #111.
 - 16 Nov 2026: added the Migrate button on the admin page (Pro or Ultimate key to an admin key for the same buyer; old key revoked; cap checked first). Worker and site only.
 - 16 Nov 2026: released 2.2.74 (admin keys on both platforms; the worker is redeployed). Still open: issue the first admin key from the key generator page (Admin, max four).

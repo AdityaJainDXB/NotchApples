@@ -2,6 +2,7 @@
 // emoji look different on every PC). 24×24, 2px round strokes, coloured by the text colour.
 
 const P = {
+  more: '<circle cx="5.5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="18.5" cy="12" r="1.3"/>',
   today: '<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/>',
   ai: '<path d="M11 3l1.9 5.4L18.3 10l-5.4 1.9L11 17.3 9.1 11.9 3.7 10l5.4-1.6z"/><path d="M19 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/>',
   sports: '<rect x="2" y="5" width="20" height="14" rx="3.5"/><path d="M12 5v14"/><circle cx="12" cy="12" r="2.8"/>',
