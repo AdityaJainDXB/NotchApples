@@ -53,6 +53,7 @@ Not built yet. Do not add an admin tier to the licence or entitlement code witho
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 17 Nov 2026: merged #93, #105, #106, #110 and #112-#115 (Humanizer v2 + AI Detector, Translator languages, one hover outline, Friends re-add, Whop top-up link), prepared 2.2.75 (version, notes, handoff), and the Windows Humanizer now passes admin keys through (it capped them at Ultimate). Open: release 2.2.75 from the signing Mac; buying extra words does not credit the app yet; issues #99, #101, #109, #111.
 - 16 Nov 2026: added the Migrate button on the admin page (Pro or Ultimate key to an admin key for the same buyer; old key revoked; cap checked first). Worker and site only.
 - 16 Nov 2026: released 2.2.74 (admin keys on both platforms; the worker is redeployed). Still open: issue the first admin key from the key generator page (Admin, max four).
 - 16 Nov 2026: admin key tier added (NTCH-ADMN-): at most four live, the only way to make one is the admin route, and admin skips every cap (AI, Humanizer words). Public orders still cannot ask for admin.

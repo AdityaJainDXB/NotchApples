@@ -61,3 +61,9 @@ test('an admin key has no Humanizer limits at all', async () => {
   assert.equal(L.perRequestLimit(2), null, 'Ultimate is unchanged');
   assert.equal(L.monthlyAllowance(2), 40000, 'Ultimate is unchanged');
 });
+
+test('an admin key has no word limits (CLAUDE.md admin rule)', () => {
+  assert.equal(perRequestLimit(3), null);
+  assert.ok(monthlyAllowance(3) > 1e12);
+  assert.deepEqual(decide(500000, 3, u(10_000_000)), { kind: 'allowed', fromMonth: 500000, fromCredits: 0 });
+});
