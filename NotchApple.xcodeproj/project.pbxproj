@@ -179,6 +179,7 @@
 		47F3262131C954B32DF79D99 /* CookieClickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 702334063347B78DDA56DB8A /* CookieClickerView.swift */; };
 		488CD0BEB4F2C16BCAF627F2 /* BrightnessBlackout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4885DCE3ACCF1FF623E1D25F /* BrightnessBlackout.swift */; };
 		499529CC2C4C7885D964686F /* MeetingNotesLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = 813CF5ACE0591AF47CA5C5F6 /* MeetingNotesLogic.swift */; };
+		49A2A4E4E58076C1545D32B7 /* ThreeCardLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = CDA2BB9F74B86BCC19CA0BC4 /* ThreeCardLogic.swift */; };
 		4A233680E7FADB441B86E878 /* ClaudeCodeStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89130463E24D5E70FA663230 /* ClaudeCodeStatus.swift */; };
 		4A3A2D8CD5D19945AFF5381A /* LicenseKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = B16F24E7C42EBCCB3F46202A /* LicenseKey.swift */; };
 		4AB071636A278AB25212EB81 /* NotchAIDocumentIndex.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6447E51386679AB2CE334197 /* NotchAIDocumentIndex.swift */; };
@@ -245,6 +246,7 @@
 		5E3C1CC5BAB503490C8F01EA /* ConvertFormats.swift in Sources */ = {isa = PBXBuildFile; fileRef = E26901871B9937AEB263FD76 /* ConvertFormats.swift */; };
 		5E92B32B8E218C4DA0ECFDDD /* NotchAIConversationLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB63454B0761715BDBAA4F80 /* NotchAIConversationLogic.swift */; };
 		5F2E6DC4CD761DFB777B0C6B /* SharedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9E160C9C8DBBE561F7DD2AD /* SharedStore.swift */; };
+		5FB6908739A834CFFAA1455D /* ThreeCardPokerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3168558B1A1F273D9DB4B87B /* ThreeCardPokerView.swift */; };
 		5FC8FBC7D5A465315FB27591 /* nightshift.js in Resources */ = {isa = PBXBuildFile; fileRef = C60D1D2426B0E7E89DA1D3FF /* nightshift.js */; };
 		6043E84DBC4D05154CED0C5F /* DesktopWidgetLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2471BBBA3823161DB0644C9 /* DesktopWidgetLogic.swift */; };
 		616802F0F15A56E4A64C5C64 /* NotchAIVoiceEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 194AE15F63853B715420206A /* NotchAIVoiceEngines.swift */; };
@@ -570,6 +572,7 @@
 		DD77808AC84C93F4ED44E0D6 /* BoardGames.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565FBD6851D4877BC775D95B /* BoardGames.swift */; };
 		DD9148F5585BAB4679D8E965 /* NotchAIVoiceLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA733A97D7EDB8049686608A /* NotchAIVoiceLogic.swift */; };
 		DDDDB7E81AB5751C2D7A3F80 /* ShortcutsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BEEDB2663AD6544E5061C7 /* ShortcutsView.swift */; };
+		DE77C3549F770D06FD785330 /* ThreeCardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED53B0C1CD18E5886610F36E /* ThreeCardTests.swift */; };
 		DE787D98D8EB9B7B2E4CB705 /* F1View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EFD1D83C7FB4561E3A2CC27 /* F1View.swift */; };
 		DF65DFB568C3D70923232C70 /* NotchAIWebSearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 500506101EA84B3D113BC27A /* NotchAIWebSearch.swift */; };
 		DFC0C10C61F488FC1CE273A4 /* FoldShader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60E39552D413F32D02D5FFD0 /* FoldShader.swift */; };
@@ -777,6 +780,7 @@
 		2FBBC6956A3E35BD581200D1 /* EagleRideGame.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = EagleRideGame.html; sourceTree = "<group>"; };
 		2FDF0D52167C63FBB161D611 /* SystemHUDObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemHUDObserver.swift; sourceTree = "<group>"; };
 		3047710BA5AC2CDBD910608B /* ProjectFocusLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFocusLogic.swift; sourceTree = "<group>"; };
+		3168558B1A1F273D9DB4B87B /* ThreeCardPokerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreeCardPokerView.swift; sourceTree = "<group>"; };
 		318722B5FCE2CACCA528B917 /* NotchAIScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIScreenView.swift; sourceTree = "<group>"; };
 		321AEDF869EDFDD140BAC7F0 /* ModuleContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleContentView.swift; sourceTree = "<group>"; };
 		326EBD11D0EF6CA885B78559 /* CompanionClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanionClient.swift; sourceTree = "<group>"; };
@@ -1100,6 +1104,7 @@
 		CBF8382AEA6C022EC53D433C /* ScreenCaptureActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenCaptureActions.swift; sourceTree = "<group>"; };
 		CCE0CCD6C5E28321639259CE /* PeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeekView.swift; sourceTree = "<group>"; };
 		CD271EAF0A5B1BCB0FD00CF7 /* QuickAnswerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAnswerTests.swift; sourceTree = "<group>"; };
+		CDA2BB9F74B86BCC19CA0BC4 /* ThreeCardLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreeCardLogic.swift; sourceTree = "<group>"; };
 		CFD3328D9FD02F82CF81F916 /* TabChoicesLogic.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabChoicesLogic.swift; sourceTree = "<group>"; };
 		D03274B71DE9E1F3D3567E7E /* SystemStatsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SystemStatsWidget.swift; sourceTree = "<group>"; };
 		D077F8329BD06B571E7C0A86 /* FoldSurface.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoldSurface.swift; sourceTree = "<group>"; };
@@ -1177,6 +1182,7 @@
 		EC316BD63536E8BD6E9FCD54 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		ED43344457B89969F8103870 /* AIExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIExtras.swift; sourceTree = "<group>"; };
 		ED4360216F9C51D0A876996E /* NotchAIVoiceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIVoiceView.swift; sourceTree = "<group>"; };
+		ED53B0C1CD18E5886610F36E /* ThreeCardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreeCardTests.swift; sourceTree = "<group>"; };
 		EE1E2B240A1BA666531C905A /* GamesMenuTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GamesMenuTests.swift; sourceTree = "<group>"; };
 		EE3DF37ECFE22BA6B80763D9 /* TennisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TennisView.swift; sourceTree = "<group>"; };
 		EE57913A6BF1A082CB823276 /* NotchAIConversationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchAIConversationView.swift; sourceTree = "<group>"; };
@@ -1643,6 +1649,7 @@
 				ABF7BDDF60590D89D51048A8 /* SystemWatchTests.swift */,
 				DAA053318CB390C404D60377 /* TabChoicesTests.swift */,
 				9342B7403A92BBB1CB6A292A /* TennisLogicTests.swift */,
+				ED53B0C1CD18E5886610F36E /* ThreeCardTests.swift */,
 				AE3C5425B88619B7DE0DDC3F /* TicTacToeTests.swift */,
 				6E232DC7A1E5C4A3A89FF53F /* TodoLogicTests.swift */,
 				9C1E5BAFF3AE0C0AC13DBBF6 /* TokenTrailTests.swift */,
@@ -2446,6 +2453,8 @@
 				264A2A3E4ADCB8D6919DC502 /* SnakeGameViewModel.swift */,
 				D0C3A6E52CAC2AAC502D9AD8 /* SolitaireView.swift */,
 				B7EA8815F62F07817CF14BB6 /* TetrisGameView.swift */,
+				CDA2BB9F74B86BCC19CA0BC4 /* ThreeCardLogic.swift */,
+				3168558B1A1F273D9DB4B87B /* ThreeCardPokerView.swift */,
 				D5DDB1DB48C93BECF97137C8 /* WebScriptGame.swift */,
 			);
 			path = Games;
@@ -3010,6 +3019,8 @@
 				23ABBEC48B822E5003CB7CD3 /* TetrisGameView.swift in Sources */,
 				3426BA9EDEDB4808A6BEF8BA /* Theme.swift in Sources */,
 				9F191E816E9E31973BFAF4EC /* ThermalWatcher.swift in Sources */,
+				49A2A4E4E58076C1545D32B7 /* ThreeCardLogic.swift in Sources */,
+				5FB6908739A834CFFAA1455D /* ThreeCardPokerView.swift in Sources */,
 				C1139D9D6C460A85EC9FDD58 /* TicTacToeLogic.swift in Sources */,
 				7183022F97E2F24A2958AA4A /* TimeZonePlaces.swift in Sources */,
 				FD3C4D12C2C02652A4D6A729 /* TimerView.swift in Sources */,
@@ -3240,6 +3251,7 @@
 				51D45739FB780D6ED301778C /* TabChoicesTests.swift in Sources */,
 				51643321A40F4AD935486255 /* TennisLogic.swift in Sources */,
 				DC5EDBF914623CEC9EBB91A6 /* TennisLogicTests.swift in Sources */,
+				DE77C3549F770D06FD785330 /* ThreeCardTests.swift in Sources */,
 				3E81A92EEAECBFB0CE3105DC /* TicTacToeLogic.swift in Sources */,
 				971879CC1D053C625A4809D2 /* TicTacToeTests.swift in Sources */,
 				5174EDF6C440F48CA52463BC /* TodoLogic.swift in Sources */,
@@ -3380,7 +3392,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 251;
+				CURRENT_PROJECT_VERSION = 252;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3396,7 +3408,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.74;
+				MARKETING_VERSION = 2.2.75;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3514,7 +3526,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 251;
+				CURRENT_PROJECT_VERSION = 252;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3536,7 +3548,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.74;
+				MARKETING_VERSION = 2.2.75;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

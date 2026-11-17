@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.76", date: "17 November 2026", headline: "Three-Card Poker", items: [
+            "- New: Three-Card Poker. Games → Poker has a Three-Card Poker table: you against one to three computer players with play-money chips you can see, a hand-rankings panel beside the table, and a scoreboard of wins, losses and draws",
+            "- Mac: ⌘E opens the notch, not your messages: if Messenger was the last tab, the notch opens on the first tab instead"
+        ]),
         ReleaseNote(version: "2.2.75", date: "17 November 2026", headline: "AI Detector, a better Humanizer, and fixes", items: [
             "- New: AI Detector. Tools → AI Detector shows how strongly a text shows chatbot writing habits, and which ones. It runs on your own computer, sends nothing, and is a guide, not proof",
             "- Better Humanizer. It checks its own rewrite for chatbot habits, fixes the safe ones itself, and makes a second pass on anything left. It shows \"AI habits found: 9 → 1\", and a Write like me box copies your own style.",

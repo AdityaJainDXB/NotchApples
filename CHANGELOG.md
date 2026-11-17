@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.76 · Windows 2.2.76 · 17 November 2026 · 🃏 Three-Card Poker
+
+- New: Three-Card Poker. Games → Poker has a Three-Card Poker table: you against one to three computer players with play-money chips you can see, a hand-rankings panel beside the table, and a scoreboard of wins, losses and draws
+- Windows: the tab bar looks like the Mac's: up to 12 tabs, the rest under a More button, with bolder icons
+- Mac: ⌘E opens the notch, not your messages: if Messenger was the last tab, the notch opens on the first tab instead
+
 ### Mac 2.2.75 · Windows 2.2.75 BETA · 17 November 2026 · 🔍 AI Detector, a better Humanizer, and fixes
 
 - New: AI Detector. Tools → AI Detector shows how strongly a text shows chatbot writing habits, and which ones. It runs on your own computer, sends nothing, and is a guide, not proof

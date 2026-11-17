@@ -123,6 +123,19 @@ final class PokerModel: ObservableObject {
 }
 
 struct PokerView: View {
+    /// Texas Hold'em or Three-Card Poker (issue #101).
+    @AppStorage("games.poker.mode") private var mode = "holdem"
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Picker("", selection: $mode) { Text("Texas Hold'em").tag("holdem"); Text("Three-Card Poker").tag("three") }
+                .pickerStyle(.segmented).labelsHidden().frame(width: 260)
+            if mode == "three" { ThreeCardPokerView() } else { HoldemView() }
+        }
+    }
+}
+
+struct HoldemView: View {
     @StateObject private var model = PokerModel()
     private let cardWidth: CGFloat = 35
 
