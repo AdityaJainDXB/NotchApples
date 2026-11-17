@@ -13,7 +13,7 @@ import { MODULES, DEFAULT_ON, byId } from './modules.js';
 import { insideUtilities, route } from './modules/utilitieslogic.js';
 import { pref, SIZES } from './prefs.js';
 import { setRenderer, earsFor, refresh as refreshPill } from './activity.js';
-import { toast } from './ui.js';
+import { toast, menu } from './ui.js';
 import { applyPerf, probeOnce, toggleHud } from './perf.js';
 import { init as initLiquidMetal } from './liquidmetal.js';
 
@@ -103,16 +103,27 @@ function moveClockIntoUtilities() {
   if (enabledIds().includes('worldclock') && !enabledIds().includes('utilities')) setEnabled('utilities', true);
 }
 
+/** Tabs shown in the bar before the rest go under More (the Mac shows about this many). */
+const MAX_TABS = 12;
+
 export function buildTabs() {
   moveClockIntoUtilities();
   const order = tabOrder().map(byId).filter((m) => m && isEnabled(m.id) && m.id !== 'settings' && !insideUtilities(enabledIds(), m.id));   // Settings is pinned at the right of the header
   if (active !== 'settings' && active !== 'welcome' && active !== 'weeklyupdates' && active !== 'greetingchoice' && !order.some((m) => m.id === active)) active = order[0]?.id ?? 'settings';
+  // Like the Mac: at most MAX_TABS tabs in the bar, the rest under a More button (issue #111: 22 tabs were squeezed into a
+  // scrolling strip that cut icons off at both ends). The open tab always stays in the bar.
+  let shown = order, hidden = [];
+  if (order.length > MAX_TABS) {
+    shown = order.slice(0, MAX_TABS - 1); hidden = order.slice(MAX_TABS - 1);
+    const ai = hidden.findIndex((m) => m.id === active);
+    if (ai >= 0) { const [a] = hidden.splice(ai, 1); hidden.unshift(shown.pop()); shown.push(a); }
+  }
   const mode = pref('ui.compactTabs');
   // "auto": names when they fit, icons only (except the active tab) when they don't.
   const compact = mode !== 'names';  // like the Mac: icons, with the name on the open tab
 
   // Only rebuild the tabs when they change (added, removed, reordered, locked). Switching tab just moves the highlight.
-  const sig = `${compact}|${order.map((m) => m.id + (allowed(m) ? '' : 'L')).join()}`;
+  const sig = `${compact}|${shown.map((m) => m.id + (allowed(m) ? '' : 'L')).join()}|${hidden.map((m) => m.id).join()}`;
   const unchanged = tabbar.dataset.sig === sig;
   if (unchanged) {
     for (const b of tabbar.querySelectorAll('.tab')) {
@@ -121,7 +132,8 @@ export function buildTabs() {
     }
   } else {
     tabbar.dataset.sig = sig;
-    tabbar.replaceChildren(tabPill, ...order.map((m, i) => {
+    tabbar.replaceChildren(tabPill, ...shown.map((m) => {
+    const i = order.indexOf(m);
     const locked = !allowed(m);
     const b = el('button', {
       class: `tab${m.id === active ? ' active' : ''}${compact && m.id !== active ? ' icon-only' : ''}${locked ? ' locked' : ''}`,
@@ -143,7 +155,9 @@ export function buildTabs() {
       setTabOrder(ids);
     });
     return b;
-    }));
+    }), ...(hidden.length ? [el('button', { class: 'tab icon-only more-tab', title: `More tabs (${hidden.length})`, 'aria-label': 'More tabs',
+      onclick: (e) => menu(e, hidden.map((m) => ({ label: `${m.name}${allowed(m) ? '' : ' (Pro)'}`, run: () => show(m.id) }))) },
+      el('span', { class: 'ico' }, icon('more', 22)))] : []));
   }
   if (!unchanged) { tabSizes.disconnect(); tabSizes.observe(tabbar); tabbar.querySelectorAll('.tab').forEach((t) => tabSizes.observe(t)); }
   slidePill(unchanged && body.dataset.anim !== 'off');   // Lite keeps the glide: it only moves and resizes one element

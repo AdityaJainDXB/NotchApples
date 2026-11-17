@@ -21,7 +21,7 @@ const t = root();
 await tools.render(t);
 await tick(80);
 const labels = [...t.querySelector('.seg').querySelectorAll('button')].map((b) => b.textContent).join(',');
-ok('Tools shows four pages', labels === 'Utilities,Calculator,Translator,Humanizer', labels);
+ok('Tools shows five pages', labels === 'Utilities,Calculator,Translator,Humanizer,AI Detector', labels);
 [...t.querySelectorAll('.seg button')].find((b) => b.textContent === 'Calculator').click();
 await tick(30);
 const ta = t.querySelector('textarea');

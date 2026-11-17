@@ -755,3 +755,9 @@ body.liquid-metal .lm-rim::after { content: ""; position: absolute; inset: 0; bo
 body[data-perf="lite"] .lm-rim, body[data-perf="lite"] .metal-fx-canvas { display: none; }
 body.liquid-metal .tab-pill { overflow: hidden; }
 body.liquid-metal .tab-pill .metal-fx-canvas { mix-blend-mode: overlay; opacity: .9; }
+
+/* Issue #111: closer to the Mac tab bar: bolder, brighter icons (SF Symbols are heavier than a 1.9px line). */
+.tab .svgicon svg { stroke-width: 2.25; }
+.tab.icon-only { color: rgba(255, 255, 255, .82); }
+.tab.icon-only:hover { color: #fff; }
+.tab.locked.icon-only { color: var(--text-dim); }
