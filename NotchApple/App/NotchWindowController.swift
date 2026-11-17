@@ -110,6 +110,7 @@ final class NotchTriggerView: NSView {
     private func updateMetalRim() {
         let on = (isHovered || Date() < rimUntil) && (LiquidMetalSetting.isOn || LiquidMetalSetting.outlinesOn) && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
         if on, rimHost == nil {
+            defer { needsDisplay = true }   // drop the plain hover outline now the metal one is up
             let rim = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 3, veil: false))
             let sheen = PassThroughHost(rootView: LiquidMetalCapsule(hover: true, mode: 0, veil: false))
             for h in [sheen, rim] { h.wantsLayer = true; h.alphaValue = 0; addSubview(h) }
@@ -141,7 +142,7 @@ final class NotchTriggerView: NSView {
         } else {
             NSAnimationContext.runAnimationGroup({ $0.duration = 0.18; rim.animator().alphaValue = 0; sheen.animator().alphaValue = 0 }, completionHandler: { [weak self] in
                 guard let self, !self.isHovered, Date() >= self.rimUntil else { return }
-                self.rimHost?.removeFromSuperview(); self.rimHost = nil
+                self.rimHost?.removeFromSuperview(); self.rimHost = nil; self.needsDisplay = true
                 self.sheenHost?.removeFromSuperview(); self.sheenHost = nil
             })
         }
@@ -462,7 +463,8 @@ final class NotchTriggerView: NSView {
             NSGraphicsContext.restoreGraphicsState()
         }
 
-        if isHovered {
+        // With liquid metal the metal rim (updateMetalRim) is the hover outline; drawing this one too showed two outlines (issue #108).
+        if isHovered, rimHost == nil {
             NSColor(Theme.accent).withAlphaComponent(0.9).setStroke()
             path.lineWidth = 1.5
             path.stroke()
