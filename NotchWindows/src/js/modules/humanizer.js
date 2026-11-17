@@ -1,6 +1,6 @@
 // Tools → Humanizer: paste text, press Humanize, and the model chosen in AI settings rewrites it so it reads like a person wrote it.
 import { el } from '../store.js';
-import { invoke } from '../native.js';
+import { invoke, openUrl } from '../native.js';
 import { toast } from '../ui.js';
 import * as H from '../services/humanizer.js';
 import * as L from '../services/humanizerlogic.js';
@@ -37,6 +37,6 @@ export function render(root) {
       el('div', { class: 'card col gap-6', style: 'flex:1;min-width:0' }, el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Rewritten'),
         el('button', { class: 'icon-btn', title: 'Copy', onclick: () => out.textContent && invoke('clipboard_copy_text', { text: out.textContent }).then(() => toast('Copied')) }, '⧉')), out)),
     styleBox,
-    el('div', { class: 'hstack' }, styleToggle, habits, left, H.monthlyLeft() === 0 && H.credits() === 0 ? el('div', { class: 'small accent' }, 'Extra words (1 USD = 50,000, they never run out): coming soon') : null),
+    el('div', { class: 'hstack' }, styleToggle, habits, left, el('button', { class: 'quiet accent', style: 'font-size:11px', title: 'Opens the Whop page. Extra words never run out.', onclick: () => openUrl(L.TOP_UP_URL) }, '+ Buy extra words: $1 for 50,000')),
     problem));
 }

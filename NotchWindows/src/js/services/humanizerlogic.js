@@ -6,6 +6,8 @@
 //   extra words bought:    1 USD = 50,000, never run out with the month, used after the month's words
 
 export const WORDS_PER_DOLLAR = 50000;
+/** The Whop page that sells extra words. */
+export const TOP_UP_URL = 'https://whop.com/notch-bcc9/humanizer-top-up/';
 /** Most words in one request for a tier (0 Free, 1 Pro, 2 Ultimate); null for no limit. */
 export const perRequestLimit = (tier) => (tier >= 2 ? null : tier === 1 ? 1000 : 500);
 export const monthlyAllowance = (tier) => (tier >= 3 ? Number.MAX_SAFE_INTEGER : tier === 2 ? 40000 : tier === 1 ? 15000 : 3000);

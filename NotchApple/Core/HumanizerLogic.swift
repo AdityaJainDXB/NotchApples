@@ -37,6 +37,8 @@ enum HumanizerLogic {
 
     /// Extra words: one US dollar buys this many, and they never expire.
     static let wordsPerDollar = 50_000
+    /// The Whop page that sells extra words.
+    static let topUpURL = URL(string: "https://whop.com/notch-bcc9/humanizer-top-up/")!
 
     static func wordCount(_ text: String) -> Int {
         text.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count

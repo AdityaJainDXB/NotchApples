@@ -63,9 +63,11 @@ struct HumanizerView: View {
                 }
                 Text(service.summary).font(.system(size: 10)).foregroundStyle(Theme.textSecondary)
                 Spacer()
-                if service.monthlyLeft == 0 && service.credits == 0 {
-                    Text("Extra words (1 USD = 50,000, they never run out): coming soon").font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
+                Link(destination: HumanizerLogic.topUpURL) {
+                    Label("Buy extra words: $1 for 50,000", systemImage: "plus.circle.fill").font(.system(size: 10, weight: .semibold))
                 }
+                .foregroundStyle(Theme.accentBright)
+                .help("Opens the Whop page. Extra words never run out.")
             }
             Text("Checklist: the Humanizer skill, from Wikipedia's “Signs of AI writing” guide (CC BY-SA 4.0).").font(.system(size: 9)).foregroundStyle(Theme.textSecondary.opacity(0.7))
             if let problem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }
