@@ -11,6 +11,18 @@ globalThis.document = { addEventListener() {}, querySelector: () => null, docume
 const L = await import('../src/js/modules/gameslogic.js');
 const P = await import('../src/js/services/privategame.js');
 
+// Issue #103: Scribble (and Rocket League) overlapped in the Games tab because the panel stayed at the standard size there.
+test('the live web games ask for the tall panel in the Games tab; the small games do not', () => {
+  assert.equal(L.needsTallPanel('scribble'), true);
+  assert.equal(L.needsTallPanel('rocket'), true);
+  for (const id of ['2048', 'snake', 'chess', 'plane']) assert.equal(L.needsTallPanel(id), false);
+  for (const id of L.TALL_GAMES) assert.ok(L.byId(id), `${id} is a real game`);
+  const src = fs.readFileSync(new URL('../src/js/modules/games.js', import.meta.url), 'utf8');
+  assert.match(src, /tall\(needsTallPanel\(g\)\)/, 'picking a game sizes the panel for it');
+  assert.match(src, /stop = \(\) => \{\}; tall\(false\)/, 'going back to the menu lets the panel shrink');
+  assert.match(src, /ro\.disconnect\(\); stop\(\); tall\(false\)/, 'leaving the Games tab lets the panel shrink');
+});
+
 test('the catalog is sound: unique ids, known filters, one private locked game', () => {
   assert.equal(new Set(L.GAMES.map((g) => g.id)).size, L.GAMES.length);
   const cats = new Set(L.CATEGORIES.map((c) => c.id));
