@@ -150,6 +150,7 @@ targets:
       - NotchApple/Modules/Tools/Converter.swift
       - NotchApple/Core/PureModels.swift
       - NotchApple/Core/HotCornerLogic.swift
+      - NotchApple/Core/FullscreenLogic.swift
       - NotchApple/Core/CompanionMotion.swift
       - NotchApple/Core/ModelLocality.swift
       - NotchApple/Modules/NotchAI/NotchAIGuard.swift

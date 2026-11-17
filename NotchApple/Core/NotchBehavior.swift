@@ -137,23 +137,25 @@ final class FullscreenWatcher {
         onChange(now)
     }
 
-    /// A normal-level window of the front app that covers the whole screen, menu bar included.
+    /// The front app is in native full screen on `screen`: a normal-level window covers the whole
+    /// screen AND the Space shows no desktop/wallpaper window (see FullscreenLogic, issue #102).
     static func frontAppIsFullscreen(on screen: NSScreen?) -> Bool {
         guard let screen, let app = NSWorkspace.shared.frontmostApplication,
               app.bundleIdentifier != Bundle.main.bundleIdentifier, app.bundleIdentifier != "com.apple.finder",
-              let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID) as? [[String: Any]]
+              // Desktop elements are included on purpose: their absence marks a full-screen Space.
+              let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as? [[String: Any]]
         else { return false }
         // CG window bounds are top-left based on the primary display.
         let primaryHeight = NSScreen.screens.first?.frame.height ?? screen.frame.height
         let target = CGRect(x: screen.frame.minX, y: primaryHeight - screen.frame.maxY, width: screen.frame.width, height: screen.frame.height)
-        return list.contains { w in
-            guard (w[kCGWindowOwnerPID as String] as? pid_t) == app.processIdentifier,
-                  (w[kCGWindowLayer as String] as? Int) == 0,
-                  let b = w[kCGWindowBounds as String] as? [String: CGFloat] else { return false }
-            let r = CGRect(x: b["X"] ?? 0, y: b["Y"] ?? 0, width: b["Width"] ?? 0, height: b["Height"] ?? 0)
-            return abs(r.minX - target.minX) < 2 && abs(r.minY - target.minY) < 2
-                && abs(r.width - target.width) < 2 && abs(r.height - target.height) < 2
+        let windows: [FullscreenLogic.Window] = list.compactMap { w in
+            guard let pid = w[kCGWindowOwnerPID as String] as? pid_t,
+                  let layer = w[kCGWindowLayer as String] as? Int,
+                  let b = w[kCGWindowBounds as String] as? [String: CGFloat] else { return nil }
+            return .init(pid: pid, layer: layer,
+                         bounds: CGRect(x: b["X"] ?? 0, y: b["Y"] ?? 0, width: b["Width"] ?? 0, height: b["Height"] ?? 0))
         }
+        return FullscreenLogic.isFullscreen(appPID: app.processIdentifier, screen: target, windows: windows)
     }
 }
 
