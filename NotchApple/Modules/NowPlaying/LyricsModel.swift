@@ -33,7 +33,7 @@ final class LyricsModel: ObservableObject {
     }
 
     func stop() {
-        if SideLyrics.keepsModelRunning { return }   // the side overlay still needs the lines
+        if SideLyrics.keepsModelRunning || VoxelWall.isShowing { return }   // the side overlay still needs the lines
         timer?.invalidate(); timer = nil
     }
 

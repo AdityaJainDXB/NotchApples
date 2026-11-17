@@ -430,6 +430,7 @@ struct NowPlayingView: View {
                 .padding(.top, 4)
                 if monitor.current?.title.isEmpty == false { BalanceRow() }
                 SideLyricsRow()
+                VoxelWallRow()
                 BrowserMediaBar()
             }
             .frame(maxWidth: 300, alignment: .leading)
