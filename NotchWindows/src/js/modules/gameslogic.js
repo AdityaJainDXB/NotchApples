@@ -40,6 +40,11 @@ export const GAMES = [
 
 export const byId = (id) => GAMES.find((g) => g.id === id) || null;
 
+/// The live web games (Rocket League, Scribble) laid out for at least 900 x 720, like in a chat. In the Games tab the panel has
+/// to grow for them too, or their side panel, bar and menu overlap at the standard size (issue #103).
+export const TALL_GAMES = new Set(['rocket', 'scribble']);
+export const needsTallPanel = (id) => TALL_GAMES.has(id);
+
 /// The games a search word and a filter leave. The search matches anywhere in the name, ignoring capitals.
 export function filterGames(games, { q = '', cat = 'all' } = {}) {
   const word = String(q).trim().toLowerCase();

@@ -7,7 +7,7 @@ import { segmented } from '../ui.js';
 import { cookie, runner, breakout, memory } from './games-extra.js';
 import { blackjack, solitaire, poker } from './games-cards.js';
 import { renderMenu } from './gamesmenu.js';
-import { byId, recordRecent } from './gameslogic.js';
+import { byId, recordRecent, needsTallPanel } from './gameslogic.js';
 import * as AI from '../services/ai.js';
 import { http } from '../native.js';
 
@@ -32,14 +32,16 @@ export function render(root) {
   const onFull = () => { const on = document.fullscreenElement === board; board.style.cssText = on ? 'display:flex;justify-content:center;align-items:flex-start;background:#0d0b14;overflow:auto;padding-top:2vh' : ''; fit(); setTimeout(fit, 80); };
   document.addEventListener('fullscreenchange', onFull);
   const fullBtn = el('button', { class: 'btn small', title: 'Make this game fill the screen (Esc leaves)', onclick: () => { if (document.fullscreenElement === board) document.exitFullscreen?.(); else board.requestFullscreen?.().catch?.(() => {}); } }, '⛶ Full screen');
-  const pick = (g) => { stop(); game = g; save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'rocket' || g === 'scribble' || g === 'chess' || g === 'tetris' || g === 'nightshift' || g === 'eagle' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, rocket, scribble, chess, tetris, nightshift, eagle, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
+  // Rocket League and Scribble need the panel at least 900 x 720 (as in a chat), or their layout overlaps (issue #103).
+  const tall = (on) => import('../app.js').then((a) => a.chatGame?.('games', on, on)).catch(() => {});
+  const pick = (g) => { stop(); game = g; tall(needsTallPanel(g)); save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'rocket' || g === 'scribble' || g === 'chess' || g === 'tetris' || g === 'nightshift' || g === 'eagle' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, rocket, scribble, chess, tetris, nightshift, eagle, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
   // The menu of games (search, filters, "Jump back in"); picking one shows the game with a way back.
   const title = el('div', { style: 'font-weight:700' });
   const back = el('button', { class: 'btn small quiet', onclick: () => showMenu() }, '‹ All games');
   const play = el('div', { class: 'col fill', style: 'display:none;min-height:0;gap:6px' }, el('div', { class: 'hstack', style: 'gap:8px;align-items:center' }, back, title, el('div', { class: 'grow' }), fullBtn), board);
   const menu = el('div', { class: 'col fill', style: 'min-height:0' });
   const showMenu = () => {
-    stop(); stop = () => {};
+    stop(); stop = () => {}; tall(false);
     if (document.fullscreenElement === board) document.exitFullscreen?.();
     play.style.display = 'none'; menu.style.display = 'flex';
     renderMenu(menu, { onPick: open });
@@ -52,7 +54,7 @@ export function render(root) {
   };
   root.append(menu, play);
   showMenu();
-  return () => { ro.disconnect(); stop(); document.removeEventListener('fullscreenchange', onFull); if (document.fullscreenElement === board) document.exitFullscreen?.(); };
+  return () => { ro.disconnect(); stop(); tall(false); document.removeEventListener('fullscreenchange', onFull); if (document.fullscreenElement === board) document.exitFullscreen?.(); };
 }
 function best(key, v) { const b = load(`games.best.${key}`, 0); if (v !== undefined && v > b) { save(`games.best.${key}`, v); return v; } return b; }
 
