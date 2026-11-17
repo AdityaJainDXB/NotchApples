@@ -76,8 +76,14 @@ final class TranslationManager: ObservableObject {
     /// The service accepts at most 500 characters per request.
     static let characterLimit = 500
 
-    @Published var source: TranslationLanguage = .english { didSet { if oldValue != source { scheduleTranslation(immediately: true) } } }
-    @Published var target: TranslationLanguage = .spanish { didSet { if oldValue != target { scheduleTranslation(immediately: true) } } }
+    /// The chosen languages are remembered across launches (issue #107: the target kept going back to Spanish).
+    static let sourceKey = "translator.source", targetKey = "translator.target"
+    @Published var source: TranslationLanguage = TranslationLanguage(rawValue: UserDefaults.standard.string(forKey: TranslationManager.sourceKey) ?? "") ?? .english {
+        didSet { if oldValue != source { UserDefaults.standard.set(source.rawValue, forKey: Self.sourceKey); scheduleTranslation(immediately: true) } }
+    }
+    @Published var target: TranslationLanguage = TranslationLanguage(rawValue: UserDefaults.standard.string(forKey: TranslationManager.targetKey) ?? "") ?? .spanish {
+        didSet { if oldValue != target { UserDefaults.standard.set(target.rawValue, forKey: Self.targetKey); scheduleTranslation(immediately: true) } }
+    }
     @Published var input = "" { didSet { if oldValue != input { scheduleTranslation() } } }
     @Published private(set) var output = ""
     @Published private(set) var phonetic = ""
