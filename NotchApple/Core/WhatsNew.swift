@@ -20,6 +20,17 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.75", date: "17 November 2026", headline: "AI Detector, a better Humanizer, and fixes", items: [
+            "- New: AI Detector. Tools → AI Detector shows how strongly a text shows chatbot writing habits, and which ones. It runs on your own computer, sends nothing, and is a guide, not proof",
+            "- Better Humanizer. It checks its own rewrite for chatbot habits, fixes the safe ones itself, and makes a second pass on anything left. It shows \"AI habits found: 9 → 1\", and a Write like me box copies your own style.",
+            "- Mac: Flight Economy opens inside the notch, with Pop out for its own window",
+            "- Fixed: a friend who lost their friend list can add you back. Their request shows again and Accept restores the friendship and the chat",
+            "- Fixed: the Translator remembers the languages you chose (it kept going back to Spanish)",
+            "- Fixed: with liquid metal on, the closed notch showed two outlines on hover",
+            "- Fixed: the notch hid itself on other desktops (Spaces) when the menu bar auto-hides, and could not be clicked there",
+            "- Fixed: Settings search showed features it had no switch for",
+            "- Windows: Scribble and Rocket League no longer overlap in the Games tab"
+        ]),
         ReleaseNote(version: "2.2.74", date: "16 November 2026", headline: "Admin keys", items: [
             "- New: admin keys. A higher key tier with no limits at all: every paid feature unlocked and no word or message caps. Only the owner can issue one, and at most four can be live at a time.",
         ]),

@@ -1,0 +1,10 @@
+## Notch Apple for Windows 2.2.75 (BETA)
+
+- New: AI Detector. Tools → AI Detector shows how strongly a text shows chatbot writing habits, and which ones. It runs on your own computer, sends nothing, and is a guide, not proof
+- Better Humanizer. It checks its own rewrite for chatbot habits, fixes the safe ones itself, and makes a second pass on anything left. It shows "AI habits found: 9 → 1", and a Write like me box copies your own style.
+- Fixed: a friend who lost their friend list can add you back. Their request shows again and Accept restores the friendship and the chat
+- Fixed: the Translator remembers the languages you chose (it kept going back to Spanish)
+- Fixed: with liquid metal on, the closed notch showed two outlines on hover
+- Fixed: the notch hid itself on other desktops (Spaces) when the menu bar auto-hides, and could not be clicked there
+- Fixed: Settings search showed features it had no switch for
+- Windows: Scribble and Rocket League no longer overlap in the Games tab
