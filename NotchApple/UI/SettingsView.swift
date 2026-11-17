@@ -210,7 +210,9 @@ extension Module {
     static func matching(_ query: String) -> [Module] {
         let q = query.trimmingCharacters(in: .whitespaces).lowercased()
         guard q.count >= 2 else { return [] }
-        return allCases.filter { $0 != .nonNecessities && $0 != .translator && ($0.title.lowercased().contains(q) || $0.blurb.lowercased().contains(q)) }
+        // Utilities members (World Clock, Stats, Shelf, ...) have no switch of their own here, same reason .translator is excluded:
+        // matching them would open "Modules & Layout" isolated to a feature with no enable control to show.
+        return allCases.filter { $0 != .nonNecessities && $0 != .translator && !SettingsManager.onlyInsideUtilities.contains($0) && ($0.title.lowercased().contains(q) || $0.blurb.lowercased().contains(q)) }
             .sorted { ($0.title.lowercased().hasPrefix(q) ? 0 : 1) < ($1.title.lowercased().hasPrefix(q) ? 0 : 1) }
     }
 }
