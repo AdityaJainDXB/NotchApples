@@ -133,6 +133,11 @@ private struct SideLyricsView: View {
                 }
             }
         }
+        // White text vanishes on a light wallpaper (it only read on a dark one): a soft dark panel behind the lines keeps it readable anywhere.
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .background(RoundedRectangle(cornerRadius: 18, style: .continuous).fill(Color.black.opacity(0.55)))
+        .background(.ultraThinMaterial.opacity(0.6), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .fixedSize(horizontal: false, vertical: true)
         .animation(.easeInOut(duration: 0.35), value: current)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: right ? .trailing : .leading)
         .padding(.horizontal, 6)
