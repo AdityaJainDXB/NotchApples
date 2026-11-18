@@ -17,6 +17,9 @@ struct HumanizerView: View {
     @State private var result: HumanizerService.Result?
     @AppStorage(HumanizerService.styleKey) private var style = ""
     @State private var showStyle = false
+    @State private var redeeming = false
+    @State private var code = ""
+    @State private var redeemNote: String?
 
     private var words: Int { HumanizerLogic.wordCount(input) }
     private var limit: Int? { service.perRequestLimit }
@@ -67,7 +70,17 @@ struct HumanizerView: View {
                     Label("Buy extra words: $1 for 50,000", systemImage: "plus.circle.fill").font(.system(size: 10, weight: .semibold))
                 }
                 .foregroundStyle(Theme.accentBright)
-                .help("Opens the Whop page. Extra words never run out.")
+                .help("Opens the Whop page. You get a code by email; redeem it here. Extra words never run out.")
+                Button(redeeming ? "Hide" : "Redeem a code") { redeeming.toggle() }
+                    .buttonStyle(MetalPlainStyle()).font(.system(size: 10, weight: .semibold)).foregroundStyle(Theme.accentBright)
+            }
+            if redeeming {
+                HStack(spacing: 6) {
+                    TextField("WORD-XXXX-XXXX-XXXX", text: $code).textFieldStyle(.roundedBorder).font(.system(size: 11, design: .monospaced)).frame(width: 190)
+                    Button("Add words") { Task { redeemNote = await service.redeem(code); if redeemNote?.hasPrefix("Added") == true { code = "" } } }
+                        .buttonStyle(PurpleButtonStyle()).disabled(code.trimmingCharacters(in: .whitespaces).isEmpty)
+                    if let redeemNote { Text(redeemNote).font(.system(size: 10)).foregroundStyle(redeemNote.hasPrefix("Added") ? Color.green : .orange) }
+                }
             }
             Text("Checklist: the Humanizer skill, from Wikipedia's “Signs of AI writing” guide (CC BY-SA 4.0).").font(.system(size: 9)).foregroundStyle(Theme.textSecondary.opacity(0.7))
             if let problem { Text(problem).font(.system(size: 10)).foregroundStyle(.orange) }

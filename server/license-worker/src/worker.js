@@ -835,6 +835,12 @@ async function whopWebhook(env, request) {
   if (ev.type === 'refund.created') {
     // A refunded payment turns its key off (the key stays on record; it can be turned back on in the admin).
     const pid = String(pick(d, 'payment_id', 'payment.id') || '');
+    const wordCode = pid && await env.KV.get(`tx:whopwords:${pid}`);
+    if (wordCode) {                                                    // a refunded Humanizer top-up: its code stops working (if not used yet)
+      const rec = await getJSON(env, `wordcode:${wordCode}`);
+      if (rec && !rec.used) await putJSON(env, `wordcode:${wordCode}`, { ...rec, refunded: true });
+      return json({ ok: true, refunded: !!rec && !rec.used });
+    }
     const orderId = pid && await env.KV.get(`tx:whop:${pid}`);
     const o = orderId && await getJSON(env, `order:${orderId}`);
     if (o && o.keyId) await admin(env, '/admin/suspend', { keyId: o.keyId, reason: `Whop refund ${pid}` });
@@ -844,7 +850,9 @@ async function whopWebhook(env, request) {
 
   const status = pick(d, 'status', 'substatus');
   if (status && !['paid', 'succeeded', 'completed'].includes(String(status).toLowerCase())) return json({ ok: true, ignored: `status ${status}` });
-  const tier = whopTier(env, String(pick(d, 'variant_id', 'plan_id', 'plan.id', 'line_items.0.variant_id') || ''));        // Whop's payment object names the plan `variant_id`
+  const planId = String(pick(d, 'variant_id', 'plan_id', 'plan.id', 'line_items.0.variant_id') || '');
+  if (env.WHOP_PLAN_WORDS && planId === env.WHOP_PLAN_WORDS) return json(await humanizerTopUp(env, d, payId));
+  const tier = whopTier(env, planId);        // Whop's payment object names the plan `variant_id`
   if (!tier) return json({ ok: true, ignored: 'not a Notch Apple plan' });          // another product on the same Whop account
   const email = String(pick(d, 'customer_email', 'user.email', 'user_email', 'member.user.email', 'email', 'billing_address.email') || '').trim();
   if (!validEmail(email)) {
@@ -862,6 +870,50 @@ async function whopWebhook(env, request) {
     throw e;
   }
   return json({ ok: true, key: 'sent' });
+}
+
+// ---- Humanizer top-ups: $1 buys 50,000 words, delivered as a one-use code ----
+// A paid top-up (Whop plan WHOP_PLAN_WORDS) becomes a code like WORD-XXXX-XXXX-XXXX, emailed to the buyer. The app redeems it once
+// (POST /humanizer/redeem) and adds the words to that install's extra words, which never run out with the month. Only a hash of the
+// code is stored. A refund before the code is used stops it working.
+export const WORDS_PER_TOPUP = 50000;
+
+function newWordCode() {
+  const alphabet = 'ABCDEFGHJKMNPQRSTVWXYZ23456789';           // no 0/O, 1/I/L
+  const b = randomBytes(12);
+  const chars = [...b].map((x) => alphabet[x % alphabet.length]).join('');
+  return `WORD-${chars.slice(0, 4)}-${chars.slice(4, 8)}-${chars.slice(8, 12)}`;
+}
+const cleanWordCode = (c) => { const s = String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); return /^WORD[A-Z0-9]{12}$/.test(s) ? `WORD-${s.slice(4, 8)}-${s.slice(8, 12)}-${s.slice(12, 16)}` : null; };
+
+async function humanizerTopUp(env, d, payId) {
+  if (await env.KV.get(`tx:whopwords:${payId}`)) return { ok: true, again: true };          // a retried delivery: one code per payment
+  const qty = Math.max(1, Math.min(100, Math.round(Number(pick(d, 'quantity', 'line_items.0.quantity')) || 0) || Math.round(Number(pick(d, 'usd_total', 'total.amount', 'total', 'subtotal')) || 1)));
+  const words = WORDS_PER_TOPUP * qty;
+  const code = newWordCode(), hash = await sha256(`word|${code}`);
+  await putJSON(env, `wordcode:${hash}`, { words, at: Date.now(), payId, used: false });
+  await env.KV.put(`tx:whopwords:${payId}`, hash);
+  const email = String(pick(d, 'customer_email', 'user.email', 'user_email', 'member.user.email', 'email', 'billing_address.email') || '').trim();
+  if (!validEmail(email)) { await putJSON(env, `whop:nomail:${payId}`, { words, code, at: Date.now() }, 90 * 86400); return { ok: true, stored: 'no email' }; }
+  const n = words.toLocaleString('en-US');
+  const text = `Thanks for your Humanizer top-up.\n\nYour code: ${code}\n\nIt adds ${n} words to the Humanizer in Notch Apple. Open Tools → Humanizer, choose Redeem a code, and enter it. The words never run out with the month. The code works once.\n`;
+  await sendMail(env, email, `Your Humanizer top-up: ${n} words`, text);
+  return { ok: true, code: 'sent' };
+}
+
+/** POST /humanizer/redeem {code, device}: a top-up code, once. Answers { ok, words } with the words to add on this device. */
+async function humanizerRedeem(env, body) {
+  const code = cleanWordCode(body.code);
+  if (!code) throw new HTTPError(400, 'Enter the whole code: WORD and twelve letters and numbers.');
+  const device = String(body.device || '').slice(0, 64);
+  if (device.length < 8) throw new HTTPError(400, 'Update Notch Apple and try again.');
+  const hash = await sha256(`word|${code}`);
+  const rec = await getJSON(env, `wordcode:${hash}`);
+  if (!rec) throw new HTTPError(404, 'That code is not valid. Check it and try again.');
+  if (rec.refunded) throw new HTTPError(410, 'That top-up was refunded, so the code no longer works.');
+  if (rec.used) throw new HTTPError(409, rec.device === device ? 'This code was already added on this computer.' : 'That code has already been used.');
+  await putJSON(env, `wordcode:${hash}`, { ...rec, used: true, device, usedAt: Date.now() });
+  return { ok: true, words: rec.words };
 }
 
 async function promo(env, body) {
@@ -2214,6 +2266,7 @@ export default {
         case '/order/card': await addressLimit(env, request, 'cardcheck', 120); return json(await cardCheck(env, body));
         case '/claim': await addressLimit(env, request, 'claim', 60); return json(await claim(env, body));
         case '/promo': await addressLimit(env, request, 'promo', 30); return json(await promo(env, body));
+        case '/humanizer/redeem': await addressLimit(env, request, 'hzredeem', 20); return json(await humanizerRedeem(env, body));
         case '/game/unlock': await addressLimit(env, request, 'gameunlock', 20); return json(await gameUnlock(env, body));
         case '/game/ultimate': await addressLimit(env, request, 'gameunlock', 20); return json(await gameUltimate(env, body));
         case '/recover': await addressLimit(env, request, 'recover', 20); return json(await recover(env, body));
