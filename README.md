@@ -150,6 +150,10 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.79 · Windows 2.2.79 · 18 November 2026 · 📜 Teleprompter
+
+- New: Teleprompter. Tools → Teleprompter: type or paste a script, press Start, and it scrolls up a reading line at the speed you choose (1 to 10, which is 60 to 240 words a minute). You can change the text size, flip it sideways for a prompter glass, and pause or reset. Your script and settings are saved, and nothing leaves your computer
+
 ### Mac 2.2.78 · Windows 2.2.78 · 18 November 2026 · 🔔 Update reminder fix, Music Wall
 
 - Fixed: the update reminder no longer comes back every time you open Notch Apple after quitting or restarting. After it has been shown, it waits another 4 or 5 opens
@@ -161,13 +165,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Mac: Music Wall on the lock screen. While the music wallpaper is on, a still of the scene becomes your desktop and lock-screen picture; your own picture comes back when you turn it off
 - New: Humanizer top-ups arrive. Buying extra words emails you a code; Tools → Humanizer → Redeem a code adds the words (they never run out with the month)
 - Mac: the lyrics on the side of your screen now sit on a soft dark panel, so you can read them on a light wallpaper too
-
-### Mac 2.2.76 · Windows 2.2.76 · 17 November 2026 · 🃏 Three-Card Poker
-
-- Mac: Music Wall. Now Playing → Music Wall shows 3D block worlds that move with your music (Block Field, Spike Field, Infinite Tunnel, Block City), as a screensaver that keeps the Mac awake or as a music wallpaper behind your desktop icons. The lyrics play word by word on top (Soft haze, Clear flow, Edge light), or as whole lines. Choose the colours (Ocean, Ember, Violet, Monochrome or the album's), the audio intensity and speed, or Energy Saver for a silent loop
-- New: Three-Card Poker. Games → Poker has a Three-Card Poker table: you against one to three computer players with play-money chips you can see, a hand-rankings panel beside the table, and a scoreboard of wins, losses and draws
-- Windows: the tab bar looks like the Mac's: up to 12 tabs, the rest under a More button, with bolder icons
-- Mac: ⌘E opens the notch, not your messages: if Messenger was the last tab, the notch opens on the first tab instead
 
 
 ## Plugins

@@ -57,6 +57,7 @@ Never run a Debug or test copy of the Mac app with the real bundle id (`com.notc
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 18 Nov 2026: released 2.2.79 (Teleprompter on both platforms, and Windows gets the Music Wall rename that Windows 2.2.78 never shipped). Open: F1 25 look for the F1 game is not built (needs screenshots).
 - 18 Nov 2026: Tools → Teleprompter, basic version on Mac and Windows (script, Start/Pause, speed, size, mirror). Open: later ideas are listed in docs/HANDOFF.md; not yet released (goes in 2.2.79).
 - 18 Nov 2026: fixed a flaky worker test (the migrate test could revoke the shared fixture admin key, which broke the Windows 2.2.78 build). The win-v2.2.78 tag still points at the old commit and has to be moved to this fix before Windows 2.2.78 can publish.
 - 18 Nov 2026: renamed Voxel Wall to Music Wall (scenes Block Field, Block City) everywhere users can see it, including old release notes; internal code names and saved settings keep the old name so nothing resets. Released 2.2.78 with the update-reminder fix.

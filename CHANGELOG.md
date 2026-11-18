@@ -4,6 +4,17 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.79 · Windows 2.2.79 BETA · 18 November 2026 · 📜 Teleprompter
+
+**Mac**
+
+- New: Teleprompter. Tools → Teleprompter: type or paste a script, press Start, and it scrolls up a reading line at the speed you choose (1 to 10, which is 60 to 240 words a minute). You can change the text size, flip it sideways for a prompter glass, and pause or reset. Your script and settings are saved, and nothing leaves your computer
+
+**Windows**
+
+- New: Teleprompter. Tools → Teleprompter: type or paste a script, press Start, and it scrolls up a reading line at the speed you choose (1 to 10, which is 60 to 240 words a minute). You can change the text size, flip it sideways for a prompter glass, and pause or reset. Your script and settings are saved, and nothing leaves your computer
+- Changed: the music screen with the moving scenes and lyrics is now called Music Wall (it was Voxel Wall), and its scenes are Block Field and Block City
+
 ### Mac 2.2.78 · Windows 2.2.78 BETA · 18 November 2026 · 🔔 Update reminder fix, Music Wall
 
 **Mac**

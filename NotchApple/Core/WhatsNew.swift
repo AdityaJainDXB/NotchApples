@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.79", date: "18 November 2026", headline: "Teleprompter", items: [
+            "- New: Teleprompter. Tools → Teleprompter: type or paste a script, press Start, and it scrolls up a reading line at the speed you choose (1 to 10, which is 60 to 240 words a minute). You can change the text size, flip it sideways for a prompter glass, and pause or reset. Your script and settings are saved, and nothing leaves your computer",
+        ]),
         ReleaseNote(version: "2.2.78", date: "18 November 2026", headline: "Update reminder fix, Music Wall", items: [
             "- Fixed: the update reminder no longer comes back every time you open Notch Apple after quitting or restarting. After it has been shown, it waits another 4 or 5 opens",
             "- Changed: the music screen with the moving scenes and lyrics is now called Music Wall (it was Voxel Wall), and its scenes are Block Field and Block City",
