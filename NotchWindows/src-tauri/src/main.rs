@@ -16,6 +16,7 @@ mod brightness;
 mod notifications;
 mod pairdrop;
 mod awake;
+mod levels;
 mod claude_usage;
 mod clip;
 mod extras;
@@ -562,8 +563,52 @@ async fn voxel_show(app: AppHandle, mode: String) -> Result<(), String> {
     } else {
         builder.always_on_bottom(true).focused(false).build()
     }.map_err(|e| e.to_string())?;
-    if !saver { let _ = window.set_ignore_cursor_events(true); }
+    if !saver {
+        let _ = window.set_ignore_cursor_events(true);
+        // Put the wallpaper behind the desktop icons (inside the desktop's own window), like a real wallpaper.
+        #[cfg(windows)]
+        if let Ok(hwnd) = window.hwnd() { desktop::place_behind_icons(hwnd.0 as isize, size.width * scale, size.height * scale); }
+    }
     Ok(())
+}
+
+/// Behind the desktop icons: the same trick live-wallpaper apps use. Progman is asked (message 0x052C) to create the WorkerW
+/// window that sits between the wallpaper and the icons, and the Voxel Wall window becomes its child. Newer Windows 11 builds
+/// put that WorkerW inside Progman; older ones make it a top-level sibling after the window that holds the icons. If neither is
+/// found the window simply stays at the bottom of the desktop.
+#[cfg(windows)]
+mod desktop {
+    use windows::core::{w, BOOL};
+    use windows::Win32::Foundation::{HWND, LPARAM, WPARAM};
+    use windows::Win32::UI::WindowsAndMessaging::*;
+
+    unsafe extern "system" fn find_icons_host(top: HWND, out: LPARAM) -> BOOL {
+        if let Ok(view) = FindWindowExW(Some(top), None, w!("SHELLDLL_DefView"), None) {
+            if !view.is_invalid() {
+                if let Ok(worker) = FindWindowExW(None, Some(top), w!("WorkerW"), None) {
+                    *(out.0 as *mut HWND) = worker;
+                }
+            }
+        }
+        BOOL(1)
+    }
+
+    pub fn place_behind_icons(hwnd: isize, width: f64, height: f64) {
+        unsafe {
+            let Ok(progman) = FindWindowW(w!("Progman"), None) else { return };
+            let mut result = 0usize;
+            let _ = SendMessageTimeoutW(progman, 0x052C, WPARAM(0xD), LPARAM(0x1), SMTO_NORMAL, 1000, Some(&mut result));
+            let mut worker = HWND::default();
+            let _ = EnumWindows(Some(find_icons_host), LPARAM(&mut worker as *mut HWND as isize));
+            if worker.is_invalid() {
+                if let Ok(w) = FindWindowExW(Some(progman), None, w!("WorkerW"), None) { worker = w; }
+            }
+            if worker.is_invalid() { return; }
+            let me = HWND(hwnd as *mut _);
+            let _ = SetParent(me, Some(worker));
+            let _ = SetWindowPos(me, None, 0, 0, width as i32, height as i32, SWP_NOZORDER | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
+    }
 }
 
 /// Closes a Voxel Wall window.
@@ -647,9 +692,10 @@ async fn selftest_capture(name: String) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
         let windows = xcap::Window::all().map_err(|e| e.to_string())?;
         let ours = std::process::id();
-        let target = windows
+        // "screen-…" names capture the whole screen (the Voxel Wall windows), the rest the notch window.
+        let target = if safe.starts_with("screen-") { None } else { windows
             .into_iter()
-            .find(|w| w.pid().ok() == Some(ours) && w.title().map(|t| t == "Notch Apple").unwrap_or(false));
+            .find(|w| w.pid().ok() == Some(ours) && w.title().map(|t| t == "Notch Apple").unwrap_or(false)) };
         let img = match target {
             Some(w) => w.capture_image().map_err(|e| e.to_string())?,
             // The window isn't listed on some machines (it is a tool window with no taskbar button): take the
@@ -771,7 +817,7 @@ fn main() {
             awake::set_keep_awake, awake::keep_awake_state,
             system_stats, top_processes, transliterate, capture_screen,
             installed_apps, path_info, launch_app, open_path, reveal_path, open_url,
-            pick_app, pick_folder, pick_file, open_browser, browser_place, browser_hide, browser_close, browser_nav, lyrics_overlay_show, lyrics_overlay_hide, widget_show, widget_hide, voxel_show, voxel_hide, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
+            pick_app, pick_folder, pick_file, open_browser, browser_place, browser_hide, browser_close, browser_nav, lyrics_overlay_show, lyrics_overlay_hide, widget_show, widget_hide, voxel_show, voxel_hide, levels::voxel_levels, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
             index::search_files, index::set_search_folders, index::search_status,
             icons::icons,
             watch::screen_time, watch::set_edge_trigger, watch::privacy_now, watch::foreground_now, watch::minimize_external,

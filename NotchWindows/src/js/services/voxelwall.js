@@ -1,7 +1,8 @@
 // Voxel Wall on Windows (issue #119): music-reactive voxel worlds as a full-screen screensaver (keeps the PC awake; any key or
 // mouse move ends it) or as a music wallpaper window that sits behind your other windows on the desktop. The lyrics play word by
 // word (or as lines). The windows are made by the Rust side (voxel_show / voxel_hide); this service sends them what to show.
-// Windows can't hear system audio from the app, so the scene follows a made-up beat while music plays.
+// The scene follows the real sound the PC plays (a listen-only loopback of the speakers, levels.rs; nothing is recorded), and a
+// made-up beat if that can't start or Energy Saver is on.
 
 import { load, save } from '../store.js';
 import { invoke, listen } from '../native.js';
@@ -16,7 +17,7 @@ export const settings = () => ({
 export function set(key, value) { save(`voxel.${key}`, value); send(true); }
 export const wallpaperOn = () => load('voxel.wallpaper', false);
 
-let saver = false, wallpaper = false, timer = null, lines = null, key = '', last = '', awakeWasOn = false;
+let saver = false, wallpaper = false, timer = null, levelTimer = null, lines = null, key = '', last = '', awakeWasOn = false;
 
 async function currentWords(m) {
   const k = m ? `${m.artist}\u0001${m.title}` : '';
@@ -39,8 +40,15 @@ async function send(force = false) {
   if (force || json !== last) { last = json; T.event.emit('voxel-state', payload).catch(() => {}); }
 }
 function running() {
-  if ((saver || wallpaper) && !timer) timer = setInterval(() => send().catch(() => {}), 250);
-  if (!saver && !wallpaper && timer) { clearInterval(timer); timer = null; }
+  if ((saver || wallpaper) && !timer) {
+    timer = setInterval(() => send().catch(() => {}), 250);
+    levelTimer = setInterval(async () => {
+      if (settings().energySaver) return;
+      const l = await invoke('voxel_levels').catch(() => null);
+      if (l && T) T.event.emit('voxel-levels', l).catch(() => {});
+    }, 33);
+  }
+  if (!saver && !wallpaper && timer) { clearInterval(timer); clearInterval(levelTimer); timer = null; levelTimer = null; }
 }
 
 export async function startScreensaver() {
