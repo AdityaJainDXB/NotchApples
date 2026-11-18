@@ -57,6 +57,7 @@ Never run a Debug or test copy of the Mac app with the real bundle id (`com.notc
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 18 Nov 2026: released Mac 2.2.76 (Windows 2.2.76 was already out); tests 685/0 failures; old releases pruned. Still open: install on the owner's Mac (the install command was declined), the Whop site copy, the worker deploy for no daily AI limit on Pro.
 - 18 Nov 2026: Flight Economy is slightly harder (fuel +7.5%, airport fees +10%, faster airframe wear, likelier breakdowns) and an admin key opens it and gets a cheat panel on J (sent only to admin keys). Worker only. Still open: `wrangler deploy` from server/license-worker (private/ files are git-ignored), and check no uploaded KV game file (gamefile:flight-economy) overrides the bundled one.
 - 18 Nov 2026: added docs/FLIGHT_ECONOMY_ROADMAP.md. Open: the Flight Economy worker deploy, and the side-lyrics Left/Right bug the owner reported (not reproduced yet).
 - 18 Nov 2026: side lyrics get a dark backing panel (white text was invisible on light wallpapers). Not verified in the app (the test Mac has no Pro licence, so the overlay never started); needs the owner to try it on a light desktop.
