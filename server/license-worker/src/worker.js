@@ -1,5 +1,7 @@
 // The private game (private/ is git-ignored): loaded if the file is present in this copy.
 const FLIGHT_ECONOMY = await import('../private/flight-economy.js').then((m) => m.default, () => null);
+// Cheats for an admin key only (private/ is git-ignored): appended to the game for that key and never sent to anyone else.
+const FLIGHT_ECONOMY_ADMIN = await import('../private/flight-economy-admin.js').then((m) => m.default, () => null);
 // Notch Apple license server: a Cloudflare Worker (free plan) with one KV namespace.
 //
 // It issues product keys signed with Ed25519. The app checks them offline using only the
@@ -1826,13 +1828,16 @@ async function gameUnlock(env, body) {
  *  cancelled list). Same file and device rules as /game/unlock. */
 async function gameUltimate(env, body) {
   const k = await verifyKey(env, String(body.key || ''));
-  if (!k || k.tier !== TIER.ultimate) throw new HTTPError(403, 'Ultimate is needed to play this game.');
+  if (!k || (k.tier !== TIER.ultimate && k.tier !== ADMIN_TIER)) throw new HTTPError(403, 'Ultimate is needed to play this game.');
   const rec = await getJSON(env, `key:${k.keyId}`);
   if (!rec || rec.revoked || (await revokedIds(env)).includes(k.keyId)) throw new HTTPError(403, 'That key has been turned off.');
   const device = String(body.device || '');
   if (!/^[A-Za-z0-9_-]{16,64}$/.test(device)) throw new HTTPError(400, 'Missing device id.');
-  const file = (await env.KV.get('gamefile:flight-economy', 'text')) || FLIGHT_ECONOMY;
+  let file = (await env.KV.get('gamefile:flight-economy', 'text')) || FLIGHT_ECONOMY;
   if (!file) throw new HTTPError(503, 'The game is not available yet. Try again later.');
+  // An admin key also gets the cheat panel (J). It is part of the file only for that key, so its version differs and a device that
+  // switches between an admin key and an Ultimate key gets the right copy.
+  if (k.tier === ADMIN_TIER && FLIGHT_ECONOMY_ADMIN) file = file.includes('</body>') ? file.replace('</body>', () => `<script>${FLIGHT_ECONOMY_ADMIN}</script>\n</body>`) : file + `<script>${FLIGHT_ECONOMY_ADMIN}</script>`;
   const version = (await sha256(file)).slice(0, 12);
   return { ok: true, game: 'flight-economy', name: GAMES['flight-economy'], version, exp: null, ...(body.have === version ? {} : { html: file }) };
 }

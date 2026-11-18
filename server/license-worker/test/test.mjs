@@ -1436,4 +1436,18 @@ await test('Whop: a signed payment.succeeded issues one key and emails it; a wro
   assert.equal((await worker.fetch(new Request('https://x.test/whop-webhook', { method: 'POST', body: '{}' }), env)).status, 503, 'not set up');
 });
 
+await test('Private game: only an admin key gets the cheat panel (J); an Ultimate key gets the plain game', async () => {
+  const H = { authorization: 'Bearer admin-test' };
+  const ult = (await call('/admin/issue', { tier: 'ultimate', note: 'cheat test ultimate' }, H)).key;
+  const adm = globalThis.__adminFixture;   // the admin key the earlier admin test kept (only four can be live)
+  const a = await call('/game/ultimate', { key: adm, device: 'admin-device-dddddddddd' });
+  const u = await call('/game/ultimate', { key: ult, device: 'ultimate-device-eeeeeeee' });
+  assert.equal(a.status, 200); assert.equal(u.status, 200);
+  if (u.html) {
+    assert.equal(u.html.includes('__feAdmin'), false, 'an Ultimate key must never receive the cheats');
+    assert.equal(a.html.includes('__feAdmin'), true);
+    assert.notEqual(a.version, u.version);
+  }
+});
+
 console.log(`\n${passed} passed`);
