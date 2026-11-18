@@ -24,6 +24,17 @@ enum UpdateCadenceLogic {
         return now.timeIntervalSince(lastOffer) >= interval
     }
 
+    /// The "every 4th or 5th time the notch opens" reminder counter. The count is saved between launches, so it has to start
+    /// again whenever a reminder is shown (otherwise quitting instead of tapping "Skip for now" left it at 4 or more and the
+    /// reminder came straight back on the next launch) and whenever no update is waiting.
+    struct ReminderStep: Equatable { var opens: Int; var fire: Bool }
+    static func reminderStep(opens: Int, every: Int, updateWaiting: Bool, mayAnnounce: Bool, alreadyShowing: Bool) -> ReminderStep {
+        guard updateWaiting else { return ReminderStep(opens: 0, fire: false) }
+        guard !alreadyShowing, mayAnnounce else { return ReminderStep(opens: opens, fire: false) }
+        let n = opens + 1
+        return n >= max(4, every) ? ReminderStep(opens: 0, fire: true) : ReminderStep(opens: n, fire: false)
+    }
+
     /// When the next announcement can happen with the switch on (for the line shown in Settings).
     static func nextOffer(lastOffer: Date?) -> Date? { lastOffer.map { $0.addingTimeInterval(interval) } }
 }

@@ -150,9 +150,12 @@ final class UpdateChecker: ObservableObject {
     }
 
     func noteNotchOpened() {
-        guard let release = reminderRelease, !reminderDue, !DemoHooks.isDemo, mayAnnounce(release) else { return }
-        opensSinceReminder += 1
-        if opensSinceReminder >= max(4, reminderEvery) { reminderDue = true; noteAnnounced(release) }
+        if DemoHooks.isDemo { return }
+        let release = reminderRelease
+        let step = UpdateCadenceLogic.reminderStep(opens: opensSinceReminder, every: reminderEvery, updateWaiting: release != nil,
+                                                   mayAnnounce: release.map { mayAnnounce($0) } ?? false, alreadyShowing: reminderDue)
+        opensSinceReminder = step.opens
+        if step.fire, let release { reminderDue = true; reminderEvery = Int.random(in: 4...5); noteAnnounced(release) }
     }
 
     /// "Skip for now": back to the tabs; it returns after another 4 or 5 opens.
@@ -211,6 +214,7 @@ final class UpdateChecker: ObservableObject {
                 if requiredUpdate == nil, let fresh = reminderRelease, fresh.version != requestedVersion, mayAnnounce(fresh) {
                     requestedVersion = fresh.version
                     noteAnnounced(fresh)
+                    opensSinceReminder = 0
                     reminderDue = true
                 }
             } catch {
