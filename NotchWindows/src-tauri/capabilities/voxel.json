@@ -1,0 +1,9 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "voxel",
+  "description": "The Voxel Wall windows (screensaver and music wallpaper). They only send and receive events and load the app's own files.",
+  "windows": ["voxel-saver", "voxel-wallpaper"],
+  "permissions": [
+    "core:event:default"
+  ]
+}

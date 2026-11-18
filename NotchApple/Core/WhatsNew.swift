@@ -20,6 +20,10 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.77", date: "18 November 2026", headline: "Voxel Wall everywhere, Humanizer top-ups", items: [
+            "- Mac: Voxel Wall on the lock screen. While the music wallpaper is on, a still of the scene becomes your desktop and lock-screen picture; your own picture comes back when you turn it off",
+            "- New: Humanizer top-ups arrive. Buying extra words emails you a code; Tools → Humanizer → Redeem a code adds the words (they never run out with the month)"
+        ]),
         ReleaseNote(version: "2.2.76", date: "17 November 2026", headline: "Voxel Wall and Three-Card Poker", items: [
             "- Mac: Voxel Wall. Now Playing → Voxel Wall shows 3D voxel worlds that move with your music (Voxel Field, Spike Field, Infinite Tunnel, Voxel City), as a screensaver that keeps the Mac awake or as a music wallpaper behind your desktop icons. The lyrics play word by word on top (Soft haze, Clear flow, Edge light), or as whole lines. Choose the colours (Ocean, Ember, Violet, Monochrome or the album's), the audio intensity and speed, or Energy Saver for a silent loop",
             "- New: Three-Card Poker. Games → Poker has a Three-Card Poker table: you against one to three computer players with play-money chips you can see, a hand-rankings panel beside the table, and a scoreboard of wins, losses and draws",

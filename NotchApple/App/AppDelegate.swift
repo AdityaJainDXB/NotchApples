@@ -262,6 +262,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         StatusPulse.shared.start()
         PremiumRegistry.claudeStart?()
         WallpaperEngine.shared.apply()      // a live wallpaper you left on starts again
+        if VoxelWall.shared.wallpaperOn { VoxelWall.shared.applyWallpaper() }   // and the Voxel Wall music wallpaper
         NotesCloudSync.shared.syncNow()
         // Ultimate: plugins keep running in the background for Home widgets and activities.
         if PluginHost.shared.keepRunning { PluginHost.shared.start() }

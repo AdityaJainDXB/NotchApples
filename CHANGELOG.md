@@ -4,6 +4,12 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.77 · Windows 2.2.77 · 18 November 2026 · 🧊 Voxel Wall everywhere, Humanizer top-ups
+
+- New: Voxel Wall on Windows. Now Playing → Voxel Wall opens the voxel worlds full screen (keeps the PC awake; any key ends it), and Music wallpaper puts them behind your windows. Same scenes and colours as the Mac, with the lyrics word by word
+- Mac: Voxel Wall on the lock screen. While the music wallpaper is on, a still of the scene becomes your desktop and lock-screen picture; your own picture comes back when you turn it off
+- New: Humanizer top-ups arrive. Buying extra words emails you a code; Tools → Humanizer → Redeem a code adds the words (they never run out with the month)
+
 ### Mac 2.2.76 · Windows 2.2.76 · 17 November 2026 · 🃏 Three-Card Poker
 
 - Mac: Voxel Wall. Now Playing → Voxel Wall shows 3D voxel worlds that move with your music (Voxel Field, Spike Field, Infinite Tunnel, Voxel City), as a screensaver that keeps the Mac awake or as a music wallpaper behind your desktop icons. The lyrics play word by word on top (Soft haze, Clear flow, Edge light), or as whole lines. Choose the colours (Ocean, Ember, Violet, Monochrome or the album's), the audio intensity and speed, or Energy Saver for a silent loop
