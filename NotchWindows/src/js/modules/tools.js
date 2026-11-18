@@ -111,7 +111,7 @@ function calculatorPage(converter) {
 
 export function render(root) {
   let page = load('tools.page', 'utilities');
-  if (!['utilities', 'calculator', 'translator', 'humanizer', 'detector'].includes(page)) page = 'utilities';
+  if (!['utilities', 'calculator', 'translator', 'humanizer', 'detector', 'teleprompter'].includes(page)) page = 'utilities';
   const { utilities, converter } = utilitiesAndConverter();
   const calc = calculatorPage(converter);
   const host = el('div', { class: 'col fill', style: 'min-height:0' });
@@ -121,13 +121,16 @@ export function render(root) {
   const humanizer = el('div', { class: 'col fill' });
   let detectorBuilt = false;
   const detector = el('div', { class: 'col fill' });
+  let teleprompterBuilt = false;
+  const teleprompter = el('div', { class: 'col fill' });
   function paint() {
-    host.replaceChildren(page === 'utilities' ? utilities : page === 'calculator' ? calc : page === 'humanizer' ? humanizer : page === 'detector' ? detector : translator);
+    host.replaceChildren(page === 'utilities' ? utilities : page === 'calculator' ? calc : page === 'humanizer' ? humanizer : page === 'detector' ? detector : page === 'teleprompter' ? teleprompter : translator);
     if (page === 'detector' && !detectorBuilt) { detectorBuilt = true; import('./detector.js').then((m) => m.render(detector)); }
+    if (page === 'teleprompter' && !teleprompterBuilt) { teleprompterBuilt = true; import('./teleprompter.js').then((m) => m.render(teleprompter)); }
     if (page === 'humanizer' && !humanizerBuilt) { humanizerBuilt = true; import('./humanizer.js').then((m) => m.render(humanizer)); }
     if (page === 'translator' && !translatorBuilt) { translatorBuilt = true; import('./translator.js').then((m) => m.render(translator)); }
   }
-  const pages = segmented([{ value: 'utilities', label: 'Utilities' }, { value: 'calculator', label: 'Calculator' }, { value: 'translator', label: 'Translator' }, { value: 'humanizer', label: 'Humanizer' }, { value: 'detector', label: 'AI Detector' }], page, (v) => { page = v; save('tools.page', v); paint(); });
+  const pages = segmented([{ value: 'utilities', label: 'Utilities' }, { value: 'calculator', label: 'Calculator' }, { value: 'translator', label: 'Translator' }, { value: 'humanizer', label: 'Humanizer' }, { value: 'detector', label: 'AI Detector' }, { value: 'teleprompter', label: 'Teleprompter' }], page, (v) => { page = v; save('tools.page', v); paint(); });
   root.append(el('div', { class: 'col fill', style: 'gap:8px' }, el('div', { class: 'hstack', style: 'flex:none' }, pages), host));
   paint();
 }
