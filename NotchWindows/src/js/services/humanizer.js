@@ -2,7 +2,8 @@
 // and the Humanize button under AI replies. The rules are in humanizerlogic.js, the habit checker in aitells.js.
 
 import { load, save } from '../store.js';
-import { can } from '../license.js';
+import { can, WORKER } from '../license.js';
+import { getJSON } from '../native.js';
 import * as AI from './ai.js';
 import * as L from './humanizerlogic.js';
 import * as T from './aitells.js';
@@ -47,4 +48,19 @@ export async function humanize(text) {
     save(KEY, L.applying(decision, usage()));
     return { text: out, before, after: T.report(out) };
   } finally { busy = false; }
+}
+
+const device = () => { let d = load('humanizer.device', ''); if (!d || d.length < 16) { d = crypto.randomUUID().replaceAll('-', ''); save('humanizer.device', d); } return d; };
+
+/** Redeems a top-up code emailed after buying extra words on Whop. The server accepts each code once; the words are added to this
+ *  PC's extra words, which never run out with the month. Returns a sentence for the person. */
+export async function redeem(code) {
+  const c = String(code || '').trim();
+  if (!c) return 'Enter the code from your email.';
+  let r;
+  try { r = await getJSON(`${WORKER}/humanizer/redeem`, { method: 'POST', json: { code: c, device: device() }, timeout: 30000 }); }
+  catch (e) { return e?.message && !/fetch|network/i.test(e.message) ? e.message : "Couldn't reach the server. Check your connection and try again."; }
+  if (!r || !(r.words > 0)) return (r && r.error) || "That code didn't work. Check it and try again.";
+  const u = usage(); u.credits += r.words; save(KEY, u);
+  return `Added ${r.words.toLocaleString('en-US')} words. They never run out with the month.`;
 }

@@ -1415,6 +1415,23 @@ await test('Whop: a signed payment.succeeded issues one key and emails it; a wro
   assert.ok(keyId);
   r = await send({ type: 'refund.created', data: { id: 'ref_1abc', payment_id: 'pay_1abc' } }); assert.equal((await r.json()).refunded, true);
   assert.ok((await JSON.parse(await env.KV.get(`key:${keyId}`))).revoked, 'the refunded key is suspended');
+  // Humanizer top-ups: a paid top-up emails a one-use code; the app redeems it once for 50,000 words per dollar.
+  env.WHOP_PLAN_WORDS = 'plan_words_test';
+  r = await send({ type: 'payment.succeeded', data: { id: 'pay_w1', status: 'paid', variant_id: 'plan_words_test', customer_email: 'words@example.com', quantity: 2 } });
+  assert.equal((await r.json()).code, 'sent');
+  const wm = JSON.stringify(mails.find((x) => x.to === 'words@example.com')); const wcode = wm.match(/WORD-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/)[0];
+  assert.match(wm, /100,000 words/);
+  r = await send({ type: 'payment.succeeded', data: { id: 'pay_w1', status: 'paid', variant_id: 'plan_words_test', customer_email: 'words@example.com' } });
+  assert.equal((await r.json()).again, true, 'a retried delivery sends no second code');
+  let red = await call('/humanizer/redeem', { code: wcode.toLowerCase().replaceAll('-', ' '), device: 'device-aaaa-1111' });
+  assert.equal(red.words, 100000, 'the code gives its words, typed any way');
+  red = await call('/humanizer/redeem', { code: wcode, device: 'device-aaaa-1111' }); assert.equal(red.status, 409, 'a code works once');
+  red = await call('/humanizer/redeem', { code: 'WORD-AAAA-BBBB-CCCC', device: 'device-aaaa-1111' }); assert.equal(red.status, 404);
+  red = await call('/humanizer/redeem', { code: 'nonsense', device: 'device-aaaa-1111' }); assert.equal(red.status, 400);
+  r = await send({ type: 'payment.succeeded', data: { id: 'pay_w2', status: 'paid', variant_id: 'plan_words_test', customer_email: 'words2@example.com', total: { currency: 'usd', amount: '1.00' } } });
+  const wcode2 = JSON.stringify(mails.find((x) => x.to === 'words2@example.com')).match(/WORD-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/)[0];
+  r = await send({ type: 'refund.created', data: { id: 'ref_w2', payment_id: 'pay_w2' } }); assert.equal((await r.json()).refunded, true);
+  red = await call('/humanizer/redeem', { code: wcode2, device: 'device-bbbb-2222' }); assert.equal(red.status, 410, 'a refunded top-up code stops working');
   delete env.WHOP_WEBHOOK_SECRET;
   assert.equal((await worker.fetch(new Request('https://x.test/whop-webhook', { method: 'POST', body: '{}' }), env)).status, 503, 'not set up');
 });

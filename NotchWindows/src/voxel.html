@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voxel Wall</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; cursor: none; user-select: none; -webkit-user-select: none; }
+  body { font-family: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif; color: #fff; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #verse { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none; }
+  #verse span { font-family: Georgia, "Times New Roman", serif; font-weight: 900; line-height: .95; transition: transform .35s cubic-bezier(.2, 1.4, .4, 1), opacity .35s; }
+  #verse span.old { font-size: 5vh; opacity: .55; }
+  #verse span.new { font-size: 15vh; }
+  #verse.lines span.new { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-size: 7vh; font-weight: 800; color: #fff !important; }
+  #np { position: fixed; left: 40px; bottom: 34px; text-shadow: 0 1px 8px #000; }
+  #np b { display: block; font-size: 20px; } #np span { font-size: 15px; opacity: .75; }
+  #hint { position: fixed; top: 36px; width: 100%; text-align: center; font-size: 14px; opacity: .6; transition: opacity 1s; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="verse"></div>
+<div id="np"></div>
+<div id="hint"></div>
+<script type="module" src="js/voxel.js"></script>
+</body>
+</html>
