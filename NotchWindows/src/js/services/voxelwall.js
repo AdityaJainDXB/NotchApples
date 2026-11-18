@@ -1,4 +1,4 @@
-// Voxel Wall on Windows (issue #119): music-reactive voxel worlds as a full-screen screensaver (keeps the PC awake; any key or
+// Music Wall on Windows (issue #119): music-reactive block worlds as a full-screen screensaver (keeps the PC awake; any key or
 // mouse move ends it) or as a music wallpaper window that sits behind your other windows on the desktop. The lyrics play word by
 // word (or as lines). The windows are made by the Rust side (voxel_show / voxel_hide); this service sends them what to show.
 // The scene follows the real sound the PC plays (a listen-only loopback of the speakers, levels.rs; nothing is recorded), and a

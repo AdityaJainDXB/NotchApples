@@ -20,6 +20,6 @@ test('bands jump up and settle slowly; paused music is almost still', () => {
 });
 
 test('the same scenes and colours as the Mac', () => {
-  assert.deepEqual(SCENES, ['Voxel Field', 'Spike Field', 'Infinite Tunnel', 'Voxel City']);
+  assert.deepEqual(SCENES, ['Block Field', 'Spike Field', 'Infinite Tunnel', 'Block City']);
   assert.deepEqual(Object.keys(PALETTES), ['ocean', 'ember', 'violet', 'mono']);
 });

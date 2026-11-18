@@ -2,10 +2,10 @@
 //  VoxelWall.swift
 //  Notch Apple
 //
-//  Voxel Wall and Verse (issue #119): music-reactive 3D voxel worlds, and animated word-by-word lyrics.
+//  Music Wall and Verse (issue #119): music-reactive 3D block worlds, and animated word-by-word lyrics.
 //   • Screensaver: full screen on every display; keeps the Mac awake while it shows; any key, click or mouse move ends it.
 //   • Music wallpaper: the same scene behind your desktop icons on every display.
-//   • Scenes (VoxelWall.metal): Voxel Field, Spike Field, Infinite Tunnel, Voxel City. Colours: Ocean, Ember, Violet,
+//   • Scenes (VoxelWall.metal): Block Field, Spike Field, Infinite Tunnel, Block City. Colours: Ocean, Ember, Violet,
 //     Monochrome, or taken from the album cover. Per-scene tuning: audio intensity and motion speed, and Energy Saver, a
 //     silent prepared loop with no audio listening.
 //   • Verse: the lyrics appear word by word, big, with the newest word on top of the last two, over grain and a glow in the
@@ -25,7 +25,7 @@ final class VoxelWall: ObservableObject {
     enum Scene: Int, CaseIterable, Identifiable {
         case field = 0, spikes, tunnel, city
         var id: Int { rawValue }
-        var title: String { switch self { case .field: "Voxel Field"; case .spikes: "Spike Field"; case .tunnel: "Infinite Tunnel"; case .city: "Voxel City" } }
+        var title: String { switch self { case .field: "Block Field"; case .spikes: "Spike Field"; case .tunnel: "Infinite Tunnel"; case .city: "Block City" } }
     }
     enum Palette: String, CaseIterable, Identifiable {
         case ocean, ember, violet, mono, album
@@ -52,7 +52,7 @@ final class VoxelWall: ObservableObject {
     @AppStorage("voxelWall.speed") var speed = 1.0
     /// Energy Saver: a silent prepared loop, no audio listening.
     @AppStorage("voxelWall.energySaver") var energySaver = false
-    /// Show only the lyrics (Verse) on its glow, without the voxel scene.
+    /// Show only the lyrics (Verse) on its glow, without the scene.
     @AppStorage("voxelWall.verseOnly") var verseOnly = false
     /// Lock screen: while the music wallpaper is on, a still of the scene is set as each display's desktop picture, which is what
     /// macOS shows on the lock screen (no app can play live graphics there). The original pictures come back when it is turned off.
@@ -65,7 +65,7 @@ final class VoxelWall: ObservableObject {
     var lyrics: Lyrics { Lyrics(rawValue: lyricsRaw) ?? .words }
     var verseStyle: VerseStyle { VerseStyle(rawValue: verseRaw) ?? .haze }
 
-    /// True while any Voxel Wall is on screen: the lyrics model and the audio meter keep running for it.
+    /// True while any Music Wall is on screen: the lyrics model and the audio meter keep running for it.
     static var isShowing: Bool { shared.screensaverOn || shared.wallpaperOn }
 
     private var saverWindows: [NSWindow] = []
@@ -327,7 +327,7 @@ private struct VerseBackdrop: View {
     }
 }
 
-/// The lyrics, word by word: the newest word big, the two before it smaller above it (VoxelVerse look).
+/// The lyrics, word by word: the newest word big, the two before it smaller above it (lyrics glow look).
 private struct VerseWords: View {
     let style: VoxelWall.VerseStyle
     let accent: Color
@@ -393,9 +393,9 @@ struct VoxelWallRow: View {
     @State private var tuning = false
     var body: some View {
         HStack(spacing: 8) {
-            Button { wall.startScreensaver() } label: { Label("Voxel Wall", systemImage: "cube.fill").font(.system(size: 11, weight: .semibold)) }
+            Button { wall.startScreensaver() } label: { Label("Music Wall", systemImage: "cube.fill").font(.system(size: 11, weight: .semibold)) }
                 .buttonStyle(PurpleButtonStyle())
-                .help("Full-screen voxel worlds that move with your music, with animated lyrics. Keeps the Mac awake; any key ends it.")
+                .help("Full-screen block worlds that move with your music, with animated lyrics. Keeps the Mac awake; any key ends it.")
             Toggle("Music wallpaper", isOn: $wall.wallpaperOn).toggleStyle(.switch).controlSize(.mini)
                 .font(.system(size: 11)).foregroundStyle(Theme.textSecondary)
                 .help("The same scene behind your desktop icons")
@@ -416,7 +416,7 @@ struct VoxelWallSettings: View {
             Picker("Lyrics", selection: $wall.lyricsRaw) { ForEach(VoxelWall.Lyrics.allCases) { Text($0.title).tag($0.rawValue) } }
             if wall.lyrics == .words {
                 Picker("Lyric style", selection: $wall.verseRaw) { ForEach(VoxelWall.VerseStyle.allCases) { Text($0.title).tag($0.rawValue) } }.pickerStyle(.segmented)
-                Toggle("Lyrics only (no voxel scene)", isOn: $wall.verseOnly)
+                Toggle("Lyrics only (no scene)", isOn: $wall.verseOnly)
             }
             LabeledContent("Audio intensity") { Slider(value: $wall.intensity, in: 0.2...2) }
             LabeledContent("Motion speed") { Slider(value: $wall.speed, in: 0.3...2.5) }

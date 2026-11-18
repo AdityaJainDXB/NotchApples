@@ -47,7 +47,7 @@ export async function run() {
     await wait(700);
     await capture('palette');
     document.getElementById('palette')?.remove();
-    // Voxel Wall (issue #119): the wallpaper behind the icons and the full-screen screensaver, each captured from the whole
+    // Music Wall (issue #119): the wallpaper behind the icons and the full-screen screensaver, each captured from the whole
     // screen, and whether the real-sound levels started.
     const VW = await import('../services/voxelwall.js');
     await collapse(); await wait(500);

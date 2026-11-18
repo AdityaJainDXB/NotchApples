@@ -2,12 +2,12 @@
 //  VoxelWall.metal
 //  Notch Apple
 //
-//  The Voxel Wall scenes (issue #119), drawn per pixel by the GPU as a SwiftUI colour effect. Each scene is a world of voxel
+//  The Music Wall scenes (issue #119), drawn per pixel by the GPU as a SwiftUI colour effect. Each scene is a world of voxel
 //  columns or blocks, seen in perspective, that moves with the music's four bands (bass, low-mids, mids, highs):
-//    0 Voxel Field     a rolling landscape of square columns; bass lifts waves through it, highs sparkle on the peaks
+//    0 Block Field     a rolling landscape of square columns; bass lifts waves through it, highs sparkle on the peaks
 //    1 Spike Field     the same lattice, sharper: single columns shoot up with the beat
-//    2 Infinite Tunnel a tunnel of voxel blocks rushing past; the bass pushes the speed and the walls breathe
-//    3 Voxel City      a skyline of blocks under a moving camera; windows flicker with the highs
+//    2 Infinite Tunnel a tunnel of blocks rushing past; the bass pushes the speed and the walls breathe
+//    3 Block City      a skyline of blocks under a moving camera; windows flicker with the highs
 //  Rendering: a grid ray-walk (DDA) through the height field, so every column is a real box with a lit top, shaded sides,
 //  seams between stacked cubes, and fog into the distance.
 //
@@ -32,7 +32,7 @@ static float vwHeight(float2 c, float t, float4 bands, float scene, float intens
     float wave = 0.5 + 0.5 * sin(c.x * 0.32 + c.y * 0.12 + t * 1.6);
     float swell = 0.5 + 0.5 * sin(length(c - float2(0.0, t * 2.2 + 30.0)) * 0.22 - t * 3.0);
     float h;
-    if (scene > 2.5) {                                                   // Voxel City: blocks of buildings
+    if (scene > 2.5) {                                                   // Block City: blocks of buildings
         float2 block = floor(c / 3.0);
         float b = vwHash(block);
         float street = (fmod(abs(c.x), 3.0) < 1.0 || fmod(abs(c.y), 3.0) < 1.0) ? 0.0 : 1.0;
@@ -40,7 +40,7 @@ static float vwHeight(float2 c, float t, float4 bands, float scene, float intens
     } else if (scene > 0.5) {                                            // Spike Field
         float spike = pow(vwHash(c + floor(t * 3.0)), 14.0) * (2.5 + 7.0 * bands.x * intensity);
         h = 0.25 + n * n * 1.6 + spike + bands.y * intensity * wave * 1.2;
-    } else {                                                             // Voxel Field
+    } else {                                                             // Block Field
         float n3 = vwNoise(c * 0.04 + float2(-t * 0.06, t * 0.04));
         h = 0.3 + n3 * 3.0 + n * n * 2.2 + intensity * (bands.x * 3.4 * swell * (0.4 + n3) + bands.y * 1.4 * wave + bands.z * 0.8 * n2);
     }
@@ -135,7 +135,7 @@ static float3 vwTunnel(float2 uv, float t, float4 bands, float intensity, float3
     return half4(half3(clamp(rgb, 0.0, 1.0)), 1.0h);
 }
 
-/// Film grain over the lyrics (VoxelVerse look): a fine moving noise, strongest in the dark parts.
+/// Film grain over the lyrics (lyrics glow look): a fine moving noise, strongest in the dark parts.
 [[ stitchable ]] half4 voxelGrain(float2 position, half4 color, float time, float amount) {
     float n = vwHash(floor(position) + floor(time * 24.0) * 17.0) - 0.5;
     float3 c = float3(color.rgb) + n * amount;

@@ -24,13 +24,13 @@ Merged into `main` and waiting for **2.2.75**: Humanizer v2 and Tools → AI Det
 
 - **Humanizer top-up:** the Buy extra words button opens `https://whop.com/notch-bcc9/humanizer-top-up/`, but **a purchase does not add words in the app yet**: there is no server-side word balance or Whop webhook. Build that (license worker: balance per licence key, credited from the Whop payment) before promoting the button, or people pay and get nothing.
 - **ZeroGPT** in the AI Detector was asked for; their API is paid and its docs are not public. The detector is local only. Adding ZeroGPT needs the owner's API key and docs, and must be opt-in (text leaves the device).
-- **Open issues:** #99 (Now Playing activity disappears after opening the notch; not reproduced, branch `fix/issue-99` only logs attempts; needs a real Mac with music playing). #111 (Windows looks unlike the Mac): the tab bar is fixed; text sizes, emoji headings and card layouts still differ. #101, #109 and #119 (Voxel Wall) are in Mac 2.2.76. Voxel Wall was checked by running its shader math in Chrome (WebGL); it has not been seen inside the running app. Lock-screen use (VoxelWall's macOS 26 lock screen) is not built.
+- **Open issues:** #99 (Now Playing activity disappears after opening the notch; not reproduced, branch `fix/issue-99` only logs attempts; needs a real Mac with music playing). #111 (Windows looks unlike the Mac): the tab bar is fixed; text sizes, emoji headings and card layouts still differ. #101, #109 and #119 (Music Wall) are in Mac 2.2.76. Music Wall was checked by running its shader math in Chrome (WebGL); it has not been seen inside the running app. Lock-screen use (VoxelWall's macOS 26 lock screen) is not built.
 - **Test copies:** never run a Debug copy of the app with the same bundle id (`com.notchapple.app`) next to the real one; both share `~/Library/Application Support/Notch apple` (secrets.json, Friends vault) and can overwrite each other's data. Use a separate bundle id for test builds.
 
 ## 2.2.77 is ready (18 November 2026): deploy the worker first
 
 1. **Deploy the license worker** (`cd server/license-worker && npx wrangler deploy`): it adds Humanizer top-up delivery (Whop plan `plan_SUevPE2JR5KDc` emails a one-use WORD- code) and `POST /humanizer/redeem`. The Mac that built this has no Cloudflare sign-in. Make sure the Whop webhook sends `payment.succeeded` and `refund.created` for the top-up product too.
-2. Then release **2.2.77** (Mac on the signing Mac, then tag `win-v2.2.77`). Notes are written. It adds Voxel Wall on Windows, the Mac lock-screen still, and Redeem a code.
+2. Then release **2.2.77** (Mac on the signing Mac, then tag `win-v2.2.77`). Notes are written. It adds Music Wall on Windows, the Mac lock-screen still, and Redeem a code.
 
 ## Not done / needs a human
 

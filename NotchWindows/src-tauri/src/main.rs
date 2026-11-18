@@ -539,7 +539,7 @@ fn widget_hide(app: AppHandle, kind: String) {
     }
 }
 
-/// Opens a Voxel Wall window (issue #119): "saver" fills the main screen above everything and takes the keyboard (any key ends
+/// Opens a Music Wall window (issue #119): "saver" fills the main screen above everything and takes the keyboard (any key ends
 /// it); "wallpaper" fills the screen behind every other window, never takes the mouse and stays off the taskbar.
 #[tauri::command]
 async fn voxel_show(app: AppHandle, mode: String) -> Result<(), String> {
@@ -551,7 +551,7 @@ async fn voxel_show(app: AppHandle, mode: String) -> Result<(), String> {
     let size = monitor.size().to_logical::<f64>(scale);
     let origin = monitor.position().to_logical::<f64>(scale);
     let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(format!("voxel.html?mode={mode}").into()))
-        .title("Voxel Wall")
+        .title("Music Wall")
         .inner_size(size.width, size.height)
         .position(origin.x, origin.y)
         .decorations(false)
@@ -573,7 +573,7 @@ async fn voxel_show(app: AppHandle, mode: String) -> Result<(), String> {
 }
 
 /// Behind the desktop icons: the same trick live-wallpaper apps use. Progman is asked (message 0x052C) to create the WorkerW
-/// window that sits between the wallpaper and the icons, and the Voxel Wall window becomes its child. Newer Windows 11 builds
+/// window that sits between the wallpaper and the icons, and the Music Wall window becomes its child. Newer Windows 11 builds
 /// put that WorkerW inside Progman; older ones make it a top-level sibling after the window that holds the icons. If neither is
 /// found the window simply stays at the bottom of the desktop.
 #[cfg(windows)]
@@ -611,7 +611,7 @@ mod desktop {
     }
 }
 
-/// Closes a Voxel Wall window.
+/// Closes a Music Wall window.
 #[tauri::command]
 fn voxel_hide(app: AppHandle, mode: String) {
     if let Some(w) = app.get_webview_window(&format!("voxel-{mode}")) { let _ = w.close(); }
@@ -692,7 +692,7 @@ async fn selftest_capture(name: String) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
         let windows = xcap::Window::all().map_err(|e| e.to_string())?;
         let ours = std::process::id();
-        // "screen-…" names capture the whole screen (the Voxel Wall windows), the rest the notch window.
+        // "screen-…" names capture the whole screen (the Music Wall windows), the rest the notch window.
         let target = if safe.starts_with("screen-") { None } else { windows
             .into_iter()
             .find(|w| w.pid().ok() == Some(ours) && w.title().map(|t| t == "Notch Apple").unwrap_or(false)) };

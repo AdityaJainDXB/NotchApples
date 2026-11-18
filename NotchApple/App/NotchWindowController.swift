@@ -227,7 +227,7 @@ final class NotchTriggerView: NSView {
             barsTimer?.invalidate()
             barsTimer = nil
             barLevels = nil
-            if !VoxelWall.isShowing { MusicLevelMeter.shared.stop() }   // the Voxel Wall may still be listening
+            if !VoxelWall.isShowing { MusicLevelMeter.shared.stop() }   // the Music Wall may still be listening
         }
     }
     /// The status pulse: a coloured glow around the closed notch (Settings → Notch → Status pulse).

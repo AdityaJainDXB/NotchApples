@@ -1,6 +1,6 @@
-// Voxel Wall scenes for Windows (issue #119), the same scene code as the Mac's VoxelWall.metal, as WebGL 2. Draws one scene into a
+// Music Wall scenes for Windows (issue #119), the same scene code as the Mac's VoxelWall.metal, as WebGL 2. Draws one scene into a
 // canvas every frame from a state function: { scene 0-3, palette [a, b] (0-1 RGB), bands [4], intensity, speed }.
-// Scenes: 0 Voxel Field, 1 Spike Field, 2 Infinite Tunnel, 3 Voxel City. Drawn at 3/4 resolution to keep the GPU cool.
+// Scenes: 0 Block Field, 1 Spike Field, 2 Infinite Tunnel, 3 Block City. Drawn at 3/4 resolution to keep the GPU cool.
 
 const FUNCS = `float vwHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 
@@ -18,7 +18,7 @@ float vwHeight(vec2 c, float t, vec4 bands, float scene, float intensity) {
     float wave = 0.5 + 0.5 * sin(c.x * 0.32 + c.y * 0.12 + t * 1.6);
     float swell = 0.5 + 0.5 * sin(length(c - vec2(0.0, t * 2.2 + 30.0)) * 0.22 - t * 3.0);
     float h;
-    if (scene > 2.5) {                                                   // Voxel City: blocks of buildings
+    if (scene > 2.5) {                                                   // Block City: blocks of buildings
         vec2 block = floor(c / 3.0);
         float b = vwHash(block);
         float street = (mod(abs(c.x), 3.0) < 1.0 || mod(abs(c.y), 3.0) < 1.0) ? 0.0 : 1.0;
@@ -26,7 +26,7 @@ float vwHeight(vec2 c, float t, vec4 bands, float scene, float intensity) {
     } else if (scene > 0.5) {                                            // Spike Field
         float spike = pow(vwHash(c + floor(t * 3.0)), 14.0) * (2.5 + 7.0 * bands.x * intensity);
         h = 0.25 + n * n * 1.6 + spike + bands.y * intensity * wave * 1.2;
-    } else {                                                             // Voxel Field
+    } else {                                                             // Block Field
         float n3 = vwNoise(c * 0.04 + vec2(-t * 0.06, t * 0.04));
         h = 0.3 + n3 * 3.0 + n * n * 2.2 + intensity * (bands.x * 3.4 * swell * (0.4 + n3) + bands.y * 1.4 * wave + bands.z * 0.8 * n2);
     }

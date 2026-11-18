@@ -2,7 +2,7 @@
 //  VoxelWallLogic.swift
 //  Notch Apple
 //
-//  The math behind the Voxel Wall (issue #119), with no UI: an isometric floor of cubes, each cube's height from the music's
+//  The math behind the Music Wall (issue #119), with no UI: an isometric floor of cubes, each cube's height from the music's
 //  four bands (bass in the middle, highs at the edges) plus a slow travelling wave, and gentle made-up levels when the real
 //  sound can't be heard.
 //

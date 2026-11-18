@@ -1,6 +1,6 @@
-// Voxel Wall rules for Windows, the same as NotchApple/Modules/NowPlaying/VoxelWallLogic.swift (the Swift tests are the specification).
+// Music Wall rules for Windows, the same as NotchApple/Modules/NowPlaying/VoxelWallLogic.swift (the Swift tests are the specification).
 
-export const SCENES = ['Voxel Field', 'Spike Field', 'Infinite Tunnel', 'Voxel City'];
+export const SCENES = ['Block Field', 'Spike Field', 'Infinite Tunnel', 'Block City'];
 export const PALETTES = {
   ocean: { name: 'Ocean', colours: [[0.05, 0.55, 0.56], [0.93, 0.74, 0.32]] },
   ember: { name: 'Ember', colours: [[0.62, 0.12, 0.08], [1, 0.72, 0.3]] },

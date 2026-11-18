@@ -50,11 +50,11 @@ export function render(root) {
         toggle(SL.isOn(), (on) => SL.setOn(on)), el('span', { class: 'dim' }, 'Lyrics on the side of your screen'),
         select([{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }], SL.side(), (v) => SL.setSide(v), { cls: 'auto', title: 'Which edge of the screen' }))
     : proNote('lyrics', 'Lyrics on the side of your screen.');
-  // Voxel Wall (issue #119): music-reactive voxel worlds as a screensaver (keeps the PC awake) or a wallpaper window.
+  // Music Wall (issue #119): music-reactive block worlds as a screensaver (keeps the PC awake) or a wallpaper window.
   const vs = VW.settings();
   const voxelRow = el('div', { class: 'col', style: 'gap:6px' },
     el('div', { class: 'hstack small', style: 'gap:8px;flex-wrap:wrap' },
-      el('button', { class: 'btn small primary', title: 'Full-screen voxel worlds that move with your music, with the lyrics. Keeps the PC awake; any key ends it.', onclick: () => VW.startScreensaver() }, 'Voxel Wall'),
+      el('button', { class: 'btn small primary', title: 'Full-screen block worlds that move with your music, with the lyrics. Keeps the PC awake; any key ends it.', onclick: () => VW.startScreensaver() }, 'Music Wall'),
       toggle(VW.wallpaperOn(), (on) => VW.setWallpaper(on)), el('span', { class: 'dim' }, 'Music wallpaper')),
     el('div', { class: 'hstack small', style: 'gap:6px;flex-wrap:wrap' },
       select(SCENES.map((s, i) => ({ value: i, label: s })), vs.scene, (v) => VW.set('scene', Number(v)), { cls: 'auto', title: 'Scene' }),

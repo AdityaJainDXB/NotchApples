@@ -1,7 +1,7 @@
-//! Music levels for the Voxel Wall on Windows: a listen-only WASAPI loopback capture of what the PC plays (the default output
+//! Music levels for the Music Wall on Windows: a listen-only WASAPI loopback capture of what the PC plays (the default output
 //! device), split into four bands (bass ~90 Hz, low-mids ~400 Hz, mids ~1.6 kHz, highs ~6 kHz) with band-pass filters, the same
 //! split as the Mac's MusicLevelMeter. Nothing is recorded or saved: each block of samples is reduced to four numbers and dropped.
-//! The capture starts when the Voxel Wall asks for levels and stops by itself a few seconds after it stops asking.
+//! The capture starts when the Music Wall asks for levels and stops by itself a few seconds after it stops asking.
 
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::Mutex;

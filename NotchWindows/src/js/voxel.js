@@ -1,4 +1,4 @@
-// The page inside a Voxel Wall window ("voxel.html?mode=saver|wallpaper"): draws the scene and the lyrics the main window sends
+// The page inside a Music Wall window ("voxel.html?mode=saver|wallpaper"): draws the scene and the lyrics the main window sends
 // ('voxel-state' events). In the screensaver, any key, click or real mouse move asks the main window to close it.
 import { startScene } from './games/voxelwall-gl.js';
 import { PALETTES, simulatedLevels, easeBands } from './services/voxelwalllogic.js';

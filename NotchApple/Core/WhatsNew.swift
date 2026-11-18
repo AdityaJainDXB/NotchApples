@@ -20,13 +20,17 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
-        ReleaseNote(version: "2.2.77", date: "18 November 2026", headline: "Voxel Wall everywhere, Humanizer top-ups", items: [
-            "- Mac: Voxel Wall on the lock screen. While the music wallpaper is on, a still of the scene becomes your desktop and lock-screen picture; your own picture comes back when you turn it off",
+        ReleaseNote(version: "2.2.78", date: "18 November 2026", headline: "Update reminder fix, Music Wall", items: [
+            "- Fixed: the update reminder no longer comes back every time you open Notch Apple after quitting or restarting. After it has been shown, it waits another 4 or 5 opens",
+            "- Changed: the music screen with the moving scenes and lyrics is now called Music Wall (it was Voxel Wall), and its scenes are Block Field and Block City",
+        ]),
+        ReleaseNote(version: "2.2.77", date: "18 November 2026", headline: "Music Wall everywhere, Humanizer top-ups", items: [
+            "- Mac: Music Wall on the lock screen. While the music wallpaper is on, a still of the scene becomes your desktop and lock-screen picture; your own picture comes back when you turn it off",
             "- New: Humanizer top-ups arrive. Buying extra words emails you a code; Tools → Humanizer → Redeem a code adds the words (they never run out with the month)",
             "- Mac: the lyrics on the side of your screen now sit on a soft dark panel, so you can read them on a light wallpaper too"
         ]),
-        ReleaseNote(version: "2.2.76", date: "17 November 2026", headline: "Voxel Wall and Three-Card Poker", items: [
-            "- Mac: Voxel Wall. Now Playing → Voxel Wall shows 3D voxel worlds that move with your music (Voxel Field, Spike Field, Infinite Tunnel, Voxel City), as a screensaver that keeps the Mac awake or as a music wallpaper behind your desktop icons. The lyrics play word by word on top (Soft haze, Clear flow, Edge light), or as whole lines. Choose the colours (Ocean, Ember, Violet, Monochrome or the album's), the audio intensity and speed, or Energy Saver for a silent loop",
+        ReleaseNote(version: "2.2.76", date: "17 November 2026", headline: "Music Wall and Three-Card Poker", items: [
+            "- Mac: Music Wall. Now Playing → Music Wall shows 3D block worlds that move with your music (Block Field, Spike Field, Infinite Tunnel, Block City), as a screensaver that keeps the Mac awake or as a music wallpaper behind your desktop icons. The lyrics play word by word on top (Soft haze, Clear flow, Edge light), or as whole lines. Choose the colours (Ocean, Ember, Violet, Monochrome or the album's), the audio intensity and speed, or Energy Saver for a silent loop",
             "- New: Three-Card Poker. Games → Poker has a Three-Card Poker table: you against one to three computer players with play-money chips you can see, a hand-rankings panel beside the table, and a scoreboard of wins, losses and draws",
             "- Mac: ⌘E opens the notch, not your messages: if Messenger was the last tab, the notch opens on the first tab instead"
         ]),

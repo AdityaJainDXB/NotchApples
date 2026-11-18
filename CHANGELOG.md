@@ -4,16 +4,27 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
-### Mac 2.2.77 · Windows 2.2.77 · 18 November 2026 · 🧊 Voxel Wall everywhere, Humanizer top-ups
+### Mac 2.2.78 · Windows 2.2.78 BETA · 18 November 2026 · 🔔 Update reminder fix, Music Wall
 
-- New: Voxel Wall on Windows. Now Playing → Voxel Wall opens the voxel worlds full screen (keeps the PC awake; any key ends it), and Music wallpaper puts them behind your desktop icons. They move with what your PC is playing, with the same scenes and colours as the Mac and the lyrics word by word
-- Mac: Voxel Wall on the lock screen. While the music wallpaper is on, a still of the scene becomes your desktop and lock-screen picture; your own picture comes back when you turn it off
+**Mac**
+
+- Fixed: the update reminder no longer comes back every time you open Notch Apple after quitting or restarting. After it has been shown, it waits another 4 or 5 opens
+- Changed: the music screen with the moving scenes and lyrics is now called Music Wall (it was Voxel Wall), and its scenes are Block Field and Block City
+
+**Windows**
+
+- Changed: the music screen with the moving scenes and lyrics is now called Music Wall (it was Voxel Wall), and its scenes are Block Field and Block City
+
+### Mac 2.2.77 · Windows 2.2.77 · 18 November 2026 · 🧊 Music Wall everywhere, Humanizer top-ups
+
+- New: Music Wall on Windows. Now Playing → Music Wall opens the block worlds full screen (keeps the PC awake; any key ends it), and Music wallpaper puts them behind your desktop icons. They move with what your PC is playing, with the same scenes and colours as the Mac and the lyrics word by word
+- Mac: Music Wall on the lock screen. While the music wallpaper is on, a still of the scene becomes your desktop and lock-screen picture; your own picture comes back when you turn it off
 - New: Humanizer top-ups arrive. Buying extra words emails you a code; Tools → Humanizer → Redeem a code adds the words (they never run out with the month)
 - Mac: the lyrics on the side of your screen now sit on a soft dark panel, so you can read them on a light wallpaper too
 
 ### Mac 2.2.76 · Windows 2.2.76 · 17 November 2026 · 🃏 Three-Card Poker
 
-- Mac: Voxel Wall. Now Playing → Voxel Wall shows 3D voxel worlds that move with your music (Voxel Field, Spike Field, Infinite Tunnel, Voxel City), as a screensaver that keeps the Mac awake or as a music wallpaper behind your desktop icons. The lyrics play word by word on top (Soft haze, Clear flow, Edge light), or as whole lines. Choose the colours (Ocean, Ember, Violet, Monochrome or the album's), the audio intensity and speed, or Energy Saver for a silent loop
+- Mac: Music Wall. Now Playing → Music Wall shows 3D block worlds that move with your music (Block Field, Spike Field, Infinite Tunnel, Block City), as a screensaver that keeps the Mac awake or as a music wallpaper behind your desktop icons. The lyrics play word by word on top (Soft haze, Clear flow, Edge light), or as whole lines. Choose the colours (Ocean, Ember, Violet, Monochrome or the album's), the audio intensity and speed, or Energy Saver for a silent loop
 - New: Three-Card Poker. Games → Poker has a Three-Card Poker table: you against one to three computer players with play-money chips you can see, a hand-rankings panel beside the table, and a scoreboard of wins, losses and draws
 - Windows: the tab bar looks like the Mac's: up to 12 tabs, the rest under a More button, with bolder icons
 - Mac: ⌘E opens the notch, not your messages: if Messenger was the last tab, the notch opens on the first tab instead
