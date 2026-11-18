@@ -6,7 +6,7 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 ### Mac 2.2.77 · Windows 2.2.77 · 18 November 2026 · 🧊 Voxel Wall everywhere, Humanizer top-ups
 
-- New: Voxel Wall on Windows. Now Playing → Voxel Wall opens the voxel worlds full screen (keeps the PC awake; any key ends it), and Music wallpaper puts them behind your windows. Same scenes and colours as the Mac, with the lyrics word by word
+- New: Voxel Wall on Windows. Now Playing → Voxel Wall opens the voxel worlds full screen (keeps the PC awake; any key ends it), and Music wallpaper puts them behind your desktop icons. They move with what your PC is playing, with the same scenes and colours as the Mac and the lyrics word by word
 - Mac: Voxel Wall on the lock screen. While the music wallpaper is on, a still of the scene becomes your desktop and lock-screen picture; your own picture comes back when you turn it off
 - New: Humanizer top-ups arrive. Buying extra words emails you a code; Tools → Humanizer → Redeem a code adds the words (they never run out with the month)
 
