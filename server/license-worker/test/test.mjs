@@ -1445,8 +1445,11 @@ await test('Private game: only an admin key gets the cheat panel (J); an Ultimat
   assert.equal(a.status, 200); assert.equal(u.status, 200);
   if (u.html) {
     assert.equal(u.html.includes('__feAdmin'), false, 'an Ultimate key must never receive the cheats');
-    assert.equal(a.html.includes('__feAdmin'), true);
-    assert.notEqual(a.version, u.version);
+    // The cheat script lives in the git-ignored private/ folder, so it is only there on the owner's machine, not in CI.
+    if ((await import('node:fs')).existsSync(new URL('../private/flight-economy-admin.js', import.meta.url))) {
+      assert.equal(a.html.includes('__feAdmin'), true);
+      assert.notEqual(a.version, u.version);
+    }
   }
 });
 
