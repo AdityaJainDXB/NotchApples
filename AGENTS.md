@@ -57,6 +57,7 @@ Never run a Debug or test copy of the Mac app with the real bundle id (`com.notc
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 18 Nov 2026: added docs/FLIGHT_ECONOMY_ROADMAP.md. Open: the Flight Economy worker deploy, and the side-lyrics Left/Right bug the owner reported (not reproduced yet).
 - 18 Nov 2026: side lyrics get a dark backing panel (white text was invisible on light wallpapers). Not verified in the app (the test Mac has no Pro licence, so the overlay never started); needs the owner to try it on a light desktop.
 - 18 Nov 2026: Windows Voxel Wall follows the real sound (WASAPI loopback, four bands, levels.rs) and the music wallpaper is placed behind the desktop icons (WorkerW); the Windows CI self-test now captures both on a real Windows machine (screensaver and wallpaper confirmed there). Fixed the Shelf tab crash on Windows (holdButton/undoToast not imported), found by that run. Open: live audio not confirmed (the CI machine has no sound device).
 - 18 Nov 2026: Voxel Wall on Windows (WebGL scenes, screensaver window that keeps the PC awake, wallpaper window behind other windows, Now Playing controls), Mac lock-screen still for the Voxel Wall wallpaper, Voxel Wall restarts at launch; 2.2.77 notes and version. Open: deploy the license worker BEFORE releasing 2.2.77 (Redeem a code needs /humanizer/redeem); Windows wallpaper sits above the desktop icons (not between icons and wallpaper); Windows scenes follow a made-up beat (no system audio).
