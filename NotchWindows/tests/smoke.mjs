@@ -21,7 +21,17 @@ const t = root();
 await tools.render(t);
 await tick(80);
 const labels = [...t.querySelector('.seg').querySelectorAll('button')].map((b) => b.textContent).join(',');
-ok('Tools shows five pages', labels === 'Utilities,Calculator,Translator,Humanizer,AI Detector', labels);
+ok('Tools shows six pages', labels === 'Utilities,Calculator,Translator,Humanizer,AI Detector,Teleprompter', labels);
+// Teleprompter page: it renders, and Start with a script switches to the reader (jsdom has no layout, so it reaches the end at once).
+const tp = root();
+(await import('./js/modules/teleprompter.js')).render(tp);
+await tick(30);
+ok('Teleprompter shows its script box and controls', !!tp.querySelector('textarea') && tp.textContent.includes('Speed') && tp.textContent.includes('Your script'), tp.textContent.slice(0, 80));
+tp.querySelector('textarea').value = 'one two three four five six seven eight';
+tp.querySelector('textarea').oninput();
+[...tp.querySelectorAll('button')].find((b) => b.textContent === 'Start').click();
+await tick(30);
+ok('Teleprompter Start switches from the editor to the reader, with Reset', !tp.querySelector('textarea') && [...tp.querySelectorAll('button')].some((b) => b.textContent === 'Reset'), tp.textContent.slice(0, 80));
 [...t.querySelectorAll('.seg button')].find((b) => b.textContent === 'Calculator').click();
 await tick(30);
 const ta = t.querySelector('textarea');
