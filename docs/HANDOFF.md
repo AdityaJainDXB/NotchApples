@@ -37,7 +37,7 @@ Merged into `main` and waiting for **2.2.75**: Humanizer v2 and Tools → AI Det
 - **Mac 2.2.78 is released** (update-reminder fix, Voxel Wall renamed Music Wall). **Windows 2.2.78 was never published:** its build failed on a flaky worker test (fixed in `4f004ff8`) and the tag was not moved. The next release (2.2.79) carries the Windows side, so Windows goes 2.2.77 to 2.2.79.
 - **Teleprompter (Tools, Mac and Windows) is built as a basic version:** type or paste a script, Start or Pause, speed 1 to 10 (60 to 240 words a minute), text size, mirror. Rules in `TeleprompterLogic.swift` and `teleprompterlogic.js`.
 - **Later ideas for the Teleprompter (not built):** follow your voice so it scrolls as you speak; control it from the iPhone companion; a countdown before it starts; a pop-out window that stays on top of other apps; import a script from a file; keep several saved scripts; a speed ramp; keyboard keys for faster, slower, pause.
-- **Asked for, not built:** make the F1 game's HUD look like F1 25 (needs screenshots; see the rules about copying another game's look).
+- **F1 game HUD redesign (built 18 Nov 2026, version 2.2.80, not released):** the Racing HUD now has a broadcast-style tower (lap line, flag block, purple fastest-lap row), lap panel, top-centre banners, radio subtitles, sector-coloured minimap, finish card and a white-bar MFD selector, for every track and car. Study of the reference video, what was built and what was left out: `docs/F1_HUD_REDESIGN.md`. Logic in `NotchWindows/src/js/games/f1/hud.js`. Open: release 2.2.80 (merge, tag `v2.2.80` and `win-v2.2.80`, Mac build on the signing Mac), play it on a real Mac and Windows PC, and decide whether the tower should default to the gap to the leader.
 
 ## Not done / needs a human
 

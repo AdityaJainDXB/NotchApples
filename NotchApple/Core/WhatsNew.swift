@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.80", date: "18 November 2026", headline: "Racing HUD", items: [
+            "- Changed: the Racing HUD has a new broadcast-style look on every track and every car. The timing tower now has a lap line and the gap to the leader (dashes for the leader), whoever holds the fastest lap gets a purple row with a stopwatch, and while a flag is out the tower shows CAUTION with the sector, SAFETY CAR or RED FLAG, then RESUME RACING when racing restarts. The lap panel shows your position out of the field, the lap time and your best lap together. L still switches between the gap to you and the gap to the leader",
+            "- New: banners at the top centre for a new fastest lap, track-limit warnings, penalties, flags, a streak of clean laps and the chequered flag. Your engineer's and the commentator's lines also appear as subtitles, so you can follow them with the sound off",
+            "- New: the minimap line takes the colours of your sectors (green for your best, yellow for slower, purple while your last lap was the fastest of the race) with a chequered flag at the line on the final lap, and a card with your place, name and the circuit appears when you finish",
+            "- Changed: in the F1 Weekend the MFD shows the row you are on as a white bar with arrows round its value, and the telemetry panels, the qualifying screen and the pit panel use the same colours"
+        ]),
         ReleaseNote(version: "2.2.79", date: "18 November 2026", headline: "Teleprompter", items: [
             "- New: Teleprompter. Tools → Teleprompter: type or paste a script, press Start, and it scrolls up a reading line at the speed you choose (1 to 10, which is 60 to 240 words a minute). You can change the text size, flip it sideways for a prompter glass, and pause or reset. Your script and settings are saved, and nothing leaves your computer",
         ]),

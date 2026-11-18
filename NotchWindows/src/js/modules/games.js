@@ -141,7 +141,7 @@ function plane(host) {
 /// Racing: cars on a straight, curved or mixed track, with computer rivals or friends in an online room. The same script
 /// runs in the Mac app's web view. It stops when you switch away (a race is short).
 /// The F1 Weekend simulation of Racing, loaded before the game (each file registers itself in window.NotchRaceF1).
-const F1_MODULES = ['era', 'aero', 'powerunit', 'tyres', 'damage', 'sim', 'racecontrol', 'penalties', 'weekend', 'evolution', 'strategy', 'mfd'];
+const F1_MODULES = ['era', 'aero', 'powerunit', 'tyres', 'damage', 'sim', 'racecontrol', 'penalties', 'weekend', 'evolution', 'strategy', 'mfd', 'hud'];
 function racing(host) {
   host.style.position = 'relative';
   const box = el('div', { style: 'position:absolute;inset:0' });

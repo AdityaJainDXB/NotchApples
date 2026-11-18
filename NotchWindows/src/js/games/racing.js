@@ -1356,10 +1356,10 @@
 .rc-stats{min-width:170px}.rc-stats div{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:500}.rc-stats span{width:56px;opacity:.75}.rc-stats i{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}.rc-stats b{display:block;height:100%}
 .rc-sel{font:inherit;font-size:12px;color:#fff;background:#1d2230;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:5px 8px;max-width:260px}
 .rc-leave{position:absolute;left:6px;top:46%;z-index:25;width:26px;height:56px;border:1px solid rgba(255,255,255,.22);border-radius:13px;background:rgba(8,12,24,.62);color:#fff;font:700 12px system-ui;cursor:pointer;opacity:.5;padding:0;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl}.rc-leave:hover,.rc-leave:focus-visible{opacity:1;background:rgba(190,40,60,.85);outline:none}.rc-leave[hidden]{display:none}
-.rc-med{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(560px,90%);background:rgba(8,12,22,.92);color:#fff;border-radius:14px;padding:14px 16px;font:500 13px system-ui;box-shadow:0 8px 30px rgba(0,0,0,.5)}.rc-med b{font-size:14px}.rc-med p{margin:6px 0}.rc-med .dim{opacity:.7;font-size:12px}.rc-med-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.rc-med-btn{font:600 12px system-ui;color:#fff;background:#2a3142;border:0;border-radius:9px;padding:8px 10px;cursor:pointer;text-align:left;flex:1 1 45%}.rc-med-btn:hover{background:#39425a}.rc-med-btn.red{background:#b3262b}.rc-med-btn.yellow{background:#b38a12}.rc-med-btn.green{background:#1f8a4c}
+.rc-med{position:absolute;left:50%;bottom:16%;transform:translateX(-50%);width:min(560px,90%);background:rgba(10,16,36,.92);color:#fff;border-radius:14px;padding:14px 16px;font:500 13px system-ui;box-shadow:0 8px 30px rgba(0,0,0,.5)}.rc-med b{font-size:14px}.rc-med p{margin:6px 0}.rc-med .dim{opacity:.7;font-size:12px}.rc-med-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.rc-med-btn{font:600 12px system-ui;color:#fff;background:#2a3142;border:0;border-radius:9px;padding:8px 10px;cursor:pointer;text-align:left;flex:1 1 45%}.rc-med-btn:hover{background:#39425a}.rc-med-btn.red{background:#b3262b}.rc-med-btn.yellow{background:#b38a12}.rc-med-btn.green{background:#1f8a4c}
 .rc-check{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.05);margin:3px 0;font-size:12px}.rc-check.done{background:rgba(60,220,120,.16)}.rc-check span{margin-left:auto;color:#4fe09a;font-weight:800}.rc-check kbd{background:#2a3142;border-radius:4px;padding:0 5px}
 .rc-ask{display:block;width:260px;margin-top:6px;font:inherit;font-size:12px;color:#fff;background:#1d2230;border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:5px 8px}.rc-radio .dim{opacity:.65;font-size:11px;margin-top:3px}
-.rc-radio{position:absolute;left:12px;bottom:12px;background:rgba(8,12,22,.88);color:#fff;border-radius:10px;padding:10px 12px;font:600 12px system-ui;display:flex;flex-direction:column;gap:3px;pointer-events:none}.rc-radio b{color:#4fe09a;margin-bottom:3px}.rc-radio kbd{display:inline-block;min-width:16px;text-align:center;background:#2a3142;border-radius:4px;padding:0 4px;margin-right:4px}
+.rc-radio{position:absolute;left:12px;bottom:12px;background:rgba(10,16,36,.88);color:#fff;border-radius:10px;padding:10px 12px;font:600 12px system-ui;display:flex;flex-direction:column;gap:3px;pointer-events:none}.rc-radio b{color:#4fe09a;margin-bottom:3px}.rc-radio kbd{display:inline-block;min-width:16px;text-align:center;background:#2a3142;border-radius:4px;padding:0 4px;margin-right:4px}
 .rc-lights{position:absolute;left:50%;top:5%;transform:translateX(-50%);display:flex;gap:14px;padding:24px 16px 12px;background:linear-gradient(#0a0b10,#171a22);border-radius:12px 12px 6px 6px;box-shadow:0 6px 22px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.08);pointer-events:none}.rc-lights::before{content:'F1 RACE';position:absolute;top:6px;left:0;right:0;text-align:center;font:italic 900 11px system-ui;letter-spacing:.34em;color:#e9ecf3;opacity:.88}.rc-lights::after{content:'';position:absolute;left:12%;right:12%;top:-8px;height:8px;background:#20232c;border-radius:3px 3px 0 0}.rc-lights[hidden]{display:none}.rc-lights b{position:relative;display:grid;grid-template-columns:repeat(2,17px);gap:5px;padding:7px;background:#040405;border-radius:5px;box-shadow:0 0 0 1px #20232c,0 3px 6px rgba(0,0,0,.7)}.rc-lights b::before{content:'';position:absolute;left:50%;top:-9px;width:3px;height:9px;margin-left:-1.5px;background:#2b2f3a}.rc-lights i{width:17px;height:17px;border-radius:50%;background:#2a0808;box-shadow:inset 0 2px 4px rgba(0,0,0,.7)}.rc-lights b.on i{background:radial-gradient(circle at 40% 35%,#ff9a8f,#ff1a1a 55%,#a00);box-shadow:0 0 14px 2px #ff2a2a}
 .rc-big{position:absolute;left:0;right:0;top:26%;text-align:center;font-size:64px;font-weight:900;text-shadow:0 3px 14px rgba(0,0,0,.7);pointer-events:none}
 `;
@@ -2287,8 +2287,8 @@
       if (!lines.length) return;
       g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
       const wmax = Math.min(W * 0.62, 520 * s), pad = 8 * s; let h = pad * 2; const sizes = lines.map((l) => (l[3] || 12) * s * 0.85); lines.forEach((l, i) => { h += sizes[i] * 1.35; });
-      const x = (W - wmax) / 2, y0 = 56 * s;
-      g.fillStyle = 'rgba(8,12,22,.72)'; g.beginPath(); g.roundRect(x, y0, wmax, h, 8 * s); g.fill();
+      const x = (W - wmax) / 2, y0 = Math.max(56 * s, bannerBottom + 6 * s);
+      g.fillStyle = 'rgba(10,16,36,.78)'; g.beginPath(); g.roundRect(x, y0, wmax, h, 8 * s); g.fill();
       let y = y0 + pad; g.textAlign = 'center';
       lines.forEach((l, i) => { y += sizes[i] * 1.2; g.fillStyle = l[1]; g.font = `${l[2] || 700} ${sizes[i]}px system-ui`; g.fillText(String(l[0]).slice(0, 110), W / 2, y); y += sizes[i] * 0.15; });
       g.restore();
@@ -2300,14 +2300,14 @@
       const M = f1.M, res = M.penalties.trackLimit(f1.stew, r.id, { lap: Math.max(0, r.lap) }); M.penalties.drain(f1.stew);
       if (res.action === 'black-white') { M.racecontrol.blackWhite(f1.rc, r.id, 'track limits (3rd strike)'); if (r === me) say('Black and white flag. One more and it is a penalty.', 'eng', 2); }
       else if (res.action === 'plus5' || res.action === 'plus10') penalize(r, res.action === 'plus5' ? 5 : 10, `track limits (strike ${res.strike})`);
-      else if (r === me) { toast(`Track limits: warning ${res.strike} of 2`); say('Track limits. Careful.', 'eng', 1); }
+      else if (r === me) { hudBanner({ id: 'tl', kind: 'warning', title: 'FIA WARNING - TRACK LIMITS', sub: `WARNING ${res.strike} OF 2` }, `Track limits: warning ${res.strike} of 2`); say('Track limits. Careful.', 'eng', 1); }
     }
     /// Pit lane speeding: 5 s (a little over) or 10 s (well over), 80 km/h (60 on a street circuit).
     function f1PitSpeed(r, kmh) { const p = f1.M.penalties.pitSpeed(f1.stew, r.id, kmh, { lap: Math.max(0, r.lap) }); f1.M.penalties.drain(f1.stew); if (p) penalize(r, p.seconds, p.reason); }
     /// A drive-through (or a 10 s stop-go): to be served in the pit lane within 3 laps, or it is a black flag.
     function f1Penalty(r, kind, secs, why) {
       const p = f1.M.penalties.issue(f1.stew, { carId: r.id, kind, seconds: secs, reason: why, lap: Math.max(0, r.lap) }); f1.M.penalties.drain(f1.stew);
-      if (p && r === me) { toast(`⚠ ${kind === 'driveThrough' ? 'Drive-through' : '10 s stop-go'} penalty: ${why}. Serve it within 3 laps`); say(`${kind === 'driveThrough' ? 'Drive-through' : 'Stop-go'} penalty for ${why}. Serve it within three laps.`, 'eng', 2); }
+      if (p && r === me) { hudBanner({ id: 'pen' + Math.round(clock * 10), kind: 'penalty', title: kind === 'driveThrough' ? 'DRIVE-THROUGH PENALTY' : '10 S STOP-GO PENALTY', sub: `${String(why).toUpperCase()} · SERVE IT WITHIN 3 LAPS` }, `⚠ ${kind === 'driveThrough' ? 'Drive-through' : '10 s stop-go'} penalty: ${why}. Serve it within 3 laps`); say(`${kind === 'driveThrough' ? 'Drive-through' : 'Stop-go'} penalty for ${why}. Serve it within three laps.`, 'eng', 2); }
       else if (p && me) say(`${kind === 'driveThrough' ? 'Drive-through' : 'Stop-go'} penalty for ${r.name}.`, 'com', 1);
       return p;
     }
@@ -2671,6 +2671,7 @@
     }
     /// Says a line. `who` is 'eng' (the radio) or 'com' (the commentator). Lower `pri` lines are dropped while something is said.
     function say(text, who = 'eng', pri = 1) {
+      hudSay(text, who, pri);
       const sp = synth(); if (!radioOn || !soundOn || suspended || !sp || typeof SpeechSynthesisUtterance === 'undefined') return;
       const now = performance.now();
       if ((sp.speaking || now - lastTalk < 2500) && pri < 2) return;
@@ -2733,7 +2734,8 @@
       raceCtl.flag = flag; raceCtl.t = 0; raceCtl.warned = false; raceCtl.lap0 = null; raceCtl.restart = false; raceCtl.inWarned = false; raceCtl.scOut = false;
       if (flag === 'green') raceCtl.next = clock + 40 + Math.random() * 80;       // the next incident (when you drive for race control) comes a while after the restart
       if (flag === 'green') for (const r of racers) if (!r.official && !r.dnf && r.stopped && !cranes.some((k) => k.r === r)) { r.car.dmg = Math.min(r.car.dmg, 0.6); r.stopped = false; }      // the crashed car was recovered: it limps on to the pits, and no longer counts as a wreck
-      big.style.fontSize = '22px'; big.style.top = '14%'; big.textContent = (flag === 'green' ? '🟢 ' : flag === 'red' ? '🟥 ' : '🟨 ') + FLAGS[flag][0]; clearTimeout(toastT); toastT = setTimeout(() => { big.textContent = ''; big.style.fontSize = ''; big.style.top = ''; }, 2600);
+      if (HM()) hudBanner({ id: 'flag', kind: flag === 'green' ? 'green' : 'flag', icon: flag === 'green' ? 'green' : 'flag', title: FLAGS[flag][0], sub: why ? String(why).toUpperCase() : '', col: FLAGS[flag][1] });
+      else { big.style.fontSize = '22px'; big.style.top = '14%'; big.textContent = (flag === 'green' ? '🟢 ' : flag === 'red' ? '🟥 ' : '🟨 ') + FLAGS[flag][0]; clearTimeout(toastT); toastT = setTimeout(() => { big.textContent = ''; big.style.fontSize = ''; big.style.top = ''; }, 2600); }
       const lines = { green: ['Green flag, green flag. Racing resumes!', 'com'], yellow: [`Yellow flag${why ? ', ' + why : ''}. No overtaking there.`, 'eng'], vsc: ['Virtual Safety Car. Slow down, keep to the delta, no overtaking.', 'eng'], sc: ['Safety car, safety car. Close up behind the car in front, no overtaking.', 'eng'], red: ['Red flag, red flag! The race is stopped.', 'com'] };
       say(...lines[flag], 2);
     }
@@ -3088,7 +3090,7 @@
     function penalize(r, sec, why) {
       if (!r || r.official) return;           // the Safety Car and the Medical Car are race control: no penalties
       r.pen = (r.pen || 0) + sec; r.penWhy = why;
-      if (r === me) { toast(`⚠ ${sec}-second time penalty: ${why}. Q: serve it at your next pit stop`); say(`You have a ${sec === 5 ? 'five' : 'ten'} second time penalty, for ${why}. You can serve it at the stop.`, 'eng', 2); }
+      if (r === me) { hudBanner({ id: 'pen' + Math.round(clock * 10), kind: 'penalty', title: `${sec} SECOND TIME PENALTY`, sub: String(why).toUpperCase() }, `⚠ ${sec}-second time penalty: ${why}. Q: serve it at your next pit stop`); say(`You have a ${sec === 5 ? 'five' : 'ten'} second time penalty, for ${why}. You can serve it at the stop.`, 'eng', 2); }
       else if (me && Math.abs(r.prog - me.prog) < 400) say(`${sec} second penalty for ${r.name}.`, 'com', 1);
     }
     function trackLimits(r) {
@@ -3096,7 +3098,7 @@
       if (f1 && r.car.f1) { f1TrackLimit(r); return; }
       const step = trackLimitStep(r.tl); r.tl = step.count;
       if (step.action === 'penalty') penalize(r, 5, 'track limits');
-      else if (r === me) { if (r.tl === 3) { toast('🏁 Black and white flag: next time is a penalty'); say('Black and white flag. One more and it is a penalty.', 'eng', 2); } else { toast(`Track limits: warning ${r.tl} of 3`); say('Track limits. Careful.', 'eng', 1); } }
+      else if (r === me) { if (r.tl === 3) { hudBanner({ id: 'tl', kind: 'warning', icon: 'flag', title: 'BLACK AND WHITE FLAG', sub: 'NEXT TIME IS A PENALTY' }, '🏁 Black and white flag: next time is a penalty'); say('Black and white flag. One more and it is a penalty.', 'eng', 2); } else { hudBanner({ id: 'tl', kind: 'warning', title: 'FIA WARNING - TRACK LIMITS', sub: `WARNING ${r.tl} OF 3` }, `Track limits: warning ${r.tl} of 3`); say('Track limits. Careful.', 'eng', 1); } }
     }
     // Leaving the track and gaining an advantage (FIA): a car that is off the track for a moment and comes back in front of a car it
     // was behind must let it back through, or take 5 seconds. Only under green, and not for a car that has crashed or stopped.
@@ -3498,6 +3500,7 @@
       if (screen === 'race' && me && me.dnf && me.retiredT != null && clock - me.retiredT > 3) showResults();
     }
     function finishedMe() {
+      hudBanner({ id: 'chq', kind: 'chequered', title: 'CHEQUERED FLAG' });
       const key = `best.${trackId}.${carId}`, b = store.get(key, null) || {};
       const upd = { lap: b.lap, race: b.race };
       if (me.bestLap && (!upd.lap || me.bestLap < upd.lap)) upd.lap = me.bestLap;
@@ -3597,13 +3600,13 @@
     // ---- the broadcast-style HUD: a timing tower with the lap, a sector and lap-time panel, the car's condition with its four tyres,
     // and a dash with the battery, gear, revs and speed.
     let pitIn = null;
-    const sectors = { me: null, lap: -9, sec: -1, t0: 0, times: [null, null, null], col: [null, null, null], pb: [1e9, 1e9, 1e9] };
+    const sectors = { me: null, lap: -9, sec: -1, t0: 0, times: [null, null, null], col: [null, null, null], pb: [1e9, 1e9, 1e9], prev: [null, null, null], purple: false };
     function sectorTick() {
-      if (sectors.me !== me) Object.assign(sectors, { me, lap: -9, sec: -1, t0: clock, times: [null, null, null], col: [null, null, null], pb: [1e9, 1e9, 1e9] });
+      if (sectors.me !== me) Object.assign(sectors, { me, lap: -9, sec: -1, t0: clock, times: [null, null, null], col: [null, null, null], pb: [1e9, 1e9, 1e9], prev: [null, null, null], purple: false });
       if (!T.closed || me.lap < 0) { sectors.lap = -9; return; }
       const sec = clamp(Math.floor(clamp((me.sLap || 0) / T.length, 0, 0.9999) * 3), 0, 2);
       const closeSec = (i) => { const t = clock - sectors.t0; sectors.times[i] = t; sectors.col[i] = t <= sectors.pb[i] ? '#3ad07a' : '#ffd23f'; sectors.pb[i] = Math.min(sectors.pb[i], t); };
-      if (me.lap !== sectors.lap) { if (sectors.lap >= 0 && sectors.sec === 2) closeSec(2); sectors.lap = me.lap; sectors.sec = sec; sectors.t0 = clock; sectors.times = [null, null, null]; sectors.col = [null, null, null]; }
+      if (me.lap !== sectors.lap) { if (sectors.lap >= 0 && sectors.sec === 2) closeSec(2); if (sectors.lap >= 0) { sectors.prev = sectors.col.slice(); const hm = HM(); sectors.purple = !!hm && me.lapTimes.length > 0 && me.lapTimes[me.lapTimes.length - 1] === me.bestLap && hm.fastestHolder(racers) === me; } sectors.lap = me.lap; sectors.sec = sec; sectors.t0 = clock; sectors.times = [null, null, null]; sectors.col = [null, null, null]; }
       else if (sec !== sectors.sec) { if (sectors.sec >= 0 && sectors.sec < 2 && sec === sectors.sec + 1) closeSec(sectors.sec); sectors.sec = sec; sectors.t0 = clock; }
     }
     const fmtLap = (t) => { const m = Math.floor(t / 60), sc = (t - m * 60).toFixed(3).padStart(6, '0'); return m ? `${m}:${sc}` : sc; };
@@ -3611,45 +3614,157 @@
       g.lineWidth = lw; g.strokeStyle = 'rgba(255,255,255,.16)'; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.stroke();
       if (frac > 0.005) { g.lineCap = 'round'; g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(frac, 0, 1)); g.stroke(); g.lineCap = 'butt'; }
     };
-    /// Which cars the tower lists (the top five, or all of a small field, and you if you are further back) and where it ends.
-    function towerLayout(s, order) {
-      const all = order.filter((r) => !r.dsq), mi = all.indexOf(me), rows = !towerMode || !T.closed || !(screen === 'race' || screen === 'done' || screen === 'countdown' || screen === 'formation') ? [] : all.length <= 8 ? all.map((_, i) => i) : [...new Set([0, 1, 2, 3, mi >= 4 ? mi : 4])];
-      return { all, rows, mi, bottom: 8 * s + 22 * s + 15 * s + rows.length * 14.5 * s + (rows.length ? 5 * s : 2 * s) };
+    // ---- the broadcast-style HUD: the rules are in f1/hud.js (loaded before this file), the drawing is here
+    const HM = () => (F1() && F1().hud) || null;
+    const PANEL = 'rgba(10,16,36,.9)', TEAL = '#38d6c4', LAP_PANEL_H = 54;
+    const hudFlag = { last: 'green', resumeUntil: -1 };
+    /// The sector (1 to 3) a yellow flag is in: from race control's mini-sectors with the F1 simulation, otherwise where the car that crashed is.
+    function yellowSector() {
+      const hm = HM();
+      if (f1 && f1.rc && f1.rc.yellow) { const y = f1.rc.yellow; for (let i = 0; i < y.length; i++) if (y[i]) return hm.sectorOf((i + 0.5) / y.length); }
+      const A = raceCtl.at; return A && A.r && T.closed ? hm.sectorOf((A.r.sLap || 0) / T.length) : null;
+    }
+    /// The block that replaces the tower's header while a flag is out (CAUTION in sector 2, SAFETY CAR, RED FLAG) and after it (RESUME RACING), or null.
+    function hudFlagBlock() {
+      const hm = HM();
+      if (!hm || !me || me.official || (screen !== 'race' && screen !== 'done')) { hudFlag.last = 'green'; hudFlag.resumeUntil = -1; return null; }
+      const C = raceCtl, flag = me.finished ? 'chequered' : C.flag;
+      return hm.flagBlock(hudFlag, { flag, sector: flag === 'yellow' ? yellowSector() : null, restart: C.restart, inWarned: C.inWarned }, clock);
+    }
+    // The banners at the top centre (fastest lap, warnings, flags, the chequered flag) and the radio subtitles: the rules are in f1/hud.js.
+    const hudBanners = { cur: null, wait: [] }, hudSubs = { cur: null }, hudNow = () => performance.now() / 1000;
+    let hudSubT = 0, bannerBottom = 0;
+    const hudSeen = { fast: null, fastT: 0, lap: -9, tl: 0, dmg: 0, streak: 0 };
+    /// Put a banner up. With no HUD module the old big text is used instead.
+    function hudBanner(b, fallback) { const hm = HM(); if (!hm) { if (fallback) toast(fallback); return; } hm.bannerPush(hudBanners, b, hudNow()); }
+    /// A line of radio on the screen as well as in the ear (and when the sound is off). Rate-limited like the voice.
+    function hudSay(text, who, pri) {
+      const hm = HM(); if (!hm || !radioOn || suspended || screen !== 'race') return;
+      const now = performance.now(); if (pri < 2 && now - hudSubT < 2500) return; hudSubT = now;
+      hm.subPush(hudSubs, text, who, hudNow());
+    }
+    /// Every frame: a new fastest lap (anyone's) puts up its banner, and a lap of yours without a track-limit warning or damage adds to the clean-lap streak.
+    function hudWatch() {
+      const hm = HM(); if (!hm || !me || me.official || screen !== 'race') return;
+      if (clock < 1) Object.assign(hudSeen, { fast: null, fastT: 0, lap: -9, tl: 0, dmg: 0, streak: 0 });
+      if (!T.closed) return;
+      const f = hm.fastestHolder(racers);
+      if (f && (f !== hudSeen.fast || f.bestLap < hudSeen.fastT - 1e-6)) { hudSeen.fast = f; hudSeen.fastT = f.bestLap; const b = hm.fastestBanner(f, f.name); if (b) hm.bannerPush(hudBanners, b, hudNow()); }
+      if (me.lap !== hudSeen.lap) {
+        if (hudSeen.lap >= 0 && me.lap > hudSeen.lap) { hudSeen.streak = (me.tl || 0) === hudSeen.tl && (me.car.dmg || 0) <= hudSeen.dmg + 0.005 ? hudSeen.streak + 1 : 0; const cb = hm.cleanLapBanner(hudSeen.streak); if (cb) hm.bannerPush(hudBanners, cb, hudNow()); }
+        hudSeen.lap = me.lap; hudSeen.tl = me.tl || 0; hudSeen.dmg = me.car.dmg || 0;
+      }
+    }
+    /// The banner: an icon square and one or two lines on a navy pill, sliding and fading in at the top centre (lower when the telemetry strip or the pit panel is up).
+    function drawBanner(s) {
+      const hm = HM(); bannerBottom = 0; if (!hm) return;
+      const n = hm.bannerNow(hudBanners, hudNow()); if (!n) return;
+      const b = n.banner, h = (b.sub ? 28 : 22) * s, y0 = (10 + (hudOn && !me.official ? 30 : 0) + (me.inLane && !me.official ? 72 : 0)) * s - n.slide * 8 * s;
+      g.save(); g.globalAlpha = n.a;
+      g.font = `900 ${10 * s}px system-ui`; const w1 = g.measureText(b.title).width; g.font = `700 ${8 * s}px system-ui`; const w2 = b.sub ? g.measureText(b.sub).width : 0;
+      const w = h + 24 * s + Math.max(w1, w2), x = W / 2 - w / 2;
+      g.fillStyle = 'rgba(10,16,36,.94)'; g.beginPath(); g.roundRect(x, y0, w, h, 5 * s); g.fill();
+      g.fillStyle = b.col; g.beginPath(); g.roundRect(x, y0, h, h, [5 * s, 0, 0, 5 * s]); g.fill();
+      hudIcon(b.icon, x + h / 2, y0 + h / 2, h * 0.3, b.col === '#ffd23f' || b.col === '#f2f2f2' ? '#101626' : '#fff');
+      g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = `900 ${10 * s}px system-ui`; g.fillText(b.title, x + h + 10 * s, y0 + (b.sub ? 12 : 14.6) * s);
+      if (b.sub) { g.fillStyle = 'rgba(255,255,255,.75)'; g.font = `700 ${8 * s}px system-ui`; g.fillText(b.sub, x + h + 10 * s, y0 + 22.5 * s); }
+      g.restore(); bannerBottom = y0 + h;
+    }
+    /// When you finish: your place, your name and the event, bottom left (where the tyre panel was).
+    function drawFinishCard(s) {
+      const hm = HM(); if (!hm || !me || !me.finished || me.official || !T.closed) return;
+      const card = hm.finishCard(ranking(racers).indexOf(me) + 1, myName || me.name, String((findDef(trackId) || {}).name || '').replace(/\s*\(.*\)\s*$/, '')), w = 190 * s, h = 54 * s, x = 8 * s, y = H - h - 8 * s;
+      g.fillStyle = PANEL; g.beginPath(); g.roundRect(x, y, w, h, 6 * s); g.fill();
+      g.fillStyle = TEAL; g.fillRect(x, y + 6 * s, 3 * s, h - 12 * s);
+      g.textAlign = 'left'; g.fillStyle = 'rgba(255,255,255,.6)'; g.font = `700 ${6.5 * s}px system-ui`; g.fillText(card.caption, x + 11 * s, y + 11 * s, w - 20 * s);
+      g.fillStyle = card.ord === '1ST' ? '#ffd23f' : '#fff'; g.font = `900 ${24 * s}px system-ui`; g.fillText(card.ord, x + 11 * s, y + 37 * s);
+      g.fillStyle = 'rgba(255,255,255,.88)'; g.font = `700 ${8.5 * s}px system-ui`; g.fillText(card.name, x + 11 * s, y + 49 * s, w - 20 * s);
+    }
+    /// The radio line, on a dark band in the lower middle of the screen (clear of the dash, the flag pills and the panels at the sides).
+    function drawSubtitle(s) {
+      const hm = HM(); if (!hm || screen === 'done') return;
+      const n = hm.subNow(hudSubs, hudNow()); if (!n) return;
+      g.save(); g.globalAlpha = n.a; g.font = `600 ${11 * s}px system-ui`;
+      const maxW = Math.min(W * 0.62, 460 * s), lines = []; let cur = '';
+      for (const wd of n.text.split(' ')) { const t = cur ? cur + ' ' + wd : wd; if (g.measureText(t).width > maxW && cur) { lines.push(cur); cur = wd; } else cur = t; }
+      if (cur) lines.push(cur);
+      const lh = 14 * s, bw = Math.min(maxW, Math.max(...lines.map((l) => g.measureText(l).width))) + 24 * s, bh = lines.length * lh + 12 * s, x = W / 2 - bw / 2, y = H * 0.6 - bh / 2;
+      g.fillStyle = 'rgba(10,16,36,.8)'; g.beginPath(); g.roundRect(x, y, bw, bh, 6 * s); g.fill();
+      g.fillStyle = n.who === 'com' ? '#cfe0ff' : '#fff'; g.textAlign = 'center'; lines.forEach((l, i) => g.fillText(l, W / 2, y + 6 * s + (i + 0.8) * lh));
+      g.restore();
+    }
+    /// Small icons for the tower and the banners, drawn with strokes in our own style: a stopwatch, a warning sign, a chequered flag, a tick, a flag, an info dot.
+    function hudIcon(kind, cx, cy, r, ink) {
+      g.save(); g.strokeStyle = ink; g.fillStyle = ink; g.lineWidth = Math.max(1, r * 0.22); g.lineCap = 'round'; g.lineJoin = 'round';
+      if (kind === 'stopwatch') { g.beginPath(); g.arc(cx, cy + r * 0.12, r * 0.78, 0, 7); g.stroke(); g.fillRect(cx - r * 0.18, cy - r * 0.98, r * 0.36, r * 0.2); g.beginPath(); g.moveTo(cx, cy + r * 0.12); g.lineTo(cx + r * 0.32, cy - r * 0.32); g.stroke(); }
+      else if (kind === 'warning' || kind === 'penalty') { g.beginPath(); g.arc(cx, cy, r * 0.85, 0, 7); g.stroke(); g.fillRect(cx - r * 0.1, cy - r * 0.5, r * 0.2, r * 0.6); g.beginPath(); g.arc(cx, cy + r * 0.5, r * 0.12, 0, 7); g.fill(); }
+      else if (kind === 'chequered') { const n = 4, q = r * 1.5 / n, x1 = cx - r * 0.75, y1 = cy - r * 0.75; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) if ((i + j) % 2 === 0) g.fillRect(x1 + i * q, y1 + j * q, q, q); g.lineWidth = Math.max(1, r * 0.12); g.strokeRect(x1, y1, r * 1.5, r * 1.5); }
+      else if (kind === 'clean' || kind === 'green') { g.beginPath(); g.moveTo(cx - r * 0.55, cy + r * 0.05); g.lineTo(cx - r * 0.12, cy + r * 0.48); g.lineTo(cx + r * 0.6, cy - r * 0.45); g.stroke(); }
+      else if (kind === 'flag') { g.beginPath(); g.moveTo(cx - r * 0.5, cy + r * 0.8); g.lineTo(cx - r * 0.5, cy - r * 0.8); g.stroke(); g.beginPath(); g.moveTo(cx - r * 0.5, cy - r * 0.8); g.lineTo(cx + r * 0.7, cy - r * 0.45); g.lineTo(cx - r * 0.5, cy - r * 0.05); g.fill(); }
+      else { g.beginPath(); g.arc(cx, cy, r * 0.85, 0, 7); g.stroke(); g.fillRect(cx - r * 0.1, cy - r * 0.05, r * 0.2, r * 0.55); g.beginPath(); g.arc(cx, cy - r * 0.4, r * 0.12, 0, 7); g.fill(); }
+      g.restore();
+    }
+    /// Our own header mark: two chevrons.
+    function hudMark(x, y, s) {
+      g.lineCap = 'round'; g.lineJoin = 'round'; g.lineWidth = 2.6 * s;
+      [[x + 11 * s, '#ff4d3d'], [x + 18 * s, '#fff']].forEach(([cx, c]) => { g.strokeStyle = c; g.beginPath(); g.moveTo(cx - 2.5 * s, y + 6 * s); g.lineTo(cx + 2.5 * s, y + 11 * s); g.lineTo(cx - 2.5 * s, y + 16 * s); g.stroke(); });
+      g.lineCap = 'butt'; g.lineJoin = 'miter';
+    }
+    /// Which cars the tower lists (the top five, or all of a small field, and you if you are further back) and where it ends. `fb` is the flag block, if one is out.
+    function towerLayout(s, order, fb) {
+      const hm = HM(), all = order.filter((r) => !r.dsq), on = towerMode && T.closed && (screen === 'race' || screen === 'done' || screen === 'countdown' || screen === 'formation');
+      const rows = on ? hm.towerRows(all, me, towerMode, T.length, hm.fastestHolder(all)) : [], blockH = fb ? (fb.sub ? 26 : 15) : 0;
+      return { all, rows, fb, bottom: 8 * s + (fb ? 0 : 22 * s) + 15 * s + blockH * s + rows.length * 15 * s + (rows.length ? 5 * s : 2 * s) };
     }
     function drawTower(s, tw) {
-      const x0 = 8 * s, y0 = 8 * s, wd = 156 * s, rh = 14.5 * s, { all, rows } = tw, L = T.length;
-      g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(x0, y0, wd, tw.bottom - y0, 5 * s); g.fill();
-      g.fillStyle = '#e10600'; g.fillRect(x0, y0, 3.5 * s, 22 * s);
-      g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = `italic 900 ${14 * s}px system-ui`; g.fillText('F1', x0 + 10 * s, y0 + 16 * s); const fw = g.measureText('F1').width;
-      g.font = `800 ${11 * s}px system-ui`; g.fillText(me.official ? (role === 'sc' ? 'SAFETY CAR' : 'MEDICAL CAR') : 'RACE', x0 + 14 * s + fw, y0 + 15.5 * s);
-      g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(x0, y0 + 22 * s, wd, 15 * s);
+      const hm = HM(), col = hm.HUD.col, { rows, fb } = tw, x0 = 8 * s, y0 = 8 * s, wd = 160 * s, rh = 15 * s;
+      g.fillStyle = PANEL; g.beginPath(); g.roundRect(x0, y0, wd, tw.bottom - y0, 5 * s); g.fill();
+      let y = y0;
+      if (!fb) {
+        // The header: our own mark (two chevrons) and what you are driving.
+        hudMark(x0, y, s);
+        g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = `800 ${11 * s}px system-ui`; g.fillText(me.official ? (role === 'sc' ? 'SAFETY CAR' : 'MEDICAL CAR') : 'RACE', x0 + 28 * s, y + 15.5 * s);
+        y += 22 * s;
+      }
+      // The lap line.
+      g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(x0, y, wd, 15 * s);
       g.textAlign = 'center'; g.fillStyle = 'rgba(255,255,255,.85)'; g.font = `700 ${9 * s}px system-ui`;
-      g.fillText(T.closed ? 'LAP ' : 'DISTANCE', x0 + wd / 2 - (T.closed ? 9 * s : 0), y0 + 33 * s);
+      g.fillText(T.closed ? 'LAP ' : 'DISTANCE', x0 + wd / 2 - (T.closed ? 9 * s : 0), y + 11 * s);
       g.fillStyle = '#fff'; g.font = `900 ${10 * s}px system-ui`;
-      if (T.closed) g.fillText(`${clamp(me.lap + 1, 1, raceLaps)} / ${raceLaps}`, x0 + wd / 2 + 14 * s, y0 + 33 * s); else g.fillText(`${Math.round(clamp(me.prog, 0, T.length))} / ${Math.round(T.length)} m`, x0 + wd / 2 + 30 * s, y0 + 33 * s);
-      rows.forEach((i, n) => {
-        const r = all[i], y = y0 + 37 * s + n * rh, yb = y + rh * 0.7;
-        g.fillStyle = r === me ? 'rgba(86,98,140,.55)' : n % 2 ? 'rgba(255,255,255,.035)' : 'rgba(255,255,255,0)'; g.fillRect(x0, y, wd, rh);
-        g.textAlign = 'left'; g.font = `800 ${8.5 * s}px system-ui`; g.fillStyle = '#fff'; g.fillText(String(i + 1), x0 + 6 * s, yb);
-        g.fillStyle = r.color || r.car.spec.color; g.fillRect(x0 + 21 * s, y + 2.5 * s, 2.6 * s, rh - 5 * s);
+      if (T.closed) g.fillText(`${clamp(me.lap + 1, 1, raceLaps)} / ${raceLaps}`, x0 + wd / 2 + 14 * s, y + 11 * s); else g.fillText(`${Math.round(clamp(me.prog, 0, T.length))} / ${Math.round(T.length)} m`, x0 + wd / 2 + 30 * s, y + 11 * s);
+      y += 15 * s;
+      // A flag is out: a coloured block (CAUTION and the sector, SAFETY CAR, RED FLAG, RESUME RACING).
+      if (fb) {
+        g.fillStyle = fb.bg; g.beginPath(); g.roundRect(x0 + 3 * s, y + 1 * s, wd - 6 * s, 13 * s, 2 * s); g.fill();
+        g.fillStyle = fb.fg; g.font = `900 ${9 * s}px system-ui`; g.fillText(fb.title, x0 + wd / 2, y + 10.6 * s);
+        y += 15 * s;
+        if (fb.sub) { g.fillStyle = 'rgba(255,255,255,.85)'; g.font = `800 ${7.5 * s}px system-ui`; g.fillText(fb.sub, x0 + wd / 2, y + 8 * s); y += 11 * s; }
+      }
+      rows.forEach((row, n) => {
+        const r = row.racer, yy = y + n * rh, yb = yy + rh * 0.7;
+        if (row.fastest) {
+          // The fastest lap: a purple row with a stopwatch badge past the right edge.
+          g.fillStyle = col.purple; g.fillRect(x0, yy, wd, rh);
+          g.beginPath(); g.roundRect(x0 + wd - 3 * s, yy + 1 * s, 15 * s, rh - 2 * s, 3 * s); g.fill();
+          hudIcon('stopwatch', x0 + wd + 5 * s, yy + rh / 2, 4.4 * s, '#fff');
+        } else { g.fillStyle = row.isMe ? 'rgba(86,98,140,.55)' : n % 2 ? 'rgba(255,255,255,.035)' : 'rgba(255,255,255,0)'; g.fillRect(x0, yy, wd, rh); }
+        if (row.isMe) { g.fillStyle = '#fff'; g.fillRect(x0, yy, 2 * s, rh); }
+        g.textAlign = 'left'; g.font = `800 ${8.5 * s}px system-ui`; g.fillStyle = '#fff'; g.fillText(String(row.pos), x0 + 6 * s, yb);
+        g.fillStyle = r.color || r.car.spec.color; g.fillRect(x0 + 21 * s, yy + 2.5 * s, 2.6 * s, rh - 5 * s);
         g.fillStyle = r.dnf ? 'rgba(255,255,255,.4)' : '#fff'; g.font = `700 ${8.5 * s}px system-ui`;
-        const nm = (r === me ? myName : r.name || r.code || '').toUpperCase(); g.fillText(nm.length > 9 ? nm.slice(0, 9) : nm, x0 + 28 * s, yb);
-        const ty = TYRES[r.car.tyre] || TYRES.M; g.strokeStyle = ty.col; g.lineWidth = 1.3 * s; g.beginPath(); g.arc(x0 + 100 * s, y + rh / 2, 4 * s, 0, 7); g.stroke();
-        g.fillStyle = ty.col; g.font = `900 ${5.2 * s}px system-ui`; g.textAlign = 'center'; g.fillText(r.car.tyre || 'M', x0 + 100 * s, y + rh / 2 + 1.9 * s);
-        // The gap: to you (negative ahead of you, positive behind), or to the leader.
-        let gap = '', col = '#fff';
-        if (r.dnf) { gap = 'OUT'; col = '#ff6b6b'; } else if (r.inLane) { gap = 'PIT'; col = '#ffd23f'; }
-        else if (towerMode === 2) { if (i === 0) gap = 'LEADER'; else { const dl = Math.floor((all[0].prog - r.prog) / L); gap = dl >= 1 ? `+${dl} LAP${dl > 1 ? 'S' : ''}` : r.gapL != null ? `+${Math.max(0, r.gapL).toFixed(3)}` : ''; } }
-        else if (r === me) { gap = ''; }
-        else { const dl = Math.round((r.prog - me.prog) / L); if (Math.abs(dl) >= 1) gap = `${dl > 0 ? '+' : '-'}${Math.abs(dl)} LAP${Math.abs(dl) > 1 ? 'S' : ''}`; else if (r.gapL != null && me.gapL != null) gap = `${r.gapL - me.gapL > 0 ? '+' : '-'}${Math.abs(r.gapL - me.gapL).toFixed(3)}`; }
-        g.textAlign = 'right'; g.font = `700 ${8 * s}px ui-monospace, monospace`; g.fillStyle = col; g.fillText(gap, x0 + wd - 6 * s, yb);
+        const nm = (r === me ? myName : r.name || r.code || '').toUpperCase(); g.fillText(nm.length > 10 ? nm.slice(0, 10) : nm, x0 + 28 * s, yb);
+        const ty = TYRES[r.car.tyre] || TYRES.M; g.strokeStyle = ty.col; g.lineWidth = 1.3 * s; g.beginPath(); g.arc(x0 + 104 * s, yy + rh / 2, 4 * s, 0, 7); g.stroke();
+        g.fillStyle = ty.col; g.font = `900 ${5.2 * s}px system-ui`; g.textAlign = 'center'; g.fillText(r.car.tyre || 'M', x0 + 104 * s, yy + rh / 2 + 1.9 * s);
+        // The gap (see hud.towerGap): to the leader (dashes for the leader) or to you (negative: ahead of you).
+        const k = row.gap.kind;
+        g.textAlign = 'right'; g.font = `700 ${8 * s}px ui-monospace, monospace`; g.fillStyle = k === 'out' ? '#ff6b6b' : k === 'pit' ? col.yellow : k === 'lead' ? 'rgba(255,255,255,.6)' : '#fff'; g.fillText(row.gap.text, x0 + wd - 6 * s, yb);
       });
       if (me.inLane && !me.official) { g.textAlign = 'left'; g.font = `700 ${8 * s}px system-ui`; g.fillStyle = '#ffd23f'; g.fillText(`Y: tyres for this stop: ${(TYRES[me.nextTyre] || TYRES.M).name}`, x0, tw.bottom + 11 * s); }
     }
-    /// Top right: the three sectors, your position and the current lap time.
+    /// Top right: the three sectors, your position out of the field, the current lap time, and your best lap.
     function drawLapPanel(s, pos, nCars) {
-      const pw = 172 * s, ph = 42 * s, x = W - 8 * s - pw, y = 8 * s, frac = T.closed ? clamp((me.sLap || 0) / T.length, 0, 0.9999) * 3 : 0;
-      g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(x, y, pw, ph, 4 * s); g.fill();
+      const pw = 172 * s, ph = LAP_PANEL_H * s, x = W - 8 * s - pw, y = 8 * s, frac = T.closed ? clamp((me.sLap || 0) / T.length, 0, 0.9999) * 3 : 0;
+      g.fillStyle = PANEL; g.beginPath(); g.roundRect(x, y, pw, ph, 4 * s); g.fill();
       for (let i = 0; i < 3; i++) {
         const cx = x + (pw / 3) * i, cw = pw / 3;
         g.textAlign = 'center'; g.font = `700 ${6.5 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('S' + (i + 1), cx + cw / 2, y + 8.5 * s);
@@ -3659,22 +3774,22 @@
       }
       g.textAlign = 'left'; g.fillStyle = '#fff';
       const posTxt = me.official ? (role === 'sc' ? '🚓' : '🚑') : String(pos);
-      g.font = `900 ${19 * s}px system-ui`; g.fillText(posTxt, x + 8 * s, y + 35 * s); const pwid = g.measureText(posTxt).width;
-      g.font = `600 ${9 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(me.official ? `${raceCtl.score} pts` : `/ ${nCars}`, x + 11 * s + pwid, y + 35 * s);
+      g.font = `900 ${19 * s}px system-ui`; g.fillText(posTxt, x + 8 * s, y + 34 * s); const pwid = g.measureText(posTxt).width;
+      g.font = `600 ${9 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.7)'; g.fillText(me.official ? `${raceCtl.score} pts` : `/ ${nCars}`, x + 11 * s + pwid, y + 34 * s);
       const lt = screen === 'countdown' || screen === 'formation' ? 0 : me.finished ? me.finishT : T.closed && me.lap >= 0 ? clock - me.lapStart : clock;
-      g.textAlign = 'right'; g.fillStyle = '#fff'; g.font = `800 ${15 * s}px ui-monospace, monospace`; g.fillText(fmtLap(Math.max(0, lt)), x + pw - 8 * s, y + 34 * s);
-      g.fillStyle = '#e10600'; g.fillRect(x, y + ph - 2.4 * s, pw, 2.4 * s);
-      if (me.bestLap) { g.textAlign = 'right'; g.font = `600 ${7 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('BEST ' + fmtLap(me.bestLap), x + pw, y + ph + 9 * s); }
+      g.textAlign = 'right'; g.fillStyle = '#fff'; g.font = `800 ${15 * s}px ui-monospace, monospace`; g.fillText(fmtLap(Math.max(0, lt)), x + pw - 8 * s, y + 33 * s);
+      g.fillStyle = TEAL; g.fillRect(x + 6 * s, y + 38.5 * s, pw - 12 * s, 1.6 * s);
+      g.textAlign = 'left'; g.font = `700 ${7 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('BEST', x + 8 * s, y + 49 * s);
+      g.textAlign = 'right'; g.font = `700 ${9 * s}px ui-monospace, monospace`; g.fillStyle = me.bestLap ? '#fff' : 'rgba(255,255,255,.4)'; g.fillText(me.bestLap ? fmtLap(me.bestLap) : '- - -', x + pw - 8 * s, y + 49 * s);
     }
     /// Qualifying: the live classification (top left), the clock and your lap (top right), and what to do next. Returns where it ends.
     function drawQualiHud(s) {
       const Q = qual, rows = qualiOrder(qualiRows()), mi = rows.findIndex((o) => o.id === me.id), cut = Q.seg < Q.sizes.length - 1 ? Q.sizes[Q.seg + 1] : -1, lead = rows.length && rows[0].best > 0 ? rows[0].best : 0;
       const idx = [...new Set([0, 1, 2, 3, 4, cut - 2, cut - 1, cut, cut + 1, mi].filter((i) => i >= 0 && i < rows.length))].sort((a, b) => a - b);
       const x0 = 8 * s, y0 = 8 * s, wd = 164 * s, rh = 14 * s, bottom = y0 + 37 * s + idx.length * rh + 4 * s, left = Math.max(0, Q.len - Q.t), mm = Math.floor(left / 60), ss = String(Math.floor(left % 60)).padStart(2, '0');
-      g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(x0, y0, wd, bottom - y0, 5 * s); g.fill();
-      g.fillStyle = '#e10600'; g.fillRect(x0, y0, 3.5 * s, 22 * s);
-      g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = `italic 900 ${14 * s}px system-ui`; g.fillText('F1', x0 + 10 * s, y0 + 16 * s); const fw = g.measureText('F1').width;
-      g.font = `800 ${11 * s}px system-ui`; g.fillText(Q.names[Q.seg], x0 + 14 * s + fw, y0 + 15.5 * s);
+      g.fillStyle = 'rgba(10,16,36,.94)'; g.beginPath(); g.roundRect(x0, y0, wd, bottom - y0, 5 * s); g.fill();
+      hudMark(x0, y0, s);
+      g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = `800 ${11 * s}px system-ui`; g.fillText(Q.names[Q.seg], x0 + 28 * s, y0 + 15.5 * s);
       g.textAlign = 'right'; g.font = `800 ${12 * s}px ui-monospace, monospace`; g.fillStyle = Q.t >= Q.len ? '#ffd23f' : '#fff'; g.fillText(Q.t >= Q.len ? 'FLAG' : `${mm}:${ss}`, x0 + wd - 6 * s, y0 + 16 * s);
       g.fillStyle = 'rgba(255,255,255,.07)'; g.fillRect(x0, y0 + 22 * s, wd, 15 * s);
       g.textAlign = 'center'; g.fillStyle = Q.t >= Q.len ? '#ffd23f' : '#4fe09a'; g.font = `800 ${8.5 * s}px system-ui`; g.fillText(Q.t >= Q.len ? 'SESSION OVER · FINISH YOUR LAP' : 'PIT EXIT OPEN', x0 + wd / 2, y0 + 33 * s);
@@ -3692,25 +3807,26 @@
         g.textAlign = 'right'; g.font = `700 ${8 * s}px ui-monospace, monospace`; g.fillStyle = r.inLane ? '#ffd23f' : ph === 'push' ? '#4fe09a' : '#fff'; g.fillText(txt, x0 + wd - 6 * s, yb);
       });
       // Top right: where you are, and your lap.
-      const q = me.q || {}, pw = 172 * s, ph2 = 42 * s, x = W - 8 * s - pw, y = 8 * s, mine = Q.rec.get(me.id), L = T.length, phase = Q.alive.has(me.id) ? q.phase : 'out-of-it';
-      g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(x, y, pw, ph2, 4 * s); g.fill();
+      const q = me.q || {}, pw = 172 * s, ph2 = LAP_PANEL_H * s, x = W - 8 * s - pw, y = 8 * s, mine = Q.rec.get(me.id), L = T.length, phase = Q.alive.has(me.id) ? q.phase : 'out-of-it';
+      g.fillStyle = 'rgba(10,16,36,.94)'; g.beginPath(); g.roundRect(x, y, pw, ph2, 4 * s); g.fill();
       g.textAlign = 'left'; g.fillStyle = 'rgba(255,255,255,.65)'; g.font = `800 ${7.5 * s}px system-ui`;
       g.fillText({ garage: 'IN THE GARAGE', out: 'OUT LAP', push: 'PUSH LAP', cool: 'IN LAP', in: 'IN LAP', done: 'IN THE GARAGE', 'out-of-it': 'KNOCKED OUT' }[phase] || '', x + 8 * s, y + 11 * s);
       g.fillStyle = '#fff'; g.font = `900 ${19 * s}px system-ui`; g.fillText(mi >= 0 ? `P${mi + 1}` : '—', x + 8 * s, y + 35 * s);
       const lt = phase === 'push' ? Q.t - q.lapStart : q.last;
       g.textAlign = 'right'; g.fillStyle = phase === 'push' ? (q.invalid ? '#ff6b6b' : '#4fe09a') : '#fff'; g.font = `800 ${15 * s}px ui-monospace, monospace`; g.fillText(lt > 0 ? fmtLap(lt) : '0:00.000', x + pw - 8 * s, y + 34 * s);
-      g.fillStyle = '#e10600'; g.fillRect(x, y + ph2 - 2.4 * s, pw * clamp((me.sNow || 0) / L, 0, 1), 2.4 * s);
-      if (mine && mine.best) { g.textAlign = 'right'; g.font = `600 ${7 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('BEST ' + fmtLap(mine.best), x + pw, y + ph2 + 9 * s); }
+      g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x + 6 * s, y + 38.5 * s, pw - 12 * s, 1.6 * s); g.fillStyle = TEAL; g.fillRect(x + 6 * s, y + 38.5 * s, (pw - 12 * s) * clamp((me.sNow || 0) / L, 0, 1), 1.6 * s);
+      g.textAlign = 'left'; g.font = `700 ${7 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.6)'; g.fillText('BEST', x + 8 * s, y + 49 * s);
+      g.textAlign = 'right'; g.font = `700 ${9 * s}px ui-monospace, monospace`; g.fillStyle = mine && mine.best ? '#fff' : 'rgba(255,255,255,.4)'; g.fillText(mine && mine.best ? fmtLap(mine.best) : '- - -', x + pw - 8 * s, y + 49 * s);
       // What to do now.
       const me0 = Q.alive.has(me.id) ? q.phase : 'out-of-it', warp = qualWarp();
       const msg = warp > 1 && me0 !== 'out-of-it' ? '⏩ FAST-FORWARD · PRESS W TO GO OUT' : me0 === 'garage' && Q.t < Q.len ? 'PIT EXIT OPEN · PRESS W TO GO OUT · Y: TYRES' : me0 === 'out-of-it' ? '⏩ KNOCKED OUT · THE SESSION CARRIES ON' : me0 === 'out' ? 'OUT LAP · WARM THE TYRES · LEAVE A GAP' : me0 === 'cool' || me0 === 'in' ? 'IN LAP · CROSS THE LINE, THEN PIT ENTRY · STOP IN YOUR BOX' : '';
-      if (msg) { g.font = `900 ${12 * s}px system-ui`; g.textAlign = 'center'; const tw2 = g.measureText(msg).width; g.fillStyle = 'rgba(8,12,22,.75)'; g.beginPath(); g.roundRect(W / 2 - tw2 / 2 - 14 * s, H - 118 * s, tw2 + 28 * s, 24 * s, 12 * s); g.fill(); g.fillStyle = '#ffd23f'; g.fillText(msg, W / 2, H - 101 * s); }
+      if (msg) { g.font = `900 ${12 * s}px system-ui`; g.textAlign = 'center'; const tw2 = g.measureText(msg).width; g.fillStyle = 'rgba(10,16,36,.75)'; g.beginPath(); g.roundRect(W / 2 - tw2 / 2 - 14 * s, H - 118 * s, tw2 + 28 * s, 24 * s, 12 * s); g.fill(); g.fillStyle = '#ffd23f'; g.fillText(msg, W / 2, H - 101 * s); }
       return bottom;
     }
     /// The car's condition: the four tyres (what is left of each) around a top view of the car, green to red with the damage.
     function drawCondition(s) {
       const c = me.car, wear = c.wear || 0, dm = clamp(c.dmg || 0, 0, 1), w = 168 * s, h = 112 * s, x = 8 * s, y = H - h - 8 * s, cx = x + w / 2, cy = y + h / 2 + 2 * s;
-      g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(x, y, w, h, 7 * s); g.fill();
+      g.fillStyle = 'rgba(10,16,36,.86)'; g.beginPath(); g.roundRect(x, y, w, h, 7 * s); g.fill();
       const health = (v) => (v < 0.34 ? '#6fe05a' : v < 0.6 ? '#ffd23f' : v < 0.82 ? '#ff9f43' : '#ff4d4d');
       // Rings: front left, front right, rear left, rear right.
       const f = [1.1, 1.0, 0.92, 0.98], pos = [[x + 21 * s, y + 24 * s], [x + w - 21 * s, y + 24 * s], [x + 21 * s, y + h - 24 * s], [x + w - 21 * s, y + h - 24 * s]];
@@ -3762,19 +3878,19 @@
       for (let i = 0; i < 15; i++) { const lit = rr * 15 > i, col = i < 5 ? '#3ad07a' : i < 10 ? '#ff4d4d' : '#4da3ff'; g.fillStyle = lit ? col : 'rgba(255,255,255,.14)'; g.beginPath(); g.arc(cx + (i - 7) * 6.2 * s, cy - 34 * s, 2 * s, 0, 7); g.fill(); }
       // Left: the battery.
       const bat = f1 ? clamp(c.ers || 0, 0, 1) : clamp(1 - (c.wear || 0), 0, 1), batCol = me.boosting ? '#ffd23f' : bat < 0.2 ? '#ff6b6b' : f1 ? '#d7e84a' : '#7ee05a';
-      g.fillStyle = 'rgba(8,13,28,.88)'; g.beginPath(); g.arc(cx - gap, cy, r + 4 * s, 0, 7); g.fill();
+      g.fillStyle = 'rgba(10,16,36,.88)'; g.beginPath(); g.arc(cx - gap, cy, r + 4 * s, 0, 7); g.fill();
       ring(cx - gap, cy, r, bat, batCol, 4.2 * s);
       g.textAlign = 'center'; g.fillStyle = 'rgba(255,255,255,.7)'; g.font = `700 ${7 * s}px system-ui`; g.fillText(f1 ? 'BATT' : 'TYRE', cx - gap, cy - 11 * s);
       g.fillStyle = '#fff'; g.font = `900 ${17 * s}px system-ui`; g.fillText(Math.round(bat * 100) + '%', cx - gap, cy + 8 * s);
       // Right: speed and revs.
-      g.fillStyle = 'rgba(8,13,28,.88)'; g.beginPath(); g.arc(cx + gap, cy, r + 4 * s, 0, 7); g.fill();
+      g.fillStyle = 'rgba(10,16,36,.88)'; g.beginPath(); g.arc(cx + gap, cy, r + 4 * s, 0, 7); g.fill();
       ring(cx + gap, cy, r, rr, rr > 0.92 ? '#ff4d4d' : '#fff', 4.2 * s);
       g.fillStyle = 'rgba(255,255,255,.7)'; g.font = `700 ${6 * s}px system-ui`; g.fillText('KPH', cx + gap, cy - 15 * s);
       g.fillStyle = '#fff'; g.font = `900 ${17 * s}px system-ui`; g.fillText(String(kmh), cx + gap, cy + 1 * s);
       g.fillStyle = 'rgba(255,255,255,.7)'; g.font = `700 ${6 * s}px system-ui`; g.fillText('RPM', cx + gap, cy + 9.5 * s);
       g.fillStyle = '#fff'; g.font = `800 ${8.5 * s}px system-ui`; g.fillText(String(Math.round(c.rpm)), cx + gap, cy + 18.5 * s);
       // Middle: the gear.
-      g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(cx - 38 * s, cy - 28 * s, 76 * s, 62 * s, 8 * s); g.fill();
+      g.fillStyle = 'rgba(10,16,36,.86)'; g.beginPath(); g.roundRect(cx - 38 * s, cy - 28 * s, 76 * s, 62 * s, 8 * s); g.fill();
       g.fillStyle = rr > 0.92 ? '#ff4d4d' : '#fff'; g.font = `900 ${40 * s}px system-ui`; g.fillText(gearName(c), cx, cy + 12 * s);
       if (c.manual) { g.font = `800 ${7 * s}px system-ui`; g.fillStyle = '#ffd23f'; g.fillText('MANUAL · E▲ Q▼', cx, cy + 24 * s); }
       g.font = `700 ${6.3 * s}px system-ui`; g.fillStyle = me.boosting ? '#ffd23f' : 'rgba(255,255,255,.7)';
@@ -3784,8 +3900,8 @@
     /// The F1 Weekend's extra display: the battery and fuel, the wings, the four tyres (surface and carcass temperatures and life), damage and engine heat, the flag, and the MFD.
     function drawF1Hud() {
       const sim = me.car.f1, m = sim.mods, M = f1.M, s = Math.min(W, H) / 400 * 0.8, w = 150 * s, x0 = W - w - 8 * s;
-      let y = H * 0.37;
-      const box = (h) => { g.fillStyle = 'rgba(8,12,22,.62)'; g.beginPath(); g.roundRect(x0, y, w, h, 7 * s); g.fill(); };
+      let y = Math.max(H * 0.37, (8 + LAP_PANEL_H + 6 + 84 + 6) * Math.min(W, H) / 400);       // below the minimap
+      const box = (h) => { g.fillStyle = 'rgba(10,16,36,.8)'; g.beginPath(); g.roundRect(x0, y, w, h, 6 * s); g.fill(); };
       const txt = (t, x, yy, col = '#fff', font = 600, sz = 9, al = 'left') => { g.fillStyle = col; g.font = `${font} ${sz * s}px system-ui`; g.textAlign = al; g.fillText(t, x, yy); };
       g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
       if (f1Tel) {
@@ -3820,14 +3936,21 @@
       // The MFD
       if (f1Mfd) {
       const mf = f1.mfd, rows = M.mfd.rows(mf), pg = M.mfd.pageOf(mf);
-      box((20 + Math.max(1, rows.length) * 12) * s);
-      txt(`MFD · ${pg.title}  (, . page · O row · − =)`, x0 + 6 * s, y + 12 * s, '#9fb6ff', 800, 8);
+      box((21 + Math.max(1, rows.length) * 13) * s);
+      txt(`MFD · ${pg.title}`, x0 + 8 * s, y + 11 * s, '#fff', 800, 8.5); txt(', . page   O row   − =', x0 + w - 8 * s, y + 11 * s, 'rgba(255,255,255,.45)', 600, 6.5, 'right');
       if (pg.id === 'timing') M.mfd.timingRows({ lapDelta: me.bestLap && me.lapStart != null ? (clock - me.lapStart) - me.bestLap : null, surface: m.surface, carcass: m.carcass, window: win, flag: f1.rc ? f1.rc.state : 'GREEN' }).slice(0, 6).forEach((r, i) => txt(`${r.label}  ${r.value}`, x0 + 6 * s, y + (24 + i * 11) * s, r.state === 'hot' ? '#ff9f43' : r.state === 'cold' ? '#7aa8ff' : '#fff', 600, 8));
-      else rows.forEach((r, i) => { txt(`${r.selected ? '▶ ' : '  '}${r.label}`, x0 + 6 * s, y + (24 + i * 12) * s, r.selected ? '#ffd23f' : '#fff', 700, 8); txt(r.plan ? r.plan.label : r.value, x0 + w - 6 * s, y + (24 + i * 12) * s, r.selected ? '#ffd23f' : '#c9d6ea', 700, 8, 'right'); });
+      else rows.forEach((r, i) => {
+        // The row you are on is a solid white bar with arrows round its value, the others are dim (left and right change it).
+        const ry = y + (16 + i * 13) * s, sel = r.selected, val = r.plan ? r.plan.label : r.value;
+        if (sel) { g.fillStyle = 'rgba(255,255,255,.92)'; g.beginPath(); g.roundRect(x0 + 3 * s, ry, w - 6 * s, 12 * s, 3 * s); g.fill(); }
+        txt(r.label, x0 + 8 * s, ry + 8.8 * s, sel ? '#101626' : '#fff', 700, 8);
+        txt(sel ? `‹ ${val} ›` : val, x0 + w - 8 * s, ry + 8.8 * s, sel ? '#101626' : '#c9d6ea', 800, 8, 'right');
+      });
       }
       g.restore();
     }
     function drawHud() {
+      hudWatch();
       if (f1 && me && me.car.f1) drawF1Hud();
       if (f1 && me) drawF1Rc();
       const s = Math.min(W, H) / 400, order = ranking(racers), pos = order.indexOf(me) + 1;
@@ -3839,8 +3962,8 @@
         for (let i = 0; i < n; i++) { const x = ((i * 97.3 + t * 90) % W + W) % W, y = ((i * 57.1 + t * 900) % H + H) % H; g.moveTo(x, y); g.lineTo(x - 3 * s, y + 14 * s); }
         g.stroke();
       }
-      const inCar = viewMode === 'cockpit' || viewMode === 'halo', tw = towerLayout(s, order);
-      let nY = tw.bottom + 14 * s;
+      const inCar = viewMode === 'cockpit' || viewMode === 'halo', fb = hudFlagBlock(), tw = towerLayout(s, order, fb);
+      let nY = tw.bottom + 14 * s + (me.inLane && !me.official ? 12 * s : 0);
       if ((screen === 'quali' || screen === 'qbreak' || screen === 'qdone') && qual) nY = drawQualiHud(s) + 14 * s;
       else { sectorTick(); drawTower(s, tw); drawLapPanel(s, pos, racers.filter((r) => !r.official).length); }
       // Speed, gear, revs and damage (the cockpit has its own on the wheel).
@@ -3853,7 +3976,7 @@
         if (bkDeg >= 3) bits.push(`BANKED ${bkDeg.toFixed(0)}°`);
         if (bits.length) {
           const txt = bits.join('  ·  '); g.font = `800 ${9.5 * s}px system-ui`; g.textAlign = 'center'; const tw3 = g.measureText(txt).width;
-          g.fillStyle = 'rgba(8,13,28,.82)'; g.beginPath(); g.roundRect(W / 2 - tw3 / 2 - 10 * s, H - 97 * s, tw3 + 20 * s, 18 * s, 9 * s); g.fill();
+          g.fillStyle = 'rgba(10,16,36,.82)'; g.beginPath(); g.roundRect(W / 2 - tw3 / 2 - 10 * s, H - 97 * s, tw3 + 20 * s, 18 * s, 9 * s); g.fill();
           g.fillStyle = Math.abs(sl) >= 2 ? (sl > 0 ? '#ffd23f' : '#6fe0ff') : '#cdbfff'; g.fillText(txt, W / 2, H - 84.5 * s); g.textAlign = 'left';
         }
       }
@@ -3865,7 +3988,7 @@
         if (me.limiter) rows.push(['LIMITER', `${PIT_LIMITER_KMH} km/h`, '#ffb02e']); if (me.launchArmed) rows.push(['LAUNCH', 'ARMED', '#ff6b6b']);
         // One line along the top centre, clear of the timing tower, the mirrors and the wheel.
         const cw = 62 * s, pw = cw * rows.length + 16 * s, px = W / 2 - pw / 2, py = 8 * s;
-        g.fillStyle = 'rgba(8,12,22,.66)'; g.beginPath(); g.roundRect(px, py, pw, 26 * s, 8 * s); g.fill();
+        g.fillStyle = 'rgba(10,16,36,.66)'; g.beginPath(); g.roundRect(px, py, pw, 26 * s, 8 * s); g.fill();
         rows.forEach(([a, b, col], i) => { const x = px + 8 * s + i * cw + cw / 2; g.textAlign = 'center'; g.font = `700 ${6 * s}px system-ui`; g.fillStyle = 'rgba(255,255,255,.5)'; g.fillText(a, x, py + 10 * s); g.font = `800 ${9 * s}px system-ui`; g.fillStyle = col; g.fillText(b, x, py + 21 * s); });
         g.textAlign = 'left';
       }
@@ -3874,9 +3997,9 @@
         let x = W - 150 * s, y = H - 22 * s;
         g.textAlign = 'left'; g.font = `800 ${9 * s}px system-ui`;
         const drs = me.drsOn ? ['DRS OPEN', '#3ad07a'] : drsOk(me) ? ['DRS: PRESS E', '#ffd23f'] : ['DRS', 'rgba(255,255,255,.35)'];
-        g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 70 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = drs[1]; g.fillText(drs[0], x + 6 * s, y - 3 * s);
-        if (me.towT > 0) { g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x + 74 * s, y - 14 * s, 68 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = '#9ad7ff'; g.fillText('SLIPSTREAM', x + 79 * s, y - 3 * s); }
-        if (WET > 0.04) { y -= 19 * s; g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 142 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = '#9ad7ff'; g.fillText(`🌧 TRACK ${WET > 0.6 ? 'SOAKED' : WET > 0.25 ? 'WET' : 'DAMP'} · ${TYRES[c.tyre].rain ? 'RAIN TYRES' : 'SLICKS'}`, x + 6 * s, y - 3 * s); }
+        g.fillStyle = 'rgba(10,16,36,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 70 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = drs[1]; g.fillText(drs[0], x + 6 * s, y - 3 * s);
+        if (me.towT > 0) { g.fillStyle = 'rgba(10,16,36,.6)'; g.beginPath(); g.roundRect(x + 74 * s, y - 14 * s, 68 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = '#9ad7ff'; g.fillText('SLIPSTREAM', x + 79 * s, y - 3 * s); }
+        if (WET > 0.04) { y -= 19 * s; g.fillStyle = 'rgba(10,16,36,.6)'; g.beginPath(); g.roundRect(x, y - 14 * s, 142 * s, 16 * s, 5 * s); g.fill(); g.fillStyle = '#9ad7ff'; g.fillText(`🌧 TRACK ${WET > 0.6 ? 'SOAKED' : WET > 0.25 ? 'WET' : 'DAMP'} · ${TYRES[c.tyre].rain ? 'RAIN TYRES' : 'SLICKS'}`, x + 6 * s, y - 3 * s); }
       }
       if (c.dmg > 0.03) { g.textAlign = 'left'; g.font = `800 ${10 * s}px system-ui`; g.fillStyle = c.dmg > 0.75 ? '#ff4d4d' : c.dmg > 0.4 ? '#ff9f43' : '#ffd166'; g.fillText(c.dmg >= 1 ? 'WRECKED: limping home' : `DAMAGE ${Math.round(c.dmg * 100)}%`, 10 * s, nY); }
       if (me.car.drifting) { g.fillStyle = '#ffd166'; g.font = `900 ${14 * s}px system-ui`; g.textAlign = 'center'; g.fillText(`DRIFT  ${Math.round(me.drift * 10)}`, W / 2, H - 82 * s); }
@@ -3893,16 +4016,16 @@
       // Race control: the flag that is out, the blue flag, and what to do when you drive for race control.
       if (screen === 'race' && me && me.medHint && !me.medOut) {
         g.font = `900 ${13 * s}px system-ui`; g.textAlign = 'center'; const txt = 'PRESS F TO GET OUT AND CHECK ON THE DRIVER', tw = g.measureText(txt).width;
-        g.fillStyle = 'rgba(8,12,22,.8)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 14 * s, H * 0.62, tw + 28 * s, 26 * s, 13 * s); g.fill(); g.fillStyle = '#ff5a5a'; g.fillText(txt, W / 2, H * 0.62 + 18 * s); g.textAlign = 'left';
+        g.fillStyle = 'rgba(10,16,36,.8)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 14 * s, H * 0.62, tw + 28 * s, 26 * s, 13 * s); g.fill(); g.fillStyle = '#ff5a5a'; g.fillText(txt, W / 2, H * 0.62 + 18 * s); g.textAlign = 'left';
       }
       if ((screen === 'formation' || screen === 'setup') && me && !me.official) {
         g.font = `900 ${12 * s}px system-ui`; g.textAlign = 'center';
         const lapName = screen === 'setup' ? 'SETUP' : 'FORMATION';
         const txt = me.gridded ? 'ON THE GRID · WAIT FOR THE LIGHTS' : me.formGo ? (() => { const d = Math.round(slotS(me).rel - relS(T, me.sNow || 0)); return d > 6 ? `${lapName} LAP · YOUR GRID BOX IN ${d} m` : `${lapName} LAP · STOP IN YOUR GRID BOX`; })() : screen === 'setup' ? (me.inLane ? 'SETUP LAP · LEAVE THE PIT LANE · 80 km/h LIMIT' : 'SETUP LAP · DRIVE ROUND TO YOUR GRID BOX') : 'FORMATION LAP · FOLLOW THE CAR AHEAD · NO OVERTAKING';
-        const tw = g.measureText(txt).width; g.fillStyle = 'rgba(8,12,22,.75)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 14 * s, H - 118 * s, tw + 28 * s, 24 * s, 12 * s); g.fill(); g.fillStyle = '#ffd23f'; g.fillText(txt, W / 2, H - 101 * s);
+        const tw = g.measureText(txt).width; g.fillStyle = 'rgba(10,16,36,.75)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 14 * s, H - 118 * s, tw + 28 * s, 24 * s, 12 * s); g.fill(); g.fillStyle = '#ffd23f'; g.fillText(txt, W / 2, H - 101 * s);
       }
       if (screen === 'race') {
-        const C = raceCtl, pill = (txt, col, y) => { g.font = `900 ${12 * s}px system-ui`; const tw = g.measureText(txt).width; g.fillStyle = 'rgba(8,12,22,.75)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 22 * s, y - 14 * s, tw + 34 * s, 20 * s, 10 * s); g.fill(); g.fillStyle = col; g.fillRect(W / 2 - tw / 2 - 16 * s, y - 9 * s, 9 * s, 10 * s); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(txt, W / 2 + 6 * s, y); };
+        const C = raceCtl, pill = (txt, col, y) => { g.font = `900 ${12 * s}px system-ui`; const tw = g.measureText(txt).width; g.fillStyle = 'rgba(10,16,36,.75)'; g.beginPath(); g.roundRect(W / 2 - tw / 2 - 22 * s, y - 14 * s, tw + 34 * s, 20 * s, 10 * s); g.fill(); g.fillStyle = col; g.fillRect(W / 2 - tw / 2 - 16 * s, y - 9 * s, 9 * s, 10 * s); g.fillStyle = '#fff'; g.textAlign = 'center'; g.fillText(txt, W / 2 + 6 * s, y); };
         let y = H - 108 * s;
         if (C.flag !== 'green') { pill(C.flag === 'yellow' ? 'YELLOW FLAG · NO OVERTAKING' : C.flag === 'vsc' ? `VIRTUAL SAFETY CAR · MAX ${Math.round(me.car.spec.vmax * 0.45 * KMH)} km/h` : C.flag === 'sc' ? (C.restart ? 'SAFETY CAR IN · RESTART AT THE LINE' : C.inWarned ? 'SAFETY CAR IN THIS LAP · NO OVERTAKING' : 'SAFETY CAR · STAY BEHIND IT') : 'RED FLAG · STOP', FLAGS[C.flag][1], y); y -= 24 * s; }
         if (me.blue) { pill('BLUE FLAG · LET THE LEADER THROUGH', '#2f7bff', y); y -= 24 * s; }
@@ -3926,14 +4049,14 @@
       if (me.advDebt && (screen === 'race' || screen === 'done')) {
         const d = me.advDebt, left = Math.max(0, d.until - clock), txt = d.kind === 'place' ? `LET ${d.o.name.toUpperCase()} BACK THROUGH · ${left.toFixed(0)}s` : `DROP BACK FROM ${d.o.name.toUpperCase()} · ${left.toFixed(0)}s`;
         g.font = `900 ${12 * s}px system-ui`; g.textAlign = 'center'; const tw2 = g.measureText(txt).width;
-        g.fillStyle = 'rgba(8,13,28,.92)'; g.beginPath(); g.roundRect(W / 2 - tw2 / 2 - 16 * s, 62 * s, tw2 + 32 * s, 24 * s, 12 * s); g.fill();
+        g.fillStyle = 'rgba(10,16,36,.92)'; g.beginPath(); g.roundRect(W / 2 - tw2 / 2 - 16 * s, 62 * s, tw2 + 32 * s, 24 * s, 12 * s); g.fill();
         g.fillStyle = left < 3 ? '#ff4d4d' : '#ffd23f'; g.fillText(txt, W / 2, 78.5 * s); g.textAlign = 'left';
       }
       // The pit lane panel: how long you have been in the lane and the stop itself.
       if (me.inLane && !me.official && (screen === 'race' || screen === 'done' || screen === 'quali' || screen === 'setup')) {
         if (pitIn == null) pitIn = clock;
         const pw2 = 150 * s, px = W / 2 - pw2 / 2, py = 10 * s, lane = clock - pitIn, stop = me.service > 0 ? Math.max(0, me.service - (me.servePen ? (me.pen || 0) : 0)) : null;
-        g.fillStyle = 'rgba(8,13,28,.94)'; g.beginPath(); g.roundRect(px, py, pw2, 38 * s, 3 * s); g.fill();
+        g.fillStyle = 'rgba(10,16,36,.94)'; g.beginPath(); g.roundRect(px, py, pw2, 38 * s, 3 * s); g.fill();
         g.fillStyle = '#1d2f66'; g.fillRect(px, py, pw2, 11 * s); g.fillStyle = '#fff'; g.font = `900 ${7.5 * s}px system-ui`; g.textAlign = 'center'; g.fillText('PIT LANE', px + pw2 / 2, py + 8.2 * s);
         g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(px + pw2 / 2, py + 14 * s, 1 * s, 20 * s);
         g.fillStyle = 'rgba(255,255,255,.6)'; g.font = `700 ${6.5 * s}px system-ui`; g.fillText('PIT', px + pw2 * 0.25, py + 20 * s); g.fillText('STOP TIME', px + pw2 * 0.75, py + 20 * s);
@@ -3943,13 +4066,26 @@
       if (me.car.hit > 0.6 && viewMode !== 'top') { g.fillStyle = `rgba(255,40,40,${(me.car.hit - 0.6) * 0.3})`; g.fillRect(0, 0, W, H); }
       // The timing tower (L: gaps to you, gaps to the leader, or only the lap) is drawn at the top left, above.
       // Minimap.
-      const mw = 84 * s, mh = 84 * s, mx = W - mw - 8 * s, my = 56 * s + (me.bestLap ? 9 * s : 0), [x0, y0, x1, y1] = T.bounds, k = Math.min((mw - 12 * s) / (x1 - x0 || 1), (mh - 12 * s) / (y1 - y0 || 1));
+      const mw = 84 * s, mh = 84 * s, mx = W - mw - 8 * s, my = (8 + LAP_PANEL_H + 6) * s, [x0, y0, x1, y1] = T.bounds, k = Math.min((mw - 12 * s) / (x1 - x0 || 1), (mh - 12 * s) / (y1 - y0 || 1));
       const mp = (x, y) => [mx + 6 * s + (x - x0) * k + ((mw - 12 * s) - (x1 - x0) * k) / 2, my + 6 * s + (y - y0) * k + ((mh - 12 * s) - (y1 - y0) * k) / 2];
-      g.fillStyle = 'rgba(8,12,22,.6)'; g.beginPath(); g.roundRect(mx, my, mw, mh, 8 * s); g.fill();
-      g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 2 * s; g.beginPath(); T.S.forEach((q, i) => { const p = mp(q.x, q.y); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); if (T.closed) g.closePath(); g.stroke();
+      g.fillStyle = 'rgba(10,16,36,.8)'; g.beginPath(); g.roundRect(mx, my, mw, mh, 8 * s); g.fill();
+      g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 2 * s; g.beginPath(); T.S.forEach((q, i) => { const p = mp(q.x, q.y); i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); if (T.closed) g.closePath(); g.stroke();
+      if (T.closed && HM() && screen !== 'qbreak') {
+        // Each third of the lap in the colour of your time there: green (your best), yellow (slower), purple while your last lap was the fastest of the race.
+        const prevLine = HM().sectorLine(sectors.prev, sectors.purple), lineCols = [0, 1, 2].map((k) => sectors.col[k] || prevLine[k]);
+        g.lineWidth = 2.6 * s; g.lineCap = 'round';
+        for (let k = 0; k < 3; k++) {
+          if (!lineCols[k]) continue;
+          g.strokeStyle = lineCols[k]; g.beginPath(); let pen = false;
+          T.S.forEach((q) => { if (Math.min(2, Math.floor(q.s / T.length * 3)) !== k) { pen = false; return; } const p = mp(q.x, q.y); pen ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); pen = true; });
+          g.stroke();
+        }
+        g.lineCap = 'butt';
+        if (me.lap >= raceLaps - 1 && screen !== 'countdown' && screen !== 'formation') { const p = mp(T.S[0].x, T.S[0].y); hudIcon('chequered', p[0], p[1] - 5 * s, 4.2 * s, '#fff'); }
+      }
       for (const r of racers) { const p = mp(r.car.x, r.car.y); g.fillStyle = r === me ? '#fff' : (r.color || '#aaa'); g.beginPath(); g.arc(p[0], p[1], (r === me ? 3.6 : 2.6) * s, 0, 7); g.fill(); }
       // The car's condition (the four tyres and the damage), bottom left.
-      if ((screen === 'race' || screen === 'done' || screen === 'formation' || screen === 'setup' || screen === 'quali' || screen === 'qbreak' || screen === 'countdown') && !me.official) drawCondition(s * condScale(W, s));
+      if ((screen === 'race' || screen === 'done' || screen === 'formation' || screen === 'setup' || screen === 'quali' || screen === 'qbreak' || screen === 'countdown') && !me.official && !me.finished) drawCondition(s * condScale(W, s));
       // Where a car has crashed: a red map pin (pulsing) while race control deals with it.
       const pins = []; if (raceCtl.at && raceCtl.flag !== 'green' && !raceCtl.at.r.dnf) pins.push([raceCtl.at.x, raceCtl.at.y]); for (const k of cranes) if (!k.done) pins.push([k.r.car.x, k.r.car.y]);
       for (const [px, py] of pins) {
@@ -3958,6 +4094,7 @@
         g.fillStyle = '#ff2a2a'; g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy - 7 * s, 4.2 * s, Math.PI * 0.8, Math.PI * 2.2); g.closePath(); g.fill();
         g.fillStyle = '#fff'; g.beginPath(); g.arc(cx, cy - 7 * s, 1.6 * s, 0, 7); g.fill();
       }
+      drawFinishCard(s); drawBanner(s); drawSubtitle(s);
     }
 
     // ---- the 3D views: a chase camera behind the car, or the driver's seat with the wheel, the gears and the revs.
@@ -4888,7 +5025,7 @@
       radioProblem: (msg) => { radioListening = false; toast(`🎙 ${String(msg).slice(0, 160)}`); },
       radioPermission: (ok) => { store.set('voice', ok ? 'on' : 'off'); toast(ok ? '🎙 Microphone on: talk to your engineer on the radio' : 'No microphone: the radio works with the number keys'); if (screen === 'menu') showMenu(); },
       key, suspend() { suspended = true; keys.clear(); audioKill(); hush(); }, resume() { suspended = false; last = performance.now(); }, setSoundEnabled(on) { setSound(on); },
-      _state: () => ({ screen, racers, me, T, clock, net, raceCtl, qual, aiState, f1, scR, medR, medF, f1Flags: () => ({ f1Tel, f1Mfd, f1Rc }), wet: WET, autoMe: () => { me.ai = true; const st = { idx: -1, lane: 0, skill: 0.95, stuck: 0, rev: 0, go: true, cap: 55, served: true }; aiState.set(me.id, st); return st; }, force: (i, sp) => { const r = racers.filter((x) => x.ai && !x.official)[i]; r.car.dmg = 0.95; incident(r, sp); return r.name; } }),
+      _state: () => ({ screen, racers, me, T, clock, net, raceCtl, qual, aiState, f1, scR, medR, medF, hud: { banners: hudBanners, subs: hudSubs, flag: hudFlag, seen: hudSeen, banner: hudBanner, say: hudSay, setFlag }, f1Flags: () => ({ f1Tel, f1Mfd, f1Rc }), wet: WET, autoMe: () => { me.ai = true; const st = { idx: -1, lane: 0, skill: 0.95, stuck: 0, rev: 0, go: true, cap: 55, served: true }; aiState.set(me.id, st); return st; }, force: (i, sp) => { const r = racers.filter((x) => x.ai && !x.official)[i]; r.car.dmg = 0.95; incident(r, sp); return r.name; } }),
     };
     window.NotchRaceGame.current = api;
     return function stop() {
