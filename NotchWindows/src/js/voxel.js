@@ -7,11 +7,12 @@ const mode = new URLSearchParams(location.search).get('mode') || 'saver';
 const T = window.__TAURI__;
 let st = { scene: 0, palette: 'ocean', intensity: 1, speed: 1, playing: false, words: [], lyricMode: 'words', title: '', artist: '' };
 let bands = [0, 0, 0, 0];
+let live = null;   // the real sound's four bands from the main window (WASAPI loopback), or null
 const verse = document.getElementById('verse'), np = document.getElementById('np'), hint = document.getElementById('hint');
 const rgb = (a) => `rgb(${a.map((x) => Math.round(x * 255)).join(',')})`;
 
 startScene(document.getElementById('c'), (t) => {
-  bands = easeBands(bands, simulatedLevels(t, st.playing || st.energySaver));
+  bands = easeBands(bands, live && !st.energySaver ? live : simulatedLevels(t, st.playing || st.energySaver));
   return { scene: st.scene, palette: (PALETTES[st.palette] || PALETTES.ocean).colours, bands, intensity: st.intensity, speed: st.speed };
 });
 
@@ -29,6 +30,7 @@ function paint() {
 
 if (T) {
   T.event.listen('voxel-state', (e) => { st = { ...st, ...(e.payload || {}) }; paint(); });
+  T.event.listen('voxel-levels', (e) => { live = e.payload?.live ? e.payload.bands : null; });
   T.event.emit('voxel-ready', { mode }).catch(() => {});
 }
 if (mode === 'saver') {
