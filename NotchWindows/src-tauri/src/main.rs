@@ -538,6 +538,40 @@ fn widget_hide(app: AppHandle, kind: String) {
     }
 }
 
+/// Opens a Voxel Wall window (issue #119): "saver" fills the main screen above everything and takes the keyboard (any key ends
+/// it); "wallpaper" fills the screen behind every other window, never takes the mouse and stays off the taskbar.
+#[tauri::command]
+async fn voxel_show(app: AppHandle, mode: String) -> Result<(), String> {
+    let saver = match mode.as_str() { "saver" => true, "wallpaper" => false, _ => return Err("unknown mode".into()) };
+    let label = format!("voxel-{mode}");
+    if let Some(existing) = app.get_webview_window(&label) { let _ = existing.show(); if saver { let _ = existing.set_focus(); } return Ok(()); }
+    let monitor = app.primary_monitor().ok().flatten().ok_or("no monitor")?;
+    let scale = monitor.scale_factor();
+    let size = monitor.size().to_logical::<f64>(scale);
+    let origin = monitor.position().to_logical::<f64>(scale);
+    let builder = WebviewWindowBuilder::new(&app, &label, WebviewUrl::App(format!("voxel.html?mode={mode}").into()))
+        .title("Voxel Wall")
+        .inner_size(size.width, size.height)
+        .position(origin.x, origin.y)
+        .decorations(false)
+        .resizable(false)
+        .skip_taskbar(true)
+        .shadow(false);
+    let window = if saver {
+        builder.always_on_top(true).fullscreen(true).focused(true).build()
+    } else {
+        builder.always_on_bottom(true).focused(false).build()
+    }.map_err(|e| e.to_string())?;
+    if !saver { let _ = window.set_ignore_cursor_events(true); }
+    Ok(())
+}
+
+/// Closes a Voxel Wall window.
+#[tauri::command]
+fn voxel_hide(app: AppHandle, mode: String) {
+    if let Some(w) = app.get_webview_window(&format!("voxel-{mode}")) { let _ = w.close(); }
+}
+
 /// Closes the lyrics overlay (the switch went off, or Pro lapsed).
 #[tauri::command]
 fn lyrics_overlay_hide(app: AppHandle) {
@@ -737,7 +771,7 @@ fn main() {
             awake::set_keep_awake, awake::keep_awake_state,
             system_stats, top_processes, transliterate, capture_screen,
             installed_apps, path_info, launch_app, open_path, reveal_path, open_url,
-            pick_app, pick_folder, pick_file, open_browser, browser_place, browser_hide, browser_close, browser_nav, lyrics_overlay_show, lyrics_overlay_hide, widget_show, widget_hide, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
+            pick_app, pick_folder, pick_file, open_browser, browser_place, browser_hide, browser_close, browser_nav, lyrics_overlay_show, lyrics_overlay_hide, widget_show, widget_hide, voxel_show, voxel_hide, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
             index::search_files, index::set_search_folders, index::search_status,
             icons::icons,
             watch::screen_time, watch::set_edge_trigger, watch::privacy_now, watch::foreground_now, watch::minimize_external,

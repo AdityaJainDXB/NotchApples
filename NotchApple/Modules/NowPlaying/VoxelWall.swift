@@ -16,6 +16,7 @@
 
 import AppKit
 import SwiftUI
+import ImageIO
 
 @MainActor
 final class VoxelWall: ObservableObject {
@@ -43,8 +44,8 @@ final class VoxelWall: ObservableObject {
     }
 
     @AppStorage("voxelWall.wallpaper") var wallpaperOn = false { didSet { applyWallpaper() } }
-    @AppStorage("voxelWall.scene") var sceneRaw = Scene.field.rawValue
-    @AppStorage("voxelWall.palette") var paletteRaw = Palette.ocean.rawValue
+    @AppStorage("voxelWall.scene") var sceneRaw = Scene.field.rawValue { didSet { if wallpaperOn { syncLockScreen() } } }
+    @AppStorage("voxelWall.palette") var paletteRaw = Palette.ocean.rawValue { didSet { if wallpaperOn { syncLockScreen() } } }
     @AppStorage("voxelWall.lyricsMode") var lyricsRaw = Lyrics.words.rawValue
     @AppStorage("voxelWall.verseStyle") var verseRaw = VerseStyle.haze.rawValue
     @AppStorage("voxelWall.intensity") var intensity = 1.0
@@ -53,6 +54,10 @@ final class VoxelWall: ObservableObject {
     @AppStorage("voxelWall.energySaver") var energySaver = false
     /// Show only the lyrics (Verse) on its glow, without the voxel scene.
     @AppStorage("voxelWall.verseOnly") var verseOnly = false
+    /// Lock screen: while the music wallpaper is on, a still of the scene is set as each display's desktop picture, which is what
+    /// macOS shows on the lock screen (no app can play live graphics there). The original pictures come back when it is turned off.
+    @AppStorage("voxelWall.lockScreen") var lockScreen = true { didSet { syncLockScreen() } }
+    @AppStorage("voxelWall.lockRestore") private var lockRestoreRaw = ""
     @Published private(set) var screensaverOn = false
 
     var scene: Scene { Scene(rawValue: sceneRaw) ?? .field }
@@ -112,6 +117,7 @@ final class VoxelWall: ObservableObject {
     func applyWallpaper() {
         wallWindows.forEach { $0.orderOut(nil) }; wallWindows = []
         if let o = screenObserver { NotificationCenter.default.removeObserver(o); screenObserver = nil }
+        syncLockScreen()
         guard wallpaperOn else { stopFeedsIfIdle(); return }
         for screen in NSScreen.screens {
             let w = WallWindow(screen: screen, content: VoxelWallScene(mode: .wallpaper))
@@ -122,6 +128,53 @@ final class VoxelWall: ObservableObject {
         screenObserver = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { if self?.wallpaperOn == true { self?.applyWallpaper() } }
         }
+    }
+
+    // MARK: Lock screen
+
+    /// Sets (or puts back) the lock-screen picture to match the music wallpaper and the lock-screen switch.
+    func syncLockScreen() {
+        guard wallpaperOn && lockScreen else { restoreDesktops(); return }
+        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0].appendingPathComponent("Notch apple/VoxelWall", isDirectory: true)
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        var restore = (try? JSONDecoder().decode([String: String].self, from: Data(lockRestoreRaw.utf8))) ?? [:]
+        let (a, b) = colours(artwork: NowPlayingMonitor.shared.artwork)
+        for screen in NSScreen.screens {
+            let size = screen.frame.size
+            let still = Rectangle().fill(.black).frame(width: size.width, height: size.height)
+                .colorEffect(ShaderLibrary.voxelWall(.boundingRect, .float(37.5), .float4(0.7, 0.45, 0.35, 0.6), .float(Float(scene.rawValue)), .float(Float(intensity)), .color(a), .color(b)))
+            let r = ImageRenderer(content: still); r.scale = screen.backingScaleFactor
+            guard let cg = r.cgImage else { continue }
+            let key = Self.screenKey(screen)
+            // A new file name each time, so macOS doesn't keep showing an old cached picture.
+            let url = dir.appendingPathComponent("lock-\(key)-\(Int(Date().timeIntervalSince1970)).png")
+            guard let dest = CGImageDestinationCreateWithURL(url as CFURL, "public.png" as CFString, 1, nil) else { continue }
+            CGImageDestinationAddImage(dest, cg, nil)
+            guard CGImageDestinationFinalize(dest) else { continue }
+            if restore[key] == nil, let old = NSWorkspace.shared.desktopImageURL(for: screen), !old.path.contains("Notch apple/VoxelWall") { restore[key] = old.absoluteString }
+            try? NSWorkspace.shared.setDesktopImageURL(url, for: screen, options: [.imageScaling: NSNumber(value: NSImageScaling.scaleProportionallyUpOrDown.rawValue), .allowClipping: NSNumber(value: true)])
+        }
+        lockRestoreRaw = (try? String(data: JSONEncoder().encode(restore), encoding: .utf8)) ?? ""
+        // Old stills: keep only the newest per display.
+        if let files = try? FileManager.default.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.creationDateKey]) {
+            let current = Set(NSScreen.screens.compactMap { NSWorkspace.shared.desktopImageURL(for: $0)?.lastPathComponent })
+            for f in files where f.lastPathComponent.hasPrefix("lock-") && !current.contains(f.lastPathComponent) { try? FileManager.default.removeItem(at: f) }
+        }
+    }
+
+    /// Puts each display's own desktop picture back.
+    private func restoreDesktops() {
+        guard let saved = try? JSONDecoder().decode([String: String].self, from: Data(lockRestoreRaw.utf8)), !saved.isEmpty else { return }
+        for screen in NSScreen.screens {
+            if let s = saved[Self.screenKey(screen)], let url = URL(string: s), FileManager.default.fileExists(atPath: url.path) {
+                try? NSWorkspace.shared.setDesktopImageURL(url, for: screen, options: [:])
+            }
+        }
+        lockRestoreRaw = ""
+    }
+
+    private static func screenKey(_ s: NSScreen) -> String {
+        (s.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber).map { "\($0)" } ?? "main"
     }
 
     // MARK: What drives the scene
@@ -367,6 +420,7 @@ struct VoxelWallSettings: View {
             }
             LabeledContent("Audio intensity") { Slider(value: $wall.intensity, in: 0.2...2) }
             LabeledContent("Motion speed") { Slider(value: $wall.speed, in: 0.3...2.5) }
+            Toggle("Show on the lock screen (a still of the scene, while the music wallpaper is on)", isOn: $wall.lockScreen)
             Toggle("Energy Saver (a silent loop, no audio listening)", isOn: Binding(get: { wall.energySaver }, set: { wall.energySaver = $0; if !$0 && VoxelWall.isShowing { wall.startFeeds() } }))
             Text("Follows what your Mac plays through a listen-only audio tap (System Audio Recording permission); nothing is recorded or sent. Lyrics come from LRCLIB.")
                 .font(.system(size: 10)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
