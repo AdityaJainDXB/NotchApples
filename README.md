@@ -150,6 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.77 · Windows 2.2.77 · 18 November 2026 · 🧊 Voxel Wall everywhere, Humanizer top-ups
+
+- New: Voxel Wall on Windows. Now Playing → Voxel Wall opens the voxel worlds full screen (keeps the PC awake; any key ends it), and Music wallpaper puts them behind your desktop icons. They move with what your PC is playing, with the same scenes and colours as the Mac and the lyrics word by word
+- Mac: Voxel Wall on the lock screen. While the music wallpaper is on, a still of the scene becomes your desktop and lock-screen picture; your own picture comes back when you turn it off
+- New: Humanizer top-ups arrive. Buying extra words emails you a code; Tools → Humanizer → Redeem a code adds the words (they never run out with the month)
+
 ### Mac 2.2.76 · Windows 2.2.76 · 17 November 2026 · 🃏 Three-Card Poker
 
 - Mac: Voxel Wall. Now Playing → Voxel Wall shows 3D voxel worlds that move with your music (Voxel Field, Spike Field, Infinite Tunnel, Voxel City), as a screensaver that keeps the Mac awake or as a music wallpaper behind your desktop icons. The lyrics play word by word on top (Soft haze, Clear flow, Edge light), or as whole lines. Choose the colours (Ocean, Ember, Violet, Monochrome or the album's), the audio intensity and speed, or Energy Saver for a silent loop
@@ -168,10 +174,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Fixed: the notch hid itself on other desktops (Spaces) when the menu bar auto-hides, and could not be clicked there
 - Fixed: Settings search showed features it had no switch for
 - Windows: Scribble and Rocket League no longer overlap in the Games tab
-
-### Mac 2.2.74 · Windows 2.2.74 · 16 November 2026 · 🔑 Admin keys
-
-- New: admin keys. A higher key tier with no limits at all: every paid feature unlocked and no word or message caps. Only the owner can issue one, and at most four can be live at a time.
 
 ## Plugins
 

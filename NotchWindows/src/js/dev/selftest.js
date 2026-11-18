@@ -47,6 +47,17 @@ export async function run() {
     await wait(700);
     await capture('palette');
     document.getElementById('palette')?.remove();
+    // Voxel Wall (issue #119): the wallpaper behind the icons and the full-screen screensaver, each captured from the whole
+    // screen, and whether the real-sound levels started.
+    const VW = await import('../services/voxelwall.js');
+    await collapse(); await wait(500);
+    await VW.setWallpaper(true); await wait(3500);
+    await capture('screen-voxel-wallpaper');
+    await VW.startScreensaver(); await wait(3500);
+    await capture('screen-voxel-screensaver');
+    report.voxel = { levels: await invoke('voxel_levels').catch((e) => ({ error: String(e) })) };
+    VW.stopScreensaver(); await VW.setWallpaper(false); await wait(800);
+    await expand('today'); await wait(500);
     await collapse();
     await wait(800);
     report.collapsedAgain = !isExpanded();

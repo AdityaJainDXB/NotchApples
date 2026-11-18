@@ -11,6 +11,8 @@ import { icon } from '../icons.js';
 import { proNote } from './activation.js';
 import * as M from '../services/media.js';
 import * as SL from '../services/sidelyrics.js';
+import * as VW from '../services/voxelwall.js';
+import { SCENES, PALETTES } from '../services/voxelwalllogic.js';
 import { invoke } from '../native.js';
 
 export function render(root) {
@@ -48,6 +50,16 @@ export function render(root) {
         toggle(SL.isOn(), (on) => SL.setOn(on)), el('span', { class: 'dim' }, 'Lyrics on the side of your screen'),
         select([{ value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }], SL.side(), (v) => SL.setSide(v), { cls: 'auto', title: 'Which edge of the screen' }))
     : proNote('lyrics', 'Lyrics on the side of your screen.');
+  // Voxel Wall (issue #119): music-reactive voxel worlds as a screensaver (keeps the PC awake) or a wallpaper window.
+  const vs = VW.settings();
+  const voxelRow = el('div', { class: 'col', style: 'gap:6px' },
+    el('div', { class: 'hstack small', style: 'gap:8px;flex-wrap:wrap' },
+      el('button', { class: 'btn small primary', title: 'Full-screen voxel worlds that move with your music, with the lyrics. Keeps the PC awake; any key ends it.', onclick: () => VW.startScreensaver() }, 'Voxel Wall'),
+      toggle(VW.wallpaperOn(), (on) => VW.setWallpaper(on)), el('span', { class: 'dim' }, 'Music wallpaper')),
+    el('div', { class: 'hstack small', style: 'gap:6px;flex-wrap:wrap' },
+      select(SCENES.map((s, i) => ({ value: i, label: s })), vs.scene, (v) => VW.set('scene', Number(v)), { cls: 'auto', title: 'Scene' }),
+      select(Object.entries(PALETTES).map(([k, p]) => ({ value: k, label: p.name })), vs.palette, (v) => VW.set('palette', v), { cls: 'auto', title: 'Colours' }),
+      select([{ value: 'words', label: 'Lyrics word by word' }, { value: 'lines', label: 'Whole lines' }, { value: 'off', label: 'No lyrics' }], vs.lyricMode, (v) => VW.set('lyrics', v), { cls: 'auto', title: 'Lyrics' })));
   // Cassette mode: the cover becomes a tape whose reels turn while it plays and whose tape moves across as the song goes on.
   let cassette = load('media.cassette', false);
   const tapeTitle = el('div', { class: 'tape-title' }), tapeArtist = el('div', { class: 'tape-artist' });
@@ -69,7 +81,7 @@ export function render(root) {
         el('div', { class: 'hstack', style: 'gap:10px;flex-wrap:wrap' }, prevBtn, playBtn, nextBtn, sleepSel, sleepNote,
           el('button', { class: 'icon-btn', title: 'Lyrics', onclick: () => setSpot(true) }, '❝'),
           cassetteBtn),
-        balRow, sideRow)),
+        balRow, sideRow, voxelRow)),
     el('label', { class: 'hstack small dim', style: 'cursor:pointer' },
       toggle(load('media.pill', true), (v) => save('media.pill', v)), 'Show the cover on the closed notch while music plays'));
   // The lyrics can fill the whole notch (like the Mac's full-screen view): big centred lines, the current one in white.
