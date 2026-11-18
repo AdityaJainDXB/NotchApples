@@ -11,6 +11,10 @@ export function render(root) {
   const count = el('div', { class: 'small dim' });
   const left = el('div', { class: 'small dim grow' });
   const problem = el('div', { class: 'small err' });
+  const codeField = el('input', { class: 'field mono auto', style: 'width:200px', placeholder: 'WORD-XXXX-XXXX-XXXX' });
+  const redeemNote = el('span', { class: 'small' });
+  const redeemRow = el('div', { class: 'hstack', style: 'gap:6px;display:none' }, codeField,
+    el('button', { class: 'btn small', onclick: async () => { redeemNote.textContent = '…'; const msg = await H.redeem(codeField.value); redeemNote.textContent = msg; redeemNote.style.color = msg.startsWith('Added') ? '#22c55e' : '#f59e0b'; if (msg.startsWith('Added')) { codeField.value = ''; left.textContent = H.summary(); } } }, 'Add words'), redeemNote);
   const habits = el('div', { class: 'small dim' });
   const styleBox = el('textarea', { class: 'field', style: 'height:54px;display:none', placeholder: 'Write like me: paste a few paragraphs you wrote yourself. The rewrite copies your sentence length and word choice. Kept on this PC.', value: H.style() });
   styleBox.oninput = () => { H.setStyle(styleBox.value); styleToggle.textContent = styleLabel(); };
@@ -37,6 +41,7 @@ export function render(root) {
       el('div', { class: 'card col gap-6', style: 'flex:1;min-width:0' }, el('div', { class: 'hstack' }, el('div', { class: 'section-title grow' }, 'Rewritten'),
         el('button', { class: 'icon-btn', title: 'Copy', onclick: () => out.textContent && invoke('clipboard_copy_text', { text: out.textContent }).then(() => toast('Copied')) }, '⧉')), out)),
     styleBox,
-    el('div', { class: 'hstack' }, styleToggle, habits, left, el('button', { class: 'quiet accent', style: 'font-size:11px', title: 'Opens the Whop page. Extra words never run out.', onclick: () => openUrl(L.TOP_UP_URL) }, '+ Buy extra words: $1 for 50,000')),
-    problem));
+    el('div', { class: 'hstack' }, styleToggle, habits, left, el('button', { class: 'quiet accent', style: 'font-size:11px', title: 'Opens the Whop page. You get a code by email; redeem it here.', onclick: () => openUrl(L.TOP_UP_URL) }, '+ Buy extra words: $1 for 50,000'),
+      el('button', { class: 'quiet accent', style: 'font-size:11px', onclick: () => { redeemRow.style.display = redeemRow.style.display === 'none' ? '' : 'none'; } }, 'Redeem a code')),
+    redeemRow, problem));
 }
