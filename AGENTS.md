@@ -57,6 +57,7 @@ Never run a Debug or test copy of the Mac app with the real bundle id (`com.notc
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 18 Nov 2026: fixed a flaky worker test (the migrate test could revoke the shared fixture admin key, which broke the Windows 2.2.78 build). The win-v2.2.78 tag still points at the old commit and has to be moved to this fix before Windows 2.2.78 can publish.
 - 18 Nov 2026: renamed Voxel Wall to Music Wall (scenes Block Field, Block City) everywhere users can see it, including old release notes; internal code names and saved settings keep the old name so nothing resets. Released 2.2.78 with the update-reminder fix.
 - 18 Nov 2026: fixed the update reminder coming back on every launch: the saved "opens since the last reminder" count is now reset when a reminder is shown and when no update is waiting (UpdateCadenceLogic.reminderStep, tested). Open: none.
 - 18 Nov 2026: released Mac 2.2.76 (Windows 2.2.76 was already out); tests 685/0 failures; old releases pruned. Still open: install on the owner's Mac (the install command was declined), the Whop site copy, the worker deploy for no daily AI limit on Pro.

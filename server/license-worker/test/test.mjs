@@ -681,7 +681,8 @@ await test('Migrate: turns a Pro key into an admin key for the same buyer, revok
   assert.equal((await call('/entitle', { key: pro, device: devn(710) })).status, 200, 'the Pro key still works after a refused migration');
   // Free one admin slot, then migrate.
   const freed = await call('/admin/list', {}, { authorization: 'Bearer admin-test' });
-  const someAdmin = freed.rows.find((r) => r.tier === 'Admin' && !r.suspended);
+  const keep = parseKey(globalThis.__adminFixture).keyId;   // the fixture admin key stays live: later tests and the Swift fixture use it
+  const someAdmin = freed.rows.find((r) => r.tier === 'Admin' && !r.suspended && r.keyId !== keep);
   await call('/admin/revoke', { keyId: someAdmin.keyId, reason: 'slot for migrate test' }, { authorization: 'Bearer admin-test' });
   const m = await call('/admin/migrate', { keyId: proId, reason: 'owner upgrade' }, { authorization: 'Bearer admin-test' });
   assert.equal(m.revoked, proId);
