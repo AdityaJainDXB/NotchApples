@@ -57,6 +57,7 @@ Never run a Debug or test copy of the Mac app with the real bundle id (`com.notc
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 18 Nov 2026: Flight Economy is slightly harder (fuel +7.5%, airport fees +10%, faster airframe wear, likelier breakdowns) and an admin key opens it and gets a cheat panel on J (sent only to admin keys). Worker only. Still open: `wrangler deploy` from server/license-worker (private/ files are git-ignored), and check no uploaded KV game file (gamefile:flight-economy) overrides the bundled one.
 - 18 Nov 2026: added docs/FLIGHT_ECONOMY_ROADMAP.md. Open: the Flight Economy worker deploy, and the side-lyrics Left/Right bug the owner reported (not reproduced yet).
 - 18 Nov 2026: side lyrics get a dark backing panel (white text was invisible on light wallpapers). Not verified in the app (the test Mac has no Pro licence, so the overlay never started); needs the owner to try it on a light desktop.
 - 18 Nov 2026: Windows Voxel Wall follows the real sound (WASAPI loopback, four bands, levels.rs) and the music wallpaper is placed behind the desktop icons (WorkerW); the Windows CI self-test now captures both on a real Windows machine (screensaver and wallpaper confirmed there). Fixed the Shelf tab crash on Windows (holdButton/undoToast not imported), found by that run. Open: live audio not confirmed (the CI machine has no sound device).
