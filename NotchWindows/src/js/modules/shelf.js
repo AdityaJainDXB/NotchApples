@@ -4,7 +4,7 @@ import { magnet } from '../services/magnet.js';
 import { el, load, save, uid } from '../store.js';
 import { invoke, listen, openUrl } from '../native.js';
 import { canUse } from '../features.js';
-import { menu, toast, prompt, empty, segmented, holdButton, undoToast } from '../ui.js';
+import { menu, toast, prompt, empty, segmented, holdButton, undoToast, dropCard } from '../ui.js';
 import { normalize, label } from '../services/linkshelf.js';
 import { withIcons, iconEl } from './launcher.js';
 
