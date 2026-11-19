@@ -1,0 +1,9 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "desertheat",
+  "description": "The Desert Heat game window. It loads the app's own files only and needs no other permissions.",
+  "windows": ["desertheat"],
+  "permissions": [
+    "core:event:default"
+  ]
+}

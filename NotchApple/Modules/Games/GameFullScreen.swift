@@ -16,7 +16,7 @@ extension GamesView.Game {
     /// Games that get the shared Full screen button.
     var hasFullScreenButton: Bool {
         switch self {
-        case .ctf, .chess, .tetris, .fnaf, .dailyWord, .dailyTrivia, .solitaire: false
+        case .ctf, .chess, .tetris, .fnaf, .dailyWord, .dailyTrivia, .solitaire, .desertHeat: false
         default: true
         }
     }
@@ -60,9 +60,10 @@ enum GameWindow {
         switch game {
         case .plane: w.contentView = NSHostingView(rootView: PlaneGameView(standalone: true).background(Color.black).preferredColorScheme(.dark))
         case .racing: w.contentView = NSHostingView(rootView: RacingGameView(standalone: true).background(Color.black).preferredColorScheme(.dark))
+        case .desertHeat: w.contentView = NSHostingView(rootView: DesertHeatView().background(Color.black).preferredColorScheme(.dark))
         default: w.contentView = NSHostingView(rootView: GameFullView(game: game))
         }
-        if game == .plane || game == .racing { AppDelegate.current?.notch?.closeNotch() }      // one copy of the game at a time
+        if game == .plane || game == .racing || game == .desertHeat { AppDelegate.current?.notch?.closeNotch() }      // one copy of the game at a time
         w.minSize = NSSize(width: 520, height: 320)
         w.center()
         let key = game.rawValue

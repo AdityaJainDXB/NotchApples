@@ -9,7 +9,7 @@ import { blackjack, solitaire, poker } from './games-cards.js';
 import { renderMenu } from './gamesmenu.js';
 import { byId, recordRecent, needsTallPanel } from './gameslogic.js';
 import * as AI from '../services/ai.js';
-import { http } from '../native.js';
+import { http, invoke } from '../native.js';
 
 export function render(root) {
   let game = load('games.last', '2048'), stop = () => {};
@@ -19,7 +19,7 @@ export function render(root) {
   // to fit instead of being cut off. Plane and Racing fill the space themselves.
   const fit = () => {
     const inner = board.firstElementChild;
-    if (!inner || game === 'plane' || game === 'racing' || game === 'ctf' || game === 'rocket' || game === 'scribble' || game === 'chess' || game === 'tetris' || game === 'nightshift' || game === 'eagle' || game === 'wordle' || game === 'trivia') return;
+    if (!inner || game === 'plane' || game === 'racing' || game === 'desertheat' || game === 'ctf' || game === 'rocket' || game === 'scribble' || game === 'chess' || game === 'tetris' || game === 'nightshift' || game === 'eagle' || game === 'wordle' || game === 'trivia') return;
     inner.style.transform = ''; inner.style.marginBottom = ''; inner.style.transformOrigin = 'center top';
     const w = inner.offsetWidth, h = inner.offsetHeight;
     if (!w || !h) return;
@@ -34,7 +34,7 @@ export function render(root) {
   const fullBtn = el('button', { class: 'btn small', title: 'Make this game fill the screen (Esc leaves)', onclick: () => { if (document.fullscreenElement === board) document.exitFullscreen?.(); else board.requestFullscreen?.().catch?.(() => {}); } }, '⛶ Full screen');
   // Rocket League and Scribble need the panel at least 900 x 720 (as in a chat), or their layout overlaps (issue #103).
   const tall = (on) => import('../app.js').then((a) => a.chatGame?.('games', on, on)).catch(() => {});
-  const pick = (g) => { stop(); game = g; tall(needsTallPanel(g)); save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'ctf' || g === 'rocket' || g === 'scribble' || g === 'chess' || g === 'tetris' || g === 'nightshift' || g === 'eagle' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, ctf, rocket, scribble, chess, tetris, nightshift, eagle, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
+  const pick = (g) => { stop(); game = g; tall(needsTallPanel(g)); save('games.last', g); fullBtn.style.display = (g === 'plane' || g === 'racing' || g === 'desertheat' || g === 'ctf' || g === 'rocket' || g === 'scribble' || g === 'chess' || g === 'tetris' || g === 'nightshift' || g === 'eagle' || g === 'wordle' || g === 'trivia') ? 'none' : ''; stop = ({ 2048: g2048, snake, reaction, cookie, runner, breakout, memory, plane, racing, desertheat, ctf, rocket, scribble, chess, tetris, nightshift, eagle, wordle, trivia, blackjack, solitaire, poker })[g](board) || (() => {}); requestAnimationFrame(fit); setTimeout(fit, 120); };
   // The menu of games (search, filters, "Jump back in"); picking one shows the game with a way back.
   const title = el('div', { style: 'font-weight:700' });
   const back = el('button', { class: 'btn small quiet', onclick: () => showMenu() }, '‹ All games');
@@ -151,6 +151,20 @@ function racing(host) {
   window.NotchRaceAI = async (system, question) => (AI.ready() ? AI.ask(question, { system }) : null);
   import('../games/leaderboard.js').then(() => F1_MODULES.reduce((p, m) => p.then(() => import(`../games/f1/${m}.js`)), Promise.resolve())).then(() => import('../games/racing.js')).then(() => { if (!gone) { stop = window.NotchRaceGame.mount(box); box.firstElementChild && box.firstElementChild.focus(); } });
   return () => { gone = true; host.style.position = ''; stop(); };
+}
+
+/// Desert Heat: the open-world Dubai game (games/desertheat/, shared with the Mac). It needs the whole screen, so the panel
+/// shows a card whose Play button opens the game in its own window (the Rust command desertheat_open).
+function desertheat(host) {
+  const card = el('div', { style: 'height:100%;min-height:220px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;padding:18px;border-radius:12px;background:linear-gradient(0deg,#6b3d17,#e0a25a);color:#fff' });
+  const title = el('div', { style: 'font-size:26px;font-weight:600;letter-spacing:6px' }, 'DESERT HEAT');
+  const sub = el('div', { style: 'font-size:11px;opacity:.8' }, 'Dubai, Deira to the Marina. Stage 1: the roads.');
+  const msg = el('div', { style: 'font-size:11px;opacity:.85;min-height:14px' });
+  const play = el('button', { style: 'align-self:flex-start;margin-top:4px;padding:7px 14px;border:0;border-radius:6px;background:rgba(0,0,0,.55);color:#fff;font-weight:600;cursor:pointer' }, 'Play full screen');
+  play.addEventListener('click', () => { msg.textContent = ''; invoke('desertheat_open').catch((e) => { msg.textContent = 'Could not open the game: ' + (e && e.message || e); }); });
+  card.append(title, sub, play, msg);
+  host.replaceChildren(card);
+  return () => {};
 }
 
 /// Chess: against the computer or a friend in an online room (the same 6-character codes as Plane and Racing). The same script
