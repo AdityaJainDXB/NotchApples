@@ -54,3 +54,27 @@ Not done yet / honest gaps:
 - The chase SUV can cut corners through small gaps; the out-of-sight test samples building walls, so it is approximate.
 - Parked cars in the car park have no wheels; the garage is a closed box reached by a fade, not a real ramp.
 - Not played inside the Mac or Windows app yet, only in Chrome.
+
+## Section 3: the living city (19 Nov 2026)
+
+Built (`city.js`, 10 tests in `NotchWindows/tests/desertheat-city.test.mjs`, drawing in game.js):
+- Shops on real building footprints: 16 real districts decide the mix (gold in Deira, banks and cafés in Business Bay,
+  cafeterias in Al Quoz), 10 shop types, all made-up names. The test counts every shop over the whole map: 15%+ enterable
+  overall and 10%+ in every district (about 1,400 shops around Deira alone). Shop windows show a painted inside that lights up
+  at night; enterable doors are lit.
+- Interiors from a kit per type (shelves, fridges, tables, rails, gold counters, barber chairs, gym, bank counter) with a
+  person behind the counter. Walk to the counter, E, buy with number keys: food and drink (health, stamina), first aid, clothes
+  (changes the character's shirt), gold by the gram at a daily price, gym, paying fines at a bank.
+- Traffic signals at 1,120 real junctions (where three or more ordinary roads meet), two phases, green/amber/red; traffic
+  stops at the stop line on red. Running a red light: AED 1,000 fine.
+- Speed cameras every ~1.8 km on main roads, UAE fine bands (20 km/h buffer), with a flash.
+- Salik gates at Al Garhoud, Al Maktoum, Al Safa, Al Barsha and Business Bay Crossing with 2025 variable pricing (6/4/free).
+- Fuel: tank, consumption with throttle, gauge, empty means no throttle; 20 petrol stations (made-up brands) with canopy,
+  pumps and shop; stop and press E to fill up.
+- Traffic density by hour (rush hours, empty at 4 am); people on pavements by hour and district (empty in the midday heat,
+  busy evenings), dressed for the area (hi-vis in Al Quoz, kandura and abaya); they jump out of the way of a car, and fall if hit.
+- Parked cars along ordinary streets (you bump into them). Money shows only when it changes.
+
+Not done / gaps: OpenStreetMap shop and signal data could not be downloaded (Overpass refused), so shops and signals are
+placed by rules on the real buildings and junctions, not their true positions; people are simple instanced figures; no
+lane changes or indicators for traffic; no random events yet; fines are kept per character and paid at a bank.
