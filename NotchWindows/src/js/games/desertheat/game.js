@@ -1481,6 +1481,7 @@
         pursuitLost: story.pursuit && story.pursuit.lost, wrecked: story.damage > 260,
         atLift: story.foot && Math.hypot(story.foot.x - garage.liftPos.x, story.foot.z - garage.liftPos.z) < 2.2,
         guardSaw: !!guard.saw && !(story.guard && story.guard.down),
+        ...(guard.saw ? (acts.A.seen = true, {}) : {}),
         distFromPickup: story.pickupAt ? Math.hypot(car.x - story.pickupAt.x, car.z - story.pickupAt.z) : 0,
         ...acts.ctx(),
       };
@@ -2245,7 +2246,8 @@
           if (!h) continue;
           hitAny = true;
           if (h.kind === 'ped') { h.ref.down = 12; wanted().crime('hitPerson', muz.x, muz.z); }
-          if (h.kind === 'cop') { if (KB.damage(h.ref, s.dmg)) { h.ref.dead = true; wanted().crime('killCop', muz.x, muz.z); } else wanted().crime('hitCop', muz.x, muz.z); }
+          if (h.kind === 'cop' && h.ref.gang) { if (KB.damage(h.ref, s.dmg)) h.ref.dead = true; }
+          else if (h.kind === 'cop') { if (KB.damage(h.ref, s.dmg)) { h.ref.dead = true; wanted().crime('killCop', muz.x, muz.z); } else wanted().crime('hitCop', muz.x, muz.z); }
           if (h.kind === 'police') { h.ref.hp -= s.dmg * 0.5; wanted().crime('hitCop', muz.x, muz.z); if (h.ref.hp <= 0) { h.ref.wreck = true; boom(new THREE.Vector3(h.ref.sim.x, h.ref.sim.y + 1, h.ref.sim.z), 3); wanted().crime('wreckCop', muz.x, muz.z); } }
           if (h.kind === 'car') { h.ref.stopT = 8; h.ref.speed *= 0.2; }
         }
@@ -2400,12 +2402,12 @@
           if (o.dead) { o.p.group.rotation.x = -Math.PI / 2; o.p.group.position.set(o.x, o.y + 0.25, o.z); continue; }
           const dx = me.x - o.x, dz = me.z - o.z, d = Math.hypot(dx, dz);
           o.heading = Math.atan2(dx, -dz);
-          const shootable = lvl >= 2 || (lvl && arms().armed);
-          const sp = d > (shootable ? 12 : 1.6) ? (shootable ? 3.4 : 4.2) : 0;
+          const shootable = o.gang || lvl >= 2 || (lvl && arms().armed);
+          const sp = o.gang ? (d > 30 ? 2.2 : 0) : d > (shootable ? 12 : 1.6) ? (shootable ? 3.4 : 4.2) : 0;
           o.x += Math.sin(o.heading) * sp * dt; o.z -= Math.cos(o.heading) * sp * dt;
           const sup = supportAt(o.x, o.z, o.y + 0.5); o.y = sup ? sup.y : 0;
           o.p.group.position.set(o.x, o.y, o.z); o.p.group.rotation.y = -o.heading; o.p.update(dt, sp, false, shootable && d < 45);
-          if (shootable && d < 45 && lvl) {
+          if (shootable && d < 45 && (lvl || o.gang)) {
             o.cool -= dt;
             if (o.cool <= 0) { o.cool = 0.7 + Math.random() * 0.8; sound('shot');
               const mz = new THREE.Vector3(o.x + Math.sin(o.heading) * 0.6, o.y + 1.4, o.z - Math.cos(o.heading) * 0.6);
@@ -2414,9 +2416,9 @@
               if (hitp && !wallBetween(o.x, o.z, me.x, me.z)) hurt(KB.WEAPONS.pistol.dmg * 0.7);
             }
           }
-          if (!shootable && lvl && d < 2.2 && onFoot && story.foot.speed < 1) arresting = true;
+          if (!o.gang && !shootable && lvl && d < 2.2 && onFoot && story.foot.speed < 1) arresting = true;
         }
-        W.officers = W.officers.filter((o) => Math.hypot(o.x - me.x, o.z - me.z) < 400 || !lvl ? (lvl || Math.hypot(o.x - me.x, o.z - me.z) < 200) : false);
+        W.officers = W.officers.filter((o) => { const d = Math.hypot(o.x - me.x, o.z - me.z); const keep = o.gang ? d < 600 : lvl ? d < 400 : d < 200; if (!keep) scene.remove(o.p.group); return keep; });
         // pulled over (1 star, in a car): stop near a patrol car for 3 seconds and take the fines
         const nearCop = W.police.some((pc) => !pc.wreck && Math.hypot(pc.sim.x - car.x, pc.sim.z - car.z) < 12);
         if (!onFoot && lvl && nearCop && Math.abs(car.speed) < 1) { W.pullT += dt; if (W.pullT > 3) { if (lvl === 1) { const due = city.C.fines[story.active].reduce((a, f) => a + f.amount, 0) + 300; city.C.fines[story.active] = []; story.chars[story.active].money -= due; say('', `PULLED OVER · AED ${due.toLocaleString('en')} IN FINES PAID`); wv.clear(); W.pullT = 0; } else down('busted'); } } else W.pullT = 0;
@@ -2522,7 +2524,19 @@
       function toJSON() { return { fareej: W.arms.fareej.toJSON(), fatimah: W.arms.fatimah.toJSON() }; }
       function fromJSON(j) { if (!j) return; W.arms.fareej = KB.Arsenal.from(j.fareej); W.arms.fatimah = KB.Arsenal.from(j.fatimah); showGun(); }
       showGun();
-      return { W, frame, aimCamera, shopEffect, ammoPrice, toJSON, fromJSON, wanted, arms, showGun, spawnPolice };
+      // gang members for missions: armed, they hold their ground and shoot; killing them is not a police matter on its own
+      function spawnHostiles(at, n) {
+        for (let i = 0; i < n; i++) {
+          const p = P.makePerson({ skin: SKINS_P[i % SKINS_P.length], hair: '#141210', shirt: ['#1d1d22', '#3a3e44', '#4b5236'][i % 3], trousers: '#22252b', height: 1.72 + (i % 3) * 0.05, beard: i % 2 === 0, shoes: '#111' });
+          p.hand.add(gunMesh(i % 3 === 0 ? 'rifle' : 'pistol')); scene.add(p.group);
+          const a = (i / n) * Math.PI * 2, r = 14 + (i % 3) * 5, x = at.x + Math.cos(a) * r, z = at.z + Math.sin(a) * r;
+          const sup = supportAt(x, z, 50);
+          W.officers.push({ p, x, z, y: at.y !== undefined ? at.y : sup ? sup.y : 0, heading: 0, health: 70, armour: 0, dead: false, cool: 1.5 + Math.random() * 2, gang: true, home: { x, z } });
+        }
+      }
+      const hostilesLeft = () => W.officers.filter((o) => o.gang && !o.dead).length;
+      function clearHostiles() { W.officers = W.officers.filter((o) => { if (o.gang) { scene.remove(o.p.group); return false; } return true; }); }
+      return { W, frame, aimCamera, shopEffect, ammoPrice, toJSON, fromJSON, wanted, arms, showGun, spawnPolice, spawnHostiles, hostilesLeft, clearHostiles };
     })();
 
     // ------------------------------------------------------------------ section 5: the phone, money, cars and the garage
@@ -2803,7 +2817,7 @@
         const f = story.foot;
         if (f && Math.hypot(C.sim.x - f.x, C.sim.z - f.z) < 3.6) {
           story.prompt = 'F  GET IN';
-          if (state.keys.has('f')) { state.keys.delete('f'); cars[C.owner] = C; enterCar(); }
+          if (state.keys.has('f')) { state.keys.delete('f'); if (C.owner !== story.active) { if (cars[C.owner] === C) cars[C.owner] = C.prev; C.owner = story.active; C.prev = cars[story.active]; } cars[C.owner] = C; enterCar(); }
         }
         if (story.mode === 'drive' && cars[story.active] === C) C.damage = story.damage - (C.dmg0 || 0);
       }
@@ -2821,6 +2835,31 @@
           scene.add(n.group); A.npc = n;
           if (story.foot) persons[story.active].group.rotation.y = -h;
         }
+        if (su.clearWanted) war.wanted().clear();
+        if (su.moveTo) { const p = placeOf(su.moveTo); if (story.mode === 'drive') exitCar(); story.foot.x = p.x; story.foot.z = p.z; story.foot.y = 1; story.foot.vy = 0; A.abraShot = su.moveTo === 'abraBur'; }
+        if (su.outside) {
+          const p = placeOf(su.outside); garage.grp.visible = false; city.C.interior = null; A.shopCut = null; story.inside = null;
+          if (story.guard) { scene.remove(story.guard.p.group); story.guard = null; }
+          war.clearHostiles();
+          if (story.foot) { story.foot.x = p.x + 6; story.foot.z = p.z + 6; story.foot.y = 30; story.foot.vy = 0; persons[story.active].group.visible = true; }
+        }
+        if (su.hostiles) { const at = su.hostiles.at === 'garage' ? { x: garage.at.x + 10, z: garage.at.z, y: garage.y } : placeOf(su.hostiles.at); war.spawnHostiles(at, su.hostiles.n); }
+        if (su.choice) showChoice(su.choice);
+        if (su.board) showBoard();
+        if (su.payout) {
+          const pay = MI.heistPayout({ ...(A.plan || { approach: 'quiet', crew: 'jomon', car: 'saloon' }), clean: !A.seen });
+          story.chars.fareej.money += pay.fareej; story.chars.fatimah.money += pay.fatimah; city.C.moneyT = 6;
+          life.message('Kiran', `Take: AED ${pay.take.toLocaleString('en')}. Crew cut AED ${pay.crewCut.toLocaleString('en')}. You each get AED ${pay.fareej.toLocaleString('en')}.`);
+        }
+        if (su.bothInCar) {
+          // Fareej pulls up at the tower; Fatimah gets in with the bags
+          const p = placeOf(m.def.start); const ch = story.chars.fatimah; ch.inCar = 'fareej'; persons.fatimah.group.visible = false;
+          if (story.foot && story.active === 'fatimah') { story.foot = null; }
+          story.active = 'fareej'; story.chars.fareej.inCar = true; car = cars.fareej.sim; player = cars.fareej.mesh;
+          car.x = p.x; car.z = p.z; car.y = 30; resetCar(false); car.vx = car.vz = 0; story.mode = 'drive'; root.classList.remove('foot');
+          const plan = A.plan || {}; if (plan.car && plan.car !== 'saloon') { const o = life.F.owned.fareej; let i = o.findIndex((c) => c.id === plan.car); if (i < 0) { o.push({ id: plan.car, paint: '#141416', tune: { engine: plan.crew === 'kiran' ? 2 : 0 } }); i = o.length - 1; } life.F.current.fareej = i; life.applyCar('fareej'); }
+          war.wanted().clear(); war.wanted().crime(plan.approach === 'loud' ? 'killCop' : 'hitPerson', car.x, car.z);
+        }
         if (su.give) { war.W.arms[story.active].give(su.give.weapon, su.give.mags || 2); war.W.arms[story.active].select(su.give.weapon); war.showGun(); }
         if (su.spawnCar) { removeMissionCar(); spawnMissionCar(su.spawnCar); A.car.dmg0 = story.damage; }
         if (su.wanted) { const me = story.foot || car; war.wanted().crime(su.wanted >= 2 ? 'shotsFired' : 'ramCop', me.x, me.z); }
@@ -2832,7 +2871,8 @@
           if (story.mode === 'drive') exitCar();
           story.foot.x = at.x - 24; story.foot.z = at.z + 10; story.foot.y = garage.y; story.foot.heading = Math.PI / 2; story.camYaw = story.foot.heading;
           if (story.guard) scene.remove(story.guard.p.group);
-          story.guard = makeGuard(); story.guard.x = at.x + 6; story.guard.z = at.z; story.guard.down = false;
+          story.guard = makeGuard(); story.guard.x = at.x + 6; story.guard.z = at.z; story.guard.down = false; A.seen = false;
+          if (su.heistLoud && A.plan && A.plan.approach === 'loud') { scene.remove(story.guard.p.group); story.guard = null; war.spawnHostiles({ x: at.x + 8, z: at.z, y: garage.y }, A.plan.crew === 'gunman' ? 3 : 5); war.W.arms.fatimah.give('rifle', 4); war.W.arms.fatimah.select('rifle'); war.showGun(); }
         }
         if (su.shopCut) {
           const me = story.foot || car;
@@ -2868,11 +2908,41 @@
         $('.card h2').textContent = def.title.toUpperCase();
         $('.card .l1').textContent = def.reward ? `Paid: AED ${def.reward.toLocaleString('en')}` : 'Mission passed';
         const next = MI.nextMission(A.done);
-        $('.card .l2').textContent = next ? `Next: ${next.title} (${S.CHARACTERS[next.who].name})` : 'Act 1 complete. Act 2 comes in the next section.';
+        $('.card .l2').textContent = next ? `Next: ${next.title} (${S.CHARACTERS[next.who].name})` : 'That is the story so far. More comes in the next update.';
         $('.card .l3').textContent = '';
         $('.card').style.display = 'block';
         if (next) life.message(next.who === 'fareej' ? 'Uncle Rashid' : 'Unknown number', `${next.title}: meet at ${placeOf(next.start).name}.`);
         state.timeRuns = true; save();
+      }
+      // ---- a choice in a scene (keys 1 and 2, or click)
+      root.insertAdjacentHTML('beforeend', '<div class="choice shopmenu"><h3>WHAT DO YOU DO?</h3><ol></ol><p class="hint2">PRESS 1 OR 2</p></div><div class="board"><h2>THE PLAN</h2><div class="cols"></div><button>CONFIRM THE PLAN</button></div>');
+      const bcss = document.createElement('style'); bcss.textContent = `
+        .dh .choice { top:auto; bottom:120px; transform:none; } .dh .choice li { cursor:pointer; }
+        .dh .board { position:absolute; inset:8% 10%; background:#1c1a16 url() ; border:1px solid var(--line); box-shadow:0 20px 60px rgba(0,0,0,.6); padding:26px 32px; display:none; z-index:3;
+          background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.02) 0 2px, transparent 2px 6px); }
+        .dh .board h2 { margin:0 0 18px; letter-spacing:8px; font-weight:600; color:var(--gold); } .dh .board .cols { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+        .dh .board h4 { margin:0 0 10px; letter-spacing:3px; color:var(--dim); font-weight:600; } .dh .board .opt { background:#f2ead6; color:#1b1a17; padding:10px 12px; margin-bottom:10px; cursor:pointer; transform:rotate(-0.6deg); box-shadow:0 3px 8px rgba(0,0,0,.4); font-family:"Marker Felt","Segoe Print",cursive; }
+        .dh .board .opt:nth-child(odd) { transform:rotate(0.8deg); } .dh .board .opt.on { outline:3px solid #b5402c; } .dh .board .opt small { display:block; font-family:inherit; opacity:.7; font-size:12px; }
+        .dh .board button { margin-top:20px; font:inherit; font-size:16px; letter-spacing:4px; background:#b5402c; color:#fff; border:0; padding:10px 22px; cursor:pointer; }`;
+      root.appendChild(bcss);
+      function showChoice(ch) {
+        A.choiceMade = false; const el = $('.choice');
+        el.querySelector('ol').innerHTML = ch.options.map((o, i) => `<li data-i="${i}">${o}</li>`).join(''); el.classList.add('on');
+        const pick = (i) => { A.flags = A.flags || {}; A.flags[ch.key] = i; A.choiceMade = true; el.classList.remove('on'); window.removeEventListener('keydown', key); say('', i === 0 ? 'SHE WILL REMEMBER THAT YOU TOLD HER' : 'SHE WILL REMEMBER THAT YOU SAID NOTHING'); };
+        const key = (e) => { if (e.key === '1' || e.key === '2') pick(+e.key - 1); };
+        window.addEventListener('keydown', key);
+        el.querySelectorAll('li').forEach((li) => li.addEventListener('click', () => pick(+li.dataset.i)));
+      }
+      function showBoard() {
+        A.planDone = false; A.plan = { approach: 'quiet', crew: 'jomon', car: 'saloon' };
+        const el = $('.board'), cols = el.querySelector('.cols');
+        const groups = [['approach', 'APPROACH', { quiet: ['Quiet', 'Sneak past security. Less money if they see you.'], loud: ['Loud', 'Guns out. More money, more police.'] }],
+          ['crew', 'CREW', Object.fromEntries(Object.entries(MI.CREW).map(([k, c]) => [k, [c.name + ` (${Math.round(c.cut * 100)}%)`, c.skill]]))],
+          ['car', 'GETAWAY CAR', Object.fromEntries(Object.entries(MI.GETAWAY).map(([k, n]) => [k, [n, '']]))]];
+        const draw = () => { cols.innerHTML = groups.map(([g, t, opts]) => `<div><h4>${t}</h4>${Object.entries(opts).map(([k, [n, d]]) => `<div class="opt ${A.plan[g] === k ? 'on' : ''}" data-g="${g}" data-k="${k}">${n}<small>${d}</small></div>`).join('')}</div>`).join('');
+          cols.querySelectorAll('.opt').forEach((o) => o.addEventListener('click', () => { A.plan[o.dataset.g] = o.dataset.k; draw(); })); };
+        draw(); el.style.display = 'block';
+        el.querySelector('button').onclick = () => { el.style.display = 'none'; A.planDone = true; life.message('Fatimah', `Plan: ${A.plan.approach}, with ${MI.CREW[A.plan.crew].name}, in the ${MI.GETAWAY[A.plan.car]}.`); save(); };
       }
       function start(def) {
         const m = new S.Mission(def); story.mission = m; MS.line = 0;
@@ -2885,6 +2955,7 @@
           pos: { x: me.x, z: me.z }, speed: story.mode === 'drive' ? Math.abs(car.speed) : 0, wanted: war.wanted().level,
           inMissionCar: !!C && story.mode === 'drive' && car === C.sim, missionCarDamage: C ? C.damage : 0,
           missionCarLost: !!C && cars[C.owner] === C && story.mode === 'foot' && Math.hypot(C.sim.x - me.x, C.sim.z - me.z) > 250,
+          hostilesLeft: war.hostilesLeft(), choiceMade: !!A.choiceMade, planDone: !!A.planDone, quiet: !A.plan || A.plan.approach === 'quiet',
         };
       }
       function runEvents(dt) {
@@ -2910,6 +2981,7 @@
         if (A.room) { const gp = A.room.grp.position; camera.position.set(gp.x + 0.6 + t * 0.06, gp.y + 1.5, gp.z + 1.4 - t * 0.05); camera.lookAt(gp.x + 2.2, gp.y + 0.9, gp.z - 0.6); return true; }
         if (A.shopCut) { const s = A.shopCut; camera.position.set(s.x + 2.2 - t * 0.05, -120 + 1.6, s.z + 3.2); camera.lookAt(s.x - 2, -120 + 0.9, s.z + 1); return true; }
         if (A.npc) A.npc.update(dt, 0, false);
+        if (A.abraShot && story.mission.step.id === 'abra' && sights.G.abras.length) { const ab = sights.G.abras[0].g.position; camera.position.set(ab.x + 14, 4, ab.z + 10); camera.lookAt(ab.x, 1, ab.z); return true; }
         const me = story.foot || car, a = t * 0.12;
         camera.position.set(me.x + Math.cos(a) * 6, (me.y || 0) + 2.2, me.z + Math.sin(a) * 6); camera.lookAt(me.x, (me.y || 0) + 1.2, me.z);
         if (story.foot) persons[story.active].update(dt, 0, false);

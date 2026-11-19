@@ -165,3 +165,26 @@ Built (`landmarks.js`, 3 tests in `NotchWindows/tests/desertheat-landmarks.test.
 Not done / gaps: the map's west edge cuts the outer crescent of the Palm, and the airport's east side; downloading more map
 data was blocked in this session, so those need the owner's go-ahead to fetch. The airport terminal is not enterable.
 No Metro rides yet (trains run, you cannot board).
+
+## Section 8: Act 2 and the first heist (19 Nov 2026)
+
+Built (missions 7-12 in `missions.js`, heist rules with a test; game support for gangs, choices and the plan board):
+- **The Gold Run** (Fareej): collect Rashid's bag in the souk, 2 stars, run to the abra station, cross the Creek for one
+  dirham, walk away on the Bur Dubai side.
+- **Paper Towers** (Fatimah): the Palm sales office; sneak to the records room, photograph six sales of one villa in a week,
+  the alarm, lose 2 stars.
+- **Desert Delivery** (Fareej): drive Kiran's pickup to a camp past Ras Al Khor; the deal goes wrong; the first big gunfight
+  against six armed men (an SMG from Kiran); back to Kiran. AED 60,000.
+- **Detective** (Fatimah): Officer Mariam at the Bur Dubai police station; a choice (tell her about Victor, or say nothing)
+  that is remembered.
+- **The Heist Plan** (both): a planning board: quiet or loud, the crew (Jomon 6%, Kiran 12% with a faster car, a hired
+  gunman 15% with fewer guards when loud), the getaway car; then a prep job: steal a security van and bring it in clean.
+- **Business Bay Job** (both): quiet (sneak to the vault lift; being seen costs 30% of the take) or loud (fight armed
+  security with a rifle); switch to Fareej in the getaway car, 3 or 4 stars; take the money to the garage; the split
+  (1.2 or 1.8 million, minus the crew's cut, halved).
+- Gang members are a new kind of enemy: armed, they hold position and shoot; they do not count as police.
+- Businesses from section 5 are the "businesses" part of this section.
+- The review script played all of Act 2 from start to end with the loud plan (no errors).
+
+Not done / gaps: the desert camp is at the city's edge until section 9 adds the desert; no jet ski (Paper Towers escapes on
+foot); the choice changes later dialogue only once Act 4 is written.
