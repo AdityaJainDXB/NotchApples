@@ -65,7 +65,7 @@
     }
 
     let phase = 0, breath = 0, pose = 'stand';
-    function update(dt, speed, crouch) {
+    function update(dt, speed, crouch, aim) {
       breath += dt;
       if (pose === 'sit') {
         for (const side of [-1, 1]) { const L = limbs[side]; L.hip.rotation.x = 1.5; L.kn.rotation.x = -1.5; L.sh.rotation.x = 0.4; L.el.rotation.x = 0.9; }
@@ -90,9 +90,14 @@
       chest.rotation.y = sw * 0.08 * amt;
       chest.scale.y = 1 + Math.sin(breath * 1.6) * 0.008 * (1 - amt);
       head.rotation.x = run * 0.12;
+      if (aim) {   // both hands forward on the gun, right arm straight
+        limbs[1].sh.rotation.x = 1.5; limbs[1].sh.rotation.z = 0.05; limbs[1].el.rotation.x = 0.02;
+        limbs[-1].sh.rotation.x = 1.3; limbs[-1].sh.rotation.z = -0.45; limbs[-1].el.rotation.x = 0.35;
+        chest.rotation.y = -0.15;
+      }
       if (limbs.robe) { limbs.robe.rotation.x = -0.04 * amt + (crouch ? 0.5 : 0); limbs.robe.scale.x = 1 + Math.abs(sw) * 0.08 * amt; }
     }
-    return { group: g, update, torch, setPose(p) { pose = p; if (p === 'stand') hips.position.y = 0.95; } };
+    return { group: g, update, torch, hand: limbs[1].el, setPose(p) { pose = p; if (p === 'stand') hips.position.y = 0.95; } };
   }
 
   window.DesertHeatPeople = { makePerson };

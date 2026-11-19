@@ -34,6 +34,7 @@
     gym: { label: 'Gym', names: ['Iron Dunes Gym', 'Pulse Fitness'], sign: '#3a3a3a' },
     bank: { label: 'Bank', names: ['Gulf Crescent Bank', 'Emirates Pearl Bank'], sign: '#1f3b5c' },
     laundry: { label: 'Laundry', names: ['Clean Way Laundry', 'Al Safa Dry Clean'], sign: '#3c86b8' },
+    guns: { label: 'Guns', names: ['Desert Arms Co.', 'Falcon Firearms', 'Al Quoz Shooting Supplies'], sign: '#4a4f3a' },
   };
   // How likely each type is per district (souks have gold, offices have banks and cafés, Al Quoz has workshops' cafeterias).
   const MIX = {
@@ -44,7 +45,7 @@
     downtown: { cafeteria: 6, clothing: 4, pharmacy: 2, bank: 3, gym: 2, grocery: 2, phone: 1 },
     businessbay: { cafeteria: 6, bank: 3, gym: 2, grocery: 3, pharmacy: 2, laundry: 1 },
     marina: { cafeteria: 6, grocery: 3, gym: 3, clothing: 2, pharmacy: 2, barber: 2, bank: 1 },
-    alquoz: { cafeteria: 5, grocery: 4, laundry: 2, barber: 2, phone: 1 },
+    alquoz: { cafeteria: 5, grocery: 4, laundry: 2, barber: 2, phone: 1, guns: 1.4 },
   };
   function pickType(district, r) {
     const mix = MIX[district] || MIX.default;
@@ -99,6 +100,9 @@
     gym: [['Day pass and a workout', 30, { staminaSkill: 0.05 }]],
     bank: [['Pay all fines', 'fines', { payFines: true }]],
     laundry: [['Wash and iron', 15, {}]],
+    guns: [['Kestrel P9 pistol', 1800, { weapon: 'pistol' }], ['Mako .45 heavy pistol', 3600, { weapon: 'heavy' }], ['Vanta 9 SMG', 6200, { weapon: 'smg' }],
+      ['Harrow 12 shotgun', 5400, { weapon: 'shotgun' }], ['Sable AR rifle', 12500, { weapon: 'rifle' }], ['Longreach sniper rifle', 21000, { weapon: 'sniper' }],
+      ['Frag grenades (3)', 900, { weapon: 'grenade', mags: 3 }], ['Ammo for the weapon in hand (2 magazines)', 'ammo', { ammo: 2 }], ['Body armour', 500, { armour: 100 }]],
   };
   // Gold price per gram moves each game day (deterministic, between about 300 and 340 AED).
   const goldPrice = (day) => Math.round(318 + Math.sin(day * 0.9) * 12 + (hash(day, 7) - 0.5) * 14);

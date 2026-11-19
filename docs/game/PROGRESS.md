@@ -78,3 +78,29 @@ Built (`city.js`, 10 tests in `NotchWindows/tests/desertheat-city.test.mjs`, dra
 Not done / gaps: OpenStreetMap shop and signal data could not be downloaded (Overpass refused), so shops and signals are
 placed by rules on the real buildings and junctions, not their true positions; people are simple instanced figures; no
 lane changes or indicators for traffic; no random events yet; fines are kept per character and paid at a bank.
+
+## Section 4: weapons and the police (19 Nov 2026)
+
+Built (`combat.js`, 9 tests in `NotchWindows/tests/desertheat-combat.test.mjs`, drawing in game.js):
+- Weapons with made-up names: fists, bat, Kestrel P9 pistol, Mako .45, Vanta 9 SMG, Harrow 12 shotgun, Sable AR rifle,
+  Longreach sniper (scope), frag grenades. Magazines, reserve ammo, reloads (R), rate of fire, spread that grows when moving,
+  recoil, Fatimah's Focus (Q) steadies her aim. Each character keeps their own weapons; they are saved.
+- Aiming: hold the right mouse button (or K to toggle on a trackpad) for an over-the-shoulder camera and crosshair; left click
+  (or L) fires. Mouse wheel or [ ] changes weapon, G throws a grenade. Pistols and the SMG can be fired from a car.
+- Hits: people fall, traffic stops, police cars take damage and blow up, officers can be hit. Tracers, muzzle flash, sparks,
+  explosions, synthesised gunshots.
+- Gun shops in Al Quoz (enterable, wall racks): buy weapons, ammo for the weapon in hand, body armour.
+- Health and armour (thin bars over the mini-map); armour takes two thirds; crouching is cover (70% less damage); health comes
+  back to half on its own.
+- Wanted level 1-5: shots fired near witnesses = 2 stars, hitting a person 3, hitting a police officer 4; patrol cars (white
+  with a green band and a flashing light bar, a siren) that chase and ram; officers get out and run to you, shoot from 2 stars
+  (or 1 star if you have a gun out), arrest you at 1 star if you stand still; roadblocks from 3 stars; a helicopter with a
+  searchlight from 4; fast police supercars at 5. Escape by leaving the search circle and staying out of sight (hiding inside
+  the circle works, slowly). 1 star in a car: stop next to the patrol car for 3 seconds and pay the fines. Over AED 5,000 of
+  unpaid fines and a patrol may stop you.
+- Arrested: wake outside the Bur Dubai police station, lose 10% of cash (at most 5,000) and the weapons. Hospitalised: the
+  bill (500 plus 5%, at most 3,000).
+
+Not done / gaps: no take-cover key with blind fire (crouch is the cover), no shooting-range mini-game, no weapon wheel (the
+mouse wheel cycles), police do not use the road graph for shortcuts, no spike strips or snipers at 5 stars, no safe zones
+(mosques, schools, hospitals) because the map data for them could not be downloaded.
