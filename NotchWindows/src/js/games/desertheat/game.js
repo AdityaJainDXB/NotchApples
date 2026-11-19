@@ -410,12 +410,12 @@
       <canvas class="mini" width="380" height="380"></canvas>
       <div class="place"><div class="en"></div><div class="ar"></div><div class="meta"></div></div>
       <div class="clock"></div>
-      <div class="hint"><kbd>W A S D</kbd> drive &nbsp;·&nbsp; <kbd>SPACE</kbd> hand brake &nbsp;·&nbsp; <kbd>C</kbd> camera &nbsp;·&nbsp; <kbd>M</kbd> map &nbsp;·&nbsp; <kbd>T</kbd> time of day &nbsp;·&nbsp; <kbd>R</kbd> reset car &nbsp;·&nbsp; <kbd>F</kbd> on foot &nbsp;·&nbsp; <kbd>TAB</kbd> switch &nbsp;·&nbsp; <kbd>Q</kbd> ability</div>
+      <div class="hint"><kbd>W A S D</kbd> drive &nbsp;·&nbsp; <kbd>SPACE</kbd> hand brake &nbsp;·&nbsp; <kbd>C</kbd> camera &nbsp;·&nbsp; <kbd>M</kbd> map &nbsp;·&nbsp; <kbd>T</kbd> time of day &nbsp;·&nbsp; <kbd>R</kbd> reset car &nbsp;·&nbsp; <kbd>F</kbd> on foot &nbsp;·&nbsp; <kbd>TAB</kbd> switch &nbsp;·&nbsp; <kbd>Q</kbd> ability &nbsp;·&nbsp; <kbd>P</kbd> phone</div>
       <div class="panel"><h4>TIME OF DAY</h4><input type="range" min="0" max="24" step="0.05"><div class="row">
         <button data-h="6.2">Dawn</button><button data-h="12">Noon</button><button data-h="17.25">Sunset</button><button data-h="21.5">Night</button></div>
         <label><input type="checkbox" class="run" checked> Time passes (48 min a day)</label></div>
       <div class="fps"></div>
-      <div class="bigmap"><canvas></canvas><div class="t">DUBAI · CLICK TO MOVE THERE (TEST BUILD)</div><div class="credit">Map data © OpenStreetMap contributors</div></div>
+      <div class="bigmap"><canvas></canvas><div class="t">DUBAI · CLICK TO SET A WAYPOINT</div><div class="credit">Map data © OpenStreetMap contributors</div></div>
       <div class="load"><h1>DESERT HEAT</h1><p class="msg">LOADING DUBAI</p><div class="bar"><div></div></div><div class="credit">Map data © OpenStreetMap contributors</div></div>`);
     host.appendChild(root);
     const $ = (s) => root.querySelector(s);
@@ -543,7 +543,7 @@
         resetCar(true);
         city.placeAll();
         state.loaded = true;
-        { const sv = load(); if (sv && sv.done && sv.done.includes('night-fare')) { story.unlocked = sv.unlocked || { fatimah: true }; story.complete = true; story.chars.fareej.money = sv.chars.fareej.money; story.chars.fatimah.money = sv.chars.fatimah.money; war.fromJSON(sv.arms); } else if (!opts.noStory) startMission(); }
+        { const sv = load(); if (sv && sv.done && sv.done.includes('night-fare')) { story.unlocked = sv.unlocked || { fatimah: true }; story.complete = true; story.chars.fareej.money = sv.chars.fareej.money; story.chars.fatimah.money = sv.chars.fatimah.money; war.fromJSON(sv.arms); life.fromJSON(sv.life); } else if (!opts.noStory) startMission(); }
         $('.load').style.opacity = '0'; setTimeout(() => { $('.load').style.display = 'none'; }, 700);
         setTimeout(() => { $('.hint').style.opacity = '0'; }, 14000);
         renderer.domElement.focus();
@@ -1499,7 +1499,7 @@
     }
 
     // ---- homes: walk up to your door, press E to go in; inside, E at the door to leave. Going home saves.
-    function save() { try { localStorage.setItem('desertheat.save', JSON.stringify({ v: 1, unlocked: story.unlocked, chars: { fareej: { money: story.chars.fareej.money }, fatimah: { money: story.chars.fatimah.money } }, hour: state.hour, done: story.complete ? ['night-fare'] : [], arms: typeof war !== 'undefined' ? war.toJSON() : null })); story.savedAt = performance.now(); } catch { /* storage can be blocked; the game still runs */ } }
+    function save() { try { localStorage.setItem('desertheat.save', JSON.stringify({ v: 1, unlocked: story.unlocked, chars: { fareej: { money: story.chars.fareej.money }, fatimah: { money: story.chars.fatimah.money } }, hour: state.hour, done: story.complete ? ['night-fare'] : [], arms: typeof war !== 'undefined' ? war.toJSON() : null, life: typeof life !== 'undefined' ? life.toJSON() : null })); story.savedAt = performance.now(); } catch { /* storage can be blocked; the game still runs */ } }
     function load() { try { return JSON.parse(localStorage.getItem('desertheat.save') || 'null'); } catch { return null; } }
 
     function homeStep() {
@@ -1544,6 +1544,7 @@
       }
       city.frame(dt);
       war.frame(dt);
+      life.frame(dt);
       $('.prompt').textContent = story.prompt; $('.prompt').style.display = story.prompt ? 'block' : 'none';
       story.sub.t -= dt; if (story.sub.t <= 0) $('.sub').classList.remove('on');
       return story.mode;
@@ -2511,6 +2512,246 @@
       return { W, frame, aimCamera, shopEffect, ammoPrice, toJSON, fromJSON, wanted, arms, showGun, spawnPolice };
     })();
 
+    // ------------------------------------------------------------------ section 5: the phone, money, cars and the garage
+
+    const EC = window.DesertHeatEconomy, NV = window.DesertHeatNav, ON = window.DesertHeatOnline;
+    const life = (() => {
+      const F = {
+        open: false, app: 'home', messages: [], waypoint: null, route: null, routeT: 0, graph: null,
+        owned: { fareej: [{ id: 'saloon', paint: '#6d7378', tune: {} }], fatimah: [{ id: 'coupe', paint: '#e9e6df', tune: {} }] },
+        current: { fareej: 0, fatimah: 0 }, property: ['deira-flat', 'marina-apt'], business: {}, lastDay: 0,
+        ride: null, rides: 0, photo: false, gallery: [], settings: { dayMin: 48, shake: true, subs: 'normal' },
+        stats: { policeWrecked: 0, maxWanted: 0, fines: 0, rides: 0, speed: 0 }, smoke: [],
+      };
+      const GARAGE = S.xz(25.1385, 55.2290);
+
+      // ---- markup
+      root.insertAdjacentHTML('beforeend', `<div class="phone"><div class="bar"><span class="pt"></span><span>●●● 5G</span></div><div class="scr"></div><div class="homebtn"></div></div>
+        <div class="garagemenu shopmenu"><h3>KIRAN'S GARAGE · AL QUOZ</h3><p class="sub2"></p><ol></ol><p class="hint2">NUMBER KEYS choose · drive away to leave</p></div>`);
+      const css = document.createElement('style'); css.textContent = `
+        .dh .phone { position:absolute; right:40px; bottom:40px; width:300px; height:600px; border-radius:38px; background:#0c0c0e; border:9px solid #1d1d20; box-shadow:0 20px 60px rgba(0,0,0,.6); display:none; overflow:hidden; font-family:-apple-system,"Segoe UI",sans-serif; letter-spacing:0; }
+        .dh .phone.on { display:block; animation: dhup .25s ease-out; } @keyframes dhup { from { transform:translateY(60px); opacity:0; } }
+        .dh .phone .bar { display:flex; justify-content:space-between; padding:12px 22px 4px; font-size:12px; color:#ddd; }
+        .dh .phone .scr { position:absolute; left:0; right:0; top:34px; bottom:34px; overflow-y:auto; padding:10px 16px; color:#eee; font-size:13px; background:linear-gradient(160deg,#30261c,#121a24); }
+        .dh .phone .homebtn { position:absolute; left:50%; bottom:10px; width:110px; height:5px; margin-left:-55px; border-radius:3px; background:#ddd; cursor:pointer; }
+        .dh .phone .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px 8px; margin-top:24px; }
+        .dh .phone .app { text-align:center; font-size:10.5px; cursor:pointer; color:#eee; } .dh .phone .app i { display:block; width:52px; height:52px; margin:0 auto 5px; border-radius:13px; font-style:normal; font-size:24px; line-height:52px; color:#fff; }
+        .dh .phone h4 { margin:6px 0 10px; font-size:20px; font-weight:600; } .dh .phone .row { padding:9px 0; border-bottom:1px solid rgba(255,255,255,.08); display:flex; justify-content:space-between; gap:8px; align-items:center; }
+        .dh .phone .row small { display:block; color:#999; font-size:11px; } .dh .phone button { font:inherit; font-size:12px; border:0; border-radius:14px; padding:5px 11px; background:#2f7d4a; color:#fff; cursor:pointer; }
+        .dh .phone button.alt { background:#444; } .dh .phone button:disabled { background:#333; color:#777; cursor:default; } .dh .phone .soon { display:inline-block; font-size:10px; padding:2px 7px; border-radius:8px; background:#b08a2e; color:#111; font-weight:600; margin-left:6px; }
+        .dh .phone img { width:100%; border-radius:8px; margin:6px 0; }
+        .dh.photo > *:not(canvas.view):not(.phone):not(style) { opacity:0 !important; }
+        .dh .garagemenu { top:40%; }`;
+      root.appendChild(css);
+      const scr = $('.phone .scr');
+
+      // ---- messages
+      function message(from, text) { F.messages.unshift({ from, text, at: clockText() }); if (!F.open) say('', `NEW MESSAGE · ${from.toUpperCase()}`); }
+      const clockText = () => { const h = Math.floor(state.hour), m = Math.floor((state.hour - h) * 60); return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0'); };
+      message('Unknown number', 'We know you took them.');
+      message('Jomon', 'Machan! Ride app pays double after midnight this week. Go online 🚕');
+      message('Kiran Desai', 'Bring the car to Al Quoz when it needs fixing. Cash only, no questions.');
+
+      // ---- the apps
+      const APPS = [
+        ['messages', 'Messages', '#2f9a52', '✉'], ['map', 'Maps', '#3d78c9', '⌖'], ['bank', 'Bank', '#1f3b5c', 'Ⓑ'], ['ride', 'Sayara Ride', '#111', '⛟'],
+        ['cars', 'My Cars', '#8d1f1f', '⚙'], ['web', 'Internet', '#4a5a6a', '◎'], ['camera', 'Camera', '#555', '◉'], ['online', 'Online', '#6a3f8a', '⇄'],
+        ['settings', 'Settings', '#666', '≡'],
+      ];
+      const money = () => story.chars[story.active].money;
+      function render() {
+        $('.phone .pt').textContent = clockText();
+        const ch = story.chars[story.active], who = story.active;
+        let h = '';
+        if (F.app === 'home') h = `<div style="font-size:42px;font-weight:200;text-align:center;margin-top:20px">${clockText()}</div><div style="text-align:center;color:#bbb">${S.CHARACTERS[who].name} · AED ${Math.round(ch.money).toLocaleString('en')}</div><div class="grid">${APPS.map(([id, n, c, g]) => `<div class="app" data-app="${id}"><i style="background:${c}">${g}</i>${n}</div>`).join('')}</div>`;
+        if (F.app === 'messages') h = `<h4>Messages</h4>` + (F.messages.map((m) => `<div class="row"><div><b>${m.from}</b><small>${m.text}</small></div><small>${m.at}</small></div>`).join('') || '<p>No messages.</p>');
+        if (F.app === 'map') h = `<h4>Maps</h4><p>Open the full map (M) and click a place to set a GPS waypoint. The route shows on the mini-map.</p>${F.waypoint ? `<div class="row">Waypoint set<button class="alt" data-act="clearwp">Clear</button></div>` : ''}<h4 style="font-size:15px">Places</h4>` +
+          [['Kiran\'s Garage', GARAGE], ['Fareej\'s flat', S.PLACES.fareejHome], ['Fatimah\'s tower', S.PLACES.fatimahHome], ...EC.BUSINESSES.filter((b) => F.business[b.id]).map((b) => [b.name, S.xz(b.lat, b.lon)])].map(([n, p], i) => `<div class="row">${n}<button data-act="wp" data-x="${p.x}" data-z="${p.z}">Go</button></div>`).join('');
+        if (F.app === 'bank') {
+          const fines = city.C.fines[who].reduce((a, f) => a + f.amount, 0);
+          h = `<h4>Gulf Crescent Bank</h4><div class="row">Fareej<b>AED ${Math.round(story.chars.fareej.money).toLocaleString('en')}</b></div><div class="row">Fatimah<b>AED ${Math.round(story.chars.fatimah.money).toLocaleString('en')}</b></div>
+            <div class="row">Send AED 1,000 to ${who === 'fareej' ? 'Fatimah' : 'Fareej'}<button data-act="xfer">Send</button></div>
+            <div class="row"><div>Unpaid fines<small>${city.C.fines[who].length} tickets</small></div><button data-act="payfines" ${fines ? '' : 'disabled'}>Pay AED ${fines.toLocaleString('en')}</button></div>
+            <div class="row"><div>Gold<small>${ch.gold || 0} g</small></div></div>` +
+            EC.BUSINESSES.filter((b) => F.business[b.id]).map((b) => `<div class="row"><div>${b.name}<small>AED ${b.perDay.toLocaleString('en')} a day</small></div></div>`).join('');
+        }
+        if (F.app === 'ride') {
+          if (who !== 'fareej') h = '<h4>Sayara Ride</h4><p>Only Fareej drives for Sayara.</p>';
+          else h = `<h4>Sayara Ride</h4><p>${F.ride ? (F.ride.stage === 'pickup' ? `Picking up ${F.ride.name}. Follow the GPS.` : `Taking ${F.ride.name} to ${F.ride.toName}.`) : 'You are offline.'}</p><div class="row">Rides today<b>${F.rides}</b></div>` +
+            `<button data-act="${F.ride ? 'rideoff' : 'rideon'}">${F.ride ? 'Go offline' : 'Go online'}</button>`;
+        }
+        if (F.app === 'cars') h = `<h4>My Cars</h4>` + F.owned[who].map((c, i) => `<div class="row"><div>${EC.CARS[c.id].name}<small>${EC.CARS[c.id].cls} · <span style="color:${c.paint}">■</span> · engine ${c.tune.engine || 0}</small></div>${i === F.current[who] ? '<small>IN USE</small>' : `<button data-act="deliver" data-i="${i}">Deliver (AED 250)</button>`}</div>`).join('');
+        if (F.app === 'web') h = `<h4>Internet</h4><h4 style="font-size:15px">Autos Dubai</h4>` +
+          Object.entries(EC.CARS).filter(([, c]) => !c.hidden).map(([id, c]) => `<div class="row"><div>${c.name}<small>${c.cls}</small></div><button data-act="buycar" data-id="${id}" ${c.price > money() ? 'disabled' : ''}>AED ${c.price.toLocaleString('en')}</button></div>`).join('') +
+          `<h4 style="font-size:15px">Homes</h4>` + EC.PROPERTY.filter((p) => p.price).map((p) => `<div class="row"><div>${p.name}</div>${F.property.includes(p.id) ? '<small>OWNED</small>' : `<button data-act="buyprop" data-id="${p.id}" ${p.price > money() ? 'disabled' : ''}>AED ${p.price.toLocaleString('en')}</button>`}</div>`).join('') +
+          `<h4 style="font-size:15px">Businesses for sale</h4>` + EC.BUSINESSES.map((b) => `<div class="row"><div>${b.name}<small>about AED ${b.perDay.toLocaleString('en')} a day</small></div>${F.business[b.id] ? '<small>OWNED</small>' : `<button data-act="buybiz" data-id="${b.id}" ${b.price > money() ? 'disabled' : ''}>AED ${b.price.toLocaleString('en')}</button>`}</div>`).join('') +
+          `<h4 style="font-size:15px">Gulf News Today</h4>` + EC.headlines(F.stats).map((t) => `<div class="row">${t}</div>`).join('');
+        if (F.app === 'camera') h = `<h4>Camera</h4><p>Photo mode hides the screen text. Drag to turn the camera, SPACE takes a photo, P comes back.</p><button data-act="photo">Open photo mode</button>` + F.gallery.map((u) => `<img src="${u}">`).join('');
+        if (F.app === 'online') h = `<h4>Online <span class="soon">${ON.STATUS.toUpperCase()}</span></h4><p>Drive Dubai with up to ${ON.MAX_PLAYERS} friends in one city: join with a 4-letter room code, race, follow each other and play the free roam together.</p><p style="color:#bbb">Online play is coming in a later update. It is not switched on in this version.</p><button disabled>Join a room</button> <button disabled class="alt">Create a room</button>`;
+        if (F.app === 'settings') h = `<h4>Settings</h4><div class="row">Day length<span>${[24, 48, 96].map((m) => `<button class="${F.settings.dayMin === m ? '' : 'alt'}" data-act="day" data-m="${m}">${m} min</button>`).join(' ')}</span></div>
+          <div class="row">Camera shake<button class="${F.settings.shake ? '' : 'alt'}" data-act="shake">${F.settings.shake ? 'On' : 'Off'}</button></div>
+          <div class="row">Big subtitles<button class="${F.settings.subs === 'big' ? '' : 'alt'}" data-act="subs">${F.settings.subs === 'big' ? 'On' : 'Off'}</button></div>
+          <div class="row"><small>Map data © OpenStreetMap contributors (ODbL)</small></div>`;
+        if (F.app !== 'home') h = `<div style="cursor:pointer;color:#8ab4ff" data-app="home">‹ Home</div>` + h;
+        scr.innerHTML = h;
+      }
+      scr.addEventListener('click', (e) => {
+        const a = e.target.closest('[data-app]'); if (a) { F.app = a.dataset.app; render(); return; }
+        const b = e.target.closest('[data-act]'); if (!b || b.disabled) return;
+        const who = story.active, ch = story.chars[who], act = b.dataset.act;
+        if (act === 'wp') setWaypoint(+b.dataset.x, +b.dataset.z);
+        if (act === 'clearwp') { F.waypoint = null; F.route = null; }
+        if (act === 'xfer') { const other = who === 'fareej' ? 'fatimah' : 'fareej'; const n = EC.transfer(ch, story.chars[other], 1000); message('Gulf Crescent Bank', `AED ${n} sent to ${S.CHARACTERS[other].name}.`); }
+        if (act === 'payfines') { const due = city.C.fines[who].reduce((x, f) => x + f.amount, 0); if (due <= ch.money) { ch.money -= due; city.C.fines[who] = []; message('Dubai Police', `Fines of AED ${due} paid. Thank you.`); } }
+        if (act === 'rideon') startRide(); if (act === 'rideoff') { endRide(); }
+        if (act === 'deliver') deliver(+b.dataset.i);
+        if (act === 'buycar') { const c = EC.CARS[b.dataset.id]; if (c.price <= ch.money) { ch.money -= c.price; F.owned[who].push({ id: b.dataset.id, paint: EC.PAINTS[0][1], tune: {} }); message('Autos Dubai', `Your ${c.name} is ready. Order it from My Cars.`); } }
+        if (act === 'buyprop') { const p = EC.PROPERTY.find((x) => x.id === b.dataset.id); if (p.price <= ch.money) { ch.money -= p.price; F.property.push(p.id); message('Bayut Homes', `Keys to ${p.name} are yours. It's a save point now.`); } }
+        if (act === 'buybiz') { const x = EC.BUSINESSES.find((y) => y.id === b.dataset.id); if (x.price <= ch.money) { ch.money -= x.price; F.business[x.id] = { day: city.C.day, owner: who }; message('Manager', `Welcome to ${x.name}. I'll send the takings to your bank every day.`); } }
+        if (act === 'photo') { togglePhone(false); F.photo = true; root.classList.add('photo'); }
+        if (act === 'day') F.settings.dayMin = +b.dataset.m;
+        if (act === 'shake') F.settings.shake = !F.settings.shake;
+        if (act === 'subs') { F.settings.subs = F.settings.subs === 'big' ? 'normal' : 'big'; $('.sub').style.fontSize = F.settings.subs === 'big' ? '30px' : ''; }
+        save(); render();
+      });
+      $('.phone .homebtn').addEventListener('click', () => { F.app = 'home'; render(); });
+      function togglePhone(on) { F.open = on === undefined ? !F.open : on; $('.phone').classList.toggle('on', F.open); if (F.open) { F.app = 'home'; render(); } }
+
+      // ---- GPS
+      function setWaypoint(x, z) { F.waypoint = { x, z }; F.routeT = 0; say('', 'WAYPOINT SET'); }
+      function updateRoute(dt) {
+        const tgt = F.ride ? F.ride.target : missionTarget() || F.waypoint;
+        F.routeT -= dt;
+        if (!tgt) { F.route = null; return; }
+        if (F.routeT > 0 && F.route && F.route.to === tgt) return;
+        F.routeT = 2;
+        if (!F.graph) F.graph = NV.buildGraph(world.roads);
+        const me = story.foot || car;
+        const r = NV.route(F.graph, world.roads, me.x, me.z, tgt.x, tgt.z);
+        // a route far longer than the straight line means the snap went to the wrong road: show the straight line instead
+        const crow = Math.hypot(tgt.x - me.x, tgt.z - me.z);
+        F.route = r && r.length < crow * 3 + 400 ? { pts: [me.x, me.z, ...r.points], to: tgt, len: r.length } : { pts: [me.x, me.z, tgt.x, tgt.z], to: tgt, len: crow };
+        if (tgt === F.waypoint && Math.hypot(me.x - tgt.x, me.z - tgt.z) < 25) { F.waypoint = null; say('', 'YOU HAVE ARRIVED'); }
+      }
+      // drawn by drawMini (inside its transformed context)
+      function drawRoute(g) {
+        if (!F.route) return;
+        const p = F.route.pts; g.strokeStyle = 'rgba(200,162,90,0.95)'; g.lineWidth = 9; g.lineCap = 'round'; g.lineJoin = 'round';
+        g.beginPath(); g.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) g.lineTo(p[i], p[i + 1]); g.stroke();
+        const t = F.route.to; g.fillStyle = '#f0c46c'; g.beginPath(); g.arc(t.x, t.z, 14, 0, 7); g.fill();
+      }
+
+      // ---- cars: models, tuning and paint
+      function applyCar(who) {
+        const o = F.owned[who][F.current[who]], c = cars[who], spec = EC.CARS[o.id];
+        c.sim.spec = EC.specFor(new L.Car().spec, o.id, o.tune);
+        c.mesh.body.scale.set(spec.body[0], spec.body[1], spec.body[2]);
+        c.mesh.paint.color.set(o.paint);
+      }
+      function deliver(i) {
+        const who = story.active, ch = story.chars[who]; if (ch.money < 250) return;
+        ch.money -= 250; F.current[who] = i; applyCar(who);
+        if (story.mode === 'foot') { const f = story.foot, c = cars[who].sim; c.x = f.x + Math.sin(f.heading) * 6; c.z = f.z - Math.cos(f.heading) * 6; c.y = f.y + 0.5; c.heading = f.heading + Math.PI / 2; c.vx = c.vz = 0; }
+        message('My Cars', `Your ${EC.CARS[F.owned[who][i].id].name} has been delivered.`);
+      }
+      function garageStep() {
+        const near = story.mode === 'drive' && Math.hypot(car.x - GARAGE.x, car.z - GARAGE.z) < 18 && Math.abs(car.speed) < 1.5;
+        const el = $('.garagemenu');
+        if (!near) { el.classList.remove('on'); return; }
+        const who = story.active, o = F.owned[who][F.current[who]], price = EC.CARS[o.id].price || 62000;
+        const rep = EC.repairCost(story.damage, price);
+        const items = [[`Repair the damage`, rep], [`Paint: ${EC.PAINTS[(EC.PAINTS.findIndex((p) => p[1] === o.paint) + 1) % EC.PAINTS.length][0]}`, EC.PAINT_COST]];
+        for (const part of Object.keys(EC.TUNE)) { const lv = o.tune[part] || 0; items.push(lv >= 3 ? [`${EC.TUNE[part].name}: fully upgraded`, null] : [`${EC.TUNE[part].name} level ${lv + 1}`, EC.tuneCost(part, lv + 1, price)]); }
+        el.querySelector('.sub2').textContent = `${EC.CARS[o.id].name.toUpperCase()} · DAMAGE ${Math.round(Math.min(300, story.damage) / 3)}% · AED ${Math.round(story.chars[who].money).toLocaleString('en')}`;
+        el.querySelector('ol').innerHTML = items.map(([n, c]) => `<li>${n}<span>${c === null ? '' : 'AED ' + c.toLocaleString('en')}</span></li>`).join('');
+        el.classList.add('on'); F.garageItems = items;
+      }
+      window.addEventListener('keydown', (e) => {
+        const k = e.key.toLowerCase();
+        if (k === 'p') { if (F.photo) { F.photo = false; root.classList.remove('photo'); } else togglePhone(); }
+        if (k === ' ' && F.photo) { e.preventDefault(); renderer.render(scene, camera); const u = renderer.domElement.toDataURL('image/jpeg', 0.85); F.gallery.unshift(u); F.gallery = F.gallery.slice(0, 6); say('', 'PHOTO SAVED TO THE GALLERY'); }
+        if (/^[1-9]$/.test(k) && $('.garagemenu').classList.contains('on')) {
+          const i = +k - 1, it = F.garageItems && F.garageItems[i]; if (!it || it[1] === null) return;
+          const who = story.active, ch = story.chars[who], o = F.owned[who][F.current[who]];
+          if (it[1] > ch.money) { say('Kiran', 'Cash first, habibi.'); return; }
+          ch.money -= it[1]; city.C.moneyT = 3;
+          if (i === 0) { story.damage = 0; F.smoke.forEach((s) => scene.remove(s.m)); F.smoke = []; say('Kiran', 'Good as new. Almost.'); }
+          else if (i === 1) { o.paint = EC.PAINTS[(EC.PAINTS.findIndex((p) => p[1] === o.paint) + 1) % EC.PAINTS.length][1]; say('Kiran', 'Fresh paint. Nobody will know it.'); if (war.wanted().level) { war.wanted().clear(); say('', 'NEW PAINT · THE POLICE LOST YOU'); } }
+          else { const part = Object.keys(EC.TUNE)[i - 2]; o.tune[part] = (o.tune[part] || 0) + 1; say('Kiran', `${EC.TUNE[part].name} done. Drive it gently for a day. Joking.`); }
+          applyCar(who); save();
+        }
+      });
+
+      // ---- the ride-hailing job
+      function roadPointNear(x, z, minD, maxD) {
+        for (let i = 0; i < 30; i++) {
+          const a = Math.random() * Math.PI * 2, d = minD + Math.random() * (maxD - minD), px = x + Math.cos(a) * d, pz = z + Math.sin(a) * d;
+          const its = world.roadGrid.query(px, pz).filter((it) => { const r = world.roads[it.r]; return r.k >= 2 && r.k <= 4 && !r.b && !r.t; });
+          if (its.length) { const r = world.roads[its[0].r], q = L.pointAt(r.p, r.cum, r.cum[its[0].k]); return { x: q.x - q.dz * (r.w / 2 - 1.5), z: q.z + q.dx * (r.w / 2 - 1.5), name: r.n || CY.districtAt(q.x, q.z).name }; }
+        }
+        return null;
+      }
+      function startRide() {
+        if (story.active !== 'fareej') return;
+        const p = roadPointNear(car.x, car.z, 300, 900); if (!p) { say('', 'NO RIDES NEARBY'); return; }
+        F.ride = { stage: 'pickup', target: p, name: EC.RIDE_NAMES[Math.floor(Math.random() * EC.RIDE_NAMES.length)] };
+        message('Sayara Ride', `New ride: ${F.ride.name}, ${p.name}.`);
+      }
+      function endRide() { F.ride = null; }
+      function rideStep(dt) {
+        const R = F.ride; if (!R || story.active !== 'fareej') return;
+        const d = Math.hypot(car.x - R.target.x, car.z - R.target.z);
+        if (R.stage === 'pickup' && d < 14 && Math.abs(car.speed) < 1.5 && story.mode === 'drive') {
+          const to = roadPointNear(car.x, car.z, 1200, 4000); if (!to) return;
+          Object.assign(R, { stage: 'drive', target: to, toName: to.name, from: { x: car.x, z: car.z }, t: 0, dmg0: story.damage, lineT: 6 });
+          say(R.name, 'Hi! ' + to.name + ', please.'); F.routeT = 0;
+        } else if (R.stage === 'drive') {
+          R.t += dt; R.lineT -= dt;
+          if (R.lineT <= 0) { R.lineT = 25 + Math.random() * 20; say(R.name, EC.RIDE_LINES[Math.floor(Math.random() * EC.RIDE_LINES.length)]); }
+          if (d < 16 && Math.abs(car.speed) < 1.5) {
+            const km = Math.hypot(car.x - R.from.x, car.z - R.from.z) / 1000, bumps = Math.floor((story.damage - R.dmg0) / 12);
+            const res = EC.rideFare(km, R.t / 60, bumps);
+            story.chars.fareej.money += res.total; city.C.moneyT = 4; F.rides++; F.stats.rides++;
+            say('', `${'★'.repeat(res.rating)}${'☆'.repeat(5 - res.rating)} · FARE AED ${res.fare}${res.tip ? ' + TIP ' + res.tip : ''}`);
+            startRide();
+          }
+        }
+      }
+
+      // ---- smoke from a damaged car
+      const smokeMat = new THREE.MeshBasicMaterial({ color: '#555', transparent: true, opacity: 0.35, depthWrite: false });
+      const smokeGeo = new THREE.SphereGeometry(0.4, 8, 6);
+      function smokeStep(dt) {
+        if (story.mode === 'drive' && story.damage > 150 && Math.random() < dt * (story.damage > 240 ? 18 : 7)) {
+          const m = new THREE.Mesh(smokeGeo, smokeMat.clone()); const fx = Math.sin(car.heading), fz = -Math.cos(car.heading);
+          m.position.set(car.x + fx * 1.8, car.y + 1, car.z + fz * 1.8); if (story.damage > 240) m.material.color.set('#222'); scene.add(m); F.smoke.push({ m, t: 1.6 });
+        }
+        F.smoke = F.smoke.filter((s) => { s.t -= dt; s.m.position.y += dt * 1.4; s.m.scale.multiplyScalar(1 + dt * 1.2); s.m.material.opacity = s.t * 0.22; if (s.t > 0) return true; scene.remove(s.m); s.m.material.dispose(); return false; });
+      }
+
+      // ---- businesses pay every game day
+      function businessStep() {
+        const day = city.C.day;
+        for (const b of EC.BUSINESSES) { const o = F.business[b.id]; if (!o) continue; const pay = EC.businessIncome(b.perDay, day - o.day); if (pay > 0) { story.chars[o.owner].money += pay; o.day = day; message('Manager', `${b.name}: AED ${pay.toLocaleString('en')} paid in.`); } }
+      }
+
+      function frame(dt) {
+        updateRoute(dt); rideStep(dt); garageStep(); smokeStep(dt);
+        if (Math.random() < dt) businessStep();
+        if (F.open && Math.random() < dt * 2) $('.phone .pt').textContent = clockText();
+        F.stats.speed = Math.max(F.stats.speed, Math.abs(car.speed) * 3.6); F.stats.maxWanted = Math.max(F.stats.maxWanted, war.wanted().level);
+        F.stats.fines = city.C.fines[story.active].reduce((a, f) => a + f.amount, 0);
+        F.stats.policeWrecked = war.W.police.filter((p) => p.wreck).length + (F.stats._w || 0);
+        if (!F.settings.shake) state.shake = 0;
+      }
+      // the camera in photo mode: free orbit around the player, drag to turn
+      function photoCamera() { return F.photo; }
+      function toJSON() { return { owned: F.owned, current: F.current, property: F.property, business: F.business, settings: F.settings, rides: F.rides, fines: city.C.fines, fuel: city.C.fuel }; }
+      function fromJSON(j) { if (!j) return; for (const k of ['owned', 'current', 'property', 'business', 'settings']) if (j[k]) F[k] = j[k]; F.rides = j.rides || 0; if (j.fines) city.C.fines = j.fines; if (j.fuel) city.C.fuel = j.fuel; applyCar('fareej'); applyCar('fatimah'); }
+      applyCar('fareej'); applyCar('fatimah');
+      return { F, frame, drawRoute, setWaypoint, togglePhone, message, toJSON, fromJSON, photoCamera, applyCar };
+    })();
+
     // ------------------------------------------------------------------ maps
 
     const mini = $('.mini'), mg = mini.getContext('2d');
@@ -2526,6 +2767,7 @@
         mg.lineWidth = Math.max(r.w, 6) + (pass === 0 ? 4 : 0);
         mg.beginPath(); mg.moveTo(r.p[0], r.p[1]); for (let i = 2; i < r.p.length; i += 2) mg.lineTo(r.p[i], r.p[i + 1]); mg.stroke();
       }
+      life.drawRoute(mg);
       mg.restore();
       // the player
       mg.fillStyle = '#efe9dc'; mg.beginPath(); mg.moveTo(cx, cy - 13); mg.lineTo(cx + 8, cy + 9); mg.lineTo(cx, cy + 4); mg.lineTo(cx - 8, cy + 9); mg.closePath(); mg.fill();
@@ -2558,7 +2800,7 @@
       if (!bigMapView) return;
       const cv = $('.bigmap canvas'), rect = cv.getBoundingClientRect();
       const x = ((e.clientX - rect.left) * 2 - bigMapView.ox) / bigMapView.sc, z = ((e.clientY - rect.top) * 2 - bigMapView.oz) / bigMapView.sc;
-      car.x = x; car.z = z; car.y = 30; resetCar(false);
+      if (e.shiftKey && story.mode === 'drive') { car.x = x; car.z = z; car.y = 30; resetCar(false); } else life.setWaypoint(x, z);   // shift-click jumps there (test build)
       state.mapOn = false; $('.bigmap').classList.remove('on');
     });
 
@@ -2600,7 +2842,7 @@
       raf = requestAnimationFrame(step);
       const now = performance.now(); let dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
       U.uTime.value += dt;
-      if (state.timeRuns) { state.hour = (state.hour + dt * 24 / (48 * 60)) % 24; if (!$('.panel').classList.contains('on')) slider.value = state.hour; }
+      if (state.timeRuns) { state.hour = (state.hour + dt * 24 / ((typeof life !== 'undefined' ? life.F.settings.dayMin : 48) * 60)) % 24; if (!$('.panel').classList.contains('on')) slider.value = state.hour; }
       const night = setTimeOfDay();
       if (!state.loaded) { camera.position.set(0, 300, 600); camera.lookAt(0, 0, 0); renderer.render(scene, camera); return; }
 
@@ -2763,6 +3005,7 @@
       get story() { return story; },
       get city() { return city; },
       get war() { return war; },
+      get life() { return life; },
       exit() { if (story.mode === 'drive') { car.vx = car.vz = 0; exitCar(); } },
       // jump the running mission to a step (review screenshots and tests)
       toStep(id) { const m = story.mission; if (!m) return; while (m.step && m.step.id !== id) { m.next(); if (m.done) break; } if (!m.done) { m.checkpoint = m.i; onStepStart(); } },

@@ -104,3 +104,25 @@ Built (`combat.js`, 9 tests in `NotchWindows/tests/desertheat-combat.test.mjs`, 
 Not done / gaps: no take-cover key with blind fire (crouch is the cover), no shooting-range mini-game, no weapon wheel (the
 mouse wheel cycles), police do not use the road graph for shortcuts, no spike strips or snipers at 5 stars, no safe zones
 (mosques, schools, hospitals) because the map data for them could not be downloaded.
+
+## Section 5: the phone, money, cars and the garage (19 Nov 2026)
+
+Built (`economy.js` and `nav.js`, 8 tests in `NotchWindows/tests/desertheat-economy.test.mjs`; `multiplayer.js`, 4 tests):
+- The phone (P): Messages (story texts, fines, rides, managers), Maps (places, waypoints), Bank (both balances, send money
+  between Fareej and Fatimah, pay fines, gold, business takings), Sayara Ride (Fareej's side job: go online, pick up, drive,
+  fare plus tip by how smooth the ride was, passengers talk), My Cars (deliver any car you own for AED 250), Internet (Autos
+  Dubai with 7 made-up cars from a AED 48,000 compact to a AED 1.45 million supercar, homes, businesses, a news page that
+  reacts to what you did), Camera (photo mode hides the HUD, SPACE saves a photo to the gallery), Settings (day length
+  24/48/96 min, camera shake, big subtitles, the OpenStreetMap credit).
+- GPS: A* routes over the real road network (one-way streets respected), drawn on the mini-map for waypoints, missions and
+  rides. The full map (M) now sets a waypoint on click (shift-click still jumps there in this test build).
+- Kiran's Garage in Al Quoz: drive in and stop; repair damage, repaint (a repaint loses the police), engine, brakes, tyres and
+  armour plating, 3 levels each, priced by the car's value. Damaged cars smoke.
+- Property and businesses: buy apartments and a villa; buy a karak chain, car rental, desert safari, garage or nightclub that
+  pay every game day (a week at most piles up). The economy test checks a full playthrough affords one of everything, not all.
+- Online multiplayer (up to 8 players, room codes, smooth remote players, quick chat) is in the code but SWITCHED OFF: the
+  phone's Online app says "Coming soon" and its buttons are disabled; a test fails if it is ever enabled without a change to
+  the code. It needs a relay server before it can be switched on.
+
+Not done / gaps: no contacts and phone calls yet, no tow truck, no wardrobe at home (clothes change in shops), no 10 save
+slots (one save), the phone is mouse-only (no controller).
