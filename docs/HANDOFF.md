@@ -1,6 +1,17 @@
-# Handoff (updated 13 November 2026)
+# Handoff (updated 19 November 2026)
 
 For the next agent (or person) picking this up. Read `CLAUDE.md` first: its release, README and safety rules apply. Facts below were true when written; check them (`gh release list`, `gh run list`, `gh pr list`) before relying on them. Things that are already pushed and finished are not listed here; they are in the Releases page, `CHANGELOG.md` and git history.
+
+## 2.2.81 is RELEASED on Mac and Windows (19 November 2026)
+
+- **What it is:** only the hello-animation fix (issue #131: the lettering was re-worked out every frame; it is now parsed once and drawn as one GPU layer). Windows has no code change; it moves to 2.2.81 to stay in step.
+- **Mac `v2.2.81`:** built by the "Mac build" workflow (run 44462118591, started by hand from `main` after PR #132), published with `NotchApple-2.2.81.dmg` and its `.sig`; the cask commit is `75f8e6f6`.
+- **Windows `win-v2.2.81`:** tag on that cask commit, built by the "Windows build" run 44463952770, marked a pre-release; the rolling `windows-latest` assets were refreshed by CI at the same time.
+- **Pruned:** `scripts/prune-releases.sh` deleted v2.2.63 and win-v2.2.67 (the tags stay). The newest Mac and Windows releases and `windows-latest` are all still there.
+- **Hello animation timed (19 Nov, Debug build, one run each, Instruments "Animation Hitches", test copy with its own bundle id):** 2.2.80 code: 260 frames in the 5.75 s hello (about 45 fps), 28 gaps over 20 ms, a stall of about 0.8 s. 2.2.81 code: 333 frames (about 58 fps), 10 gaps over 20 ms, worst one 158 ms (the first frame, when the window opens), nothing else over 50 ms. The Settings button "Play it now" could not be clicked in the test copy, so the launch-time hello (same `HelloView`) was timed instead. Not yet watched by the owner.
+- **Issue #131 is already CLOSED** (it closed itself 6 seconds after PR #132 merged, not on the owner's confirmation). The owner asked to close it only after confirming the hello is smooth on their Mac: ask them, and reopen it if it is not.
+- **Open: Mac 2.2.81 is NOT installed on the owner's Mac (still 2.2.80).** The CI build is ad-hoc signed, but the installed app is signed "Notch Apple Self-Signed", so installing the CI DMG over it would reset the Accessibility and Screen Recording permissions (see "Not done / needs a human", item 2). This Mac has no Self-Signed identity either. Either the owner re-grants after installing, or the next release is built on the signing Mac with `scripts/release.sh`.
+- **Open: the website still showed 2.2.80 for both platforms** right after the release (the "Deploy website" run was still going). Check `https://adityajaindxb.github.io/NotchApples/latest.json` says 2.2.81, and redo the Whop site copy (the owner's standing rule: the Whop site must match).
 
 ## Added on 17 November: Notch Apple AI has no daily limit on Pro (server change, NOT deployed until someone runs `wrangler deploy`)
 
