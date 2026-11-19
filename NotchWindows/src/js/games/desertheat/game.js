@@ -538,11 +538,13 @@
         setLoad('LOADING THE ROAD MAP', 0.05);
         const [roadsD, landD, index] = await Promise.all([loadData(base, 'roads', 'roads.js'), loadData(base, 'land', 'land.js'), loadData(base, 'index', 'index.js')]);
         if (state.stopped) return;
+        region.extend(roadsD.roads, landD);
         world = await buildWorld(roadsD.roads, landD, index, setLoad, frame);
         if (state.stopped) return;
         resetCar(true);
         city.placeAll();
         sights.build();
+        region.build();
         state.loaded = true;
         { const sv = load(); if (sv && sv.done && sv.done.includes('night-fare')) { story.unlocked = sv.unlocked || { fatimah: true }; story.complete = true; story.chars.fareej.money = sv.chars.fareej.money; story.chars.fatimah.money = sv.chars.fatimah.money; war.fromJSON(sv.arms); life.fromJSON(sv.life); acts.A.done = sv.done; } else if (!opts.noStory) startMission(); }
         $('.load').style.opacity = '0'; setTimeout(() => { $('.load').style.display = 'none'; }, 700);
@@ -1250,7 +1252,7 @@
       // ground
       let gy;
       if (story.inside) gy = story.inside.grp.position.y; else if (f.y < -20) gy = garage.y;
-      else { const sup = supportAt(f.x, f.z, f.y + 0.5); gy = sup ? sup.y : 0; }
+      else { const sup = supportAt(f.x, f.z, f.y + 0.5); gy = sup ? sup.y : region.groundAt(f.x, f.z); }
       if (f.y > gy + 0.05) { f.vy -= 9.81 * dt; f.y = Math.max(gy, f.y + f.vy * dt); } else { f.y = gy; f.vy = 0; }
       if (K.has(' ') && f.vy === 0 && !story.inside) f.vy = 4.2;
       p.group.position.set(f.x, f.y, f.z); p.group.rotation.y = -f.heading;
@@ -1557,6 +1559,7 @@
       war.frame(dt);
       life.frame(dt);
       sights.frame(dt);
+      region.frame(dt, K);
       $('.prompt').textContent = story.prompt; $('.prompt').style.display = story.prompt ? 'block' : 'none';
       story.sub.t -= dt; if (story.sub.t <= 0) $('.sub').classList.remove('on');
       return story.mode;
@@ -1566,6 +1569,7 @@
     function storyCamera(dt) {
       if (story.debugCam) { const c = story.debugCam; camera.position.set(c[0], c[1], c[2]); camera.lookAt(c[3], c[4], c[5]); camera.fov = 55; sun.target.position.set(c[3], 0, c[5]); return true; }   // review screenshots only
       if (story.mode === 'fly') { flyCamera(dt); return true; }
+      if (story.mode === 'boat') return region.boatCamera(dt);
       if (story.mode === 'foot' && story.foot && war.aimCamera(dt)) return true;
       if (story.mode === 'foot' && story.foot) {
         const f = story.foot;
@@ -2212,6 +2216,7 @@
 
       function shoot() {
         const A = arms(), f = story.foot, inCar = story.mode === 'drive';
+        { const me0 = f || car, sz = region.isSafe(me0.x, me0.z); if (sz && A.cur !== 'fists') { say('', 'WEAPONS ARE NOT ALLOWED AT ' + sz.name.toUpperCase()); W.trigger = false; W.aim = false; return; } }
         const focus = story.sense > 0 && story.active === 'fatimah';
         const moving = f ? Math.min(1, f.speed / 3) : inCar ? 0.6 : 0;
         if (inCar && !['pistol', 'heavy', 'smg'].includes(A.cur)) return;
@@ -3253,6 +3258,215 @@
       return { G, build, frame };
     })();
 
+    // ------------------------------------------------------------------ section 9: the E11, the desert, Abu Dhabi, Yas, the sea
+
+    const RG = window.DesertHeatRegion;
+    const region = (() => {
+      const Z = { end: null, Lo: null, dunes: null, land: [], race: null, rivals: [], skis: [], safe: [], built: false };
+      // called before the world is built: add the generated roads and land
+      function extend(roadsList, landD) {
+        Z.end = RG.findE11End(roadsList); Z.Lo = RG.layout(Z.end); Z.dunes = RG.makeDunes(Z.end);
+        roadsList.push(...RG.roads(Z.end));
+        const rings = RG.land(Z.end); landD.land.push(...rings);
+        Z.land = landD.land;
+        // Act 2's desert camp moves out to the real desert
+        Object.assign(MI.PLACES.camp, Z.Lo.camp, { name: 'A camp in the desert' });
+      }
+      const groundAt = (x, z) => (Z.dunes ? Z.dunes.height(x, z) : 0);
+      const onLand = (x, z) => Z.land.some((r) => RG.pointInRing(x, z, r));
+
+      function build() {
+        if (Z.built || !Z.end) return; Z.built = true;
+        // Abu Dhabi's buildings
+        const b = buildingMesh(RG.buildings(Z.end), 'region'); if (b) scene.add(b.mesh);
+        dunesMesh(); camp(); abuLandmarks(); yasDressing(); jetSkis();
+      }
+      function dunesMesh() {
+        const D = Z.Lo.desert, S0 = D.s0 - 400, S1 = D.s1 + 400, D0 = D.d0 - 100, D1 = D.d1 + 400, step = 45;
+        const ns = Math.ceil((S1 - S0) / step), nd = Math.ceil((D1 - D0) / step);
+        const pos = new Float32Array((ns + 1) * (nd + 1) * 3), uv = new Float32Array((ns + 1) * (nd + 1) * 2), idx = [];
+        for (let i = 0; i <= ns; i++) for (let j = 0; j <= nd; j++) {
+          const p = Z.Lo.at(S0 + i * step, D0 + j * step), k = i * (nd + 1) + j;
+          pos[k * 3] = p.x; pos[k * 3 + 1] = groundAt(p.x, p.z) + 0.02; pos[k * 3 + 2] = p.z; uv[k * 2] = p.x / 40; uv[k * 2 + 1] = p.z / 40;
+          if (i < ns && j < nd) { const a = k, b2 = k + 1, c = k + nd + 1, d = k + nd + 2; idx.push(a, c, b2, b2, c, d); }
+        }
+        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
+        // make sure the faces point up
+        const n = g.attributes.normal; let up = 0; for (let i = 1; i < n.count * 3; i += 3) up += n.array[i]; if (up < 0) { const ix = g.index.array; for (let i = 0; i < ix.length; i += 3) { const t = ix[i + 1]; ix[i + 1] = ix[i + 2]; ix[i + 2] = t; } g.computeVertexNormals(); }
+        const sand = TEX.sand.clone(); sand.needsUpdate = true; sand.wrapS = sand.wrapT = THREE.RepeatWrapping;
+        const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: sand, color: '#e2b07a', roughness: 1 })); m.receiveShadow = true; m.castShadow = true; scene.add(m);
+      }
+      function camp() {
+        const c = Z.Lo.camp, g = new THREE.Group(); g.position.set(c.x, 0, c.z);
+        const cloth = new THREE.MeshStandardMaterial({ color: '#6b3a26', roughness: 1, side: THREE.DoubleSide }), rug = new THREE.MeshStandardMaterial({ color: '#8d1f1f', roughness: 1 });
+        for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, t = new THREE.Mesh(new THREE.ConeGeometry(4, 3.6, 4, 1, true), cloth); t.position.set(Math.cos(a) * 18, 1.8, Math.sin(a) * 18); t.rotation.y = a; g.add(t); }
+        const majlis = new THREE.Mesh(new THREE.BoxGeometry(10, 0.15, 6), rug); majlis.position.y = 0.08; g.add(majlis);
+        for (const [x, z] of [[-4.5, 0], [4.5, 0], [0, -2.7], [0, 2.7]]) { const cu = new THREE.Mesh(new THREE.BoxGeometry(x ? 0.6 : 8, 0.5, x ? 5 : 0.6), new THREE.MeshStandardMaterial({ color: '#c8a25a', roughness: 1 })); cu.position.set(x, 0.3, z); g.add(cu); }
+        const fire = new THREE.PointLight('#ff9a3c', 60, 40, 1.6); fire.position.set(0, 1.2, 8); g.add(fire); Z.fire = fire;
+        const embers = new THREE.Mesh(new THREE.ConeGeometry(0.6, 1.2, 8), new THREE.MeshBasicMaterial({ color: '#ffb347' })); embers.position.set(0, 0.6, 8); g.add(embers);
+        // camels resting
+        const camelM = new THREE.MeshStandardMaterial({ color: '#b8875a', roughness: 1 });
+        for (let i = 0; i < 4; i++) { const cg = new THREE.Group(); const body = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), camelM); body.scale.set(0.8, 0.7, 1.4); body.position.y = 0.8; cg.add(body); const hump = new THREE.Mesh(new THREE.SphereGeometry(0.6, 10, 8), camelM); hump.position.y = 1.4; cg.add(hump); const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.25, 1.4, 6), camelM); neck.position.set(0, 1.4, -1.3); neck.rotation.x = 0.6; cg.add(neck); const head = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.3, 0.6), camelM); head.position.set(0, 2, -1.8); cg.add(head); cg.position.set(-30 + i * 4, 0, -12 - i * 2); cg.rotation.y = i; g.add(cg); }
+        g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(g);
+      }
+      function abuLandmarks() {
+        for (const l of RG.LANDMARKS(Z.end)) {
+          const g = new THREE.Group(); g.position.set(l.x, 0, l.z);
+          const white = new THREE.MeshStandardMaterial({ color: '#f4f2ec', roughness: 0.35 });
+          if (l.kind === 'mosque') {
+            const base = new THREE.Mesh(new THREE.BoxGeometry(240, 14, 180), white); base.position.y = 7; g.add(base);
+            const dome = new THREE.Mesh(new THREE.SphereGeometry(28, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.55), white); dome.position.y = 30; g.add(dome);
+            for (let i = 0; i < 8; i++) { const d = new THREE.Mesh(new THREE.SphereGeometry(10, 16, 10, 0, Math.PI * 2, 0, Math.PI * 0.55), white); d.position.set(-90 + (i % 4) * 60, 18, i < 4 ? -60 : 60); g.add(d); }
+            for (const [x, z] of [[-120, -90], [120, -90], [-120, 90], [120, 90]]) { const mn = new THREE.Mesh(new THREE.CylinderGeometry(3, 4, 107, 12), white); mn.position.set(x, 53, z); g.add(mn); const top = new THREE.Mesh(new THREE.ConeGeometry(3.4, 8, 12), new THREE.MeshStandardMaterial({ color: '#d4b45a', metalness: 0.9, roughness: 0.3 })); top.position.set(x, 111, z); g.add(top); }
+            const pool = new THREE.Mesh(new THREE.PlaneGeometry(200, 30), new THREE.MeshStandardMaterial({ color: '#2a5d73', roughness: 0.05, metalness: 0.3 })); pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.1, -110); g.add(pool);
+            Z.safe.push({ x: l.x, z: l.z, r: l.safe, name: l.name });
+          }
+          if (l.kind === 'twin') for (let i = 0; i < 3; i++) { const t = new THREE.Mesh(new THREE.CylinderGeometry(12, 18, l.h - i * 40, 5), new THREE.MeshPhysicalMaterial({ color: '#7d93a8', metalness: 0.8, roughness: 0.15 })); t.position.set(-50 + i * 50, (l.h - i * 40) / 2, i * 20); g.add(t); }
+          if (l.kind === 'palace') { const b = new THREE.Mesh(new THREE.BoxGeometry(300, 30, 80), new THREE.MeshStandardMaterial({ color: '#e7c9a2', roughness: 0.6 })); b.position.y = 15; g.add(b); const d = new THREE.Mesh(new THREE.SphereGeometry(30, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: '#e7c9a2' })); d.position.y = 30; g.add(d); for (const x of [-120, -60, 60, 120]) { const s = new THREE.Mesh(new THREE.SphereGeometry(10, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), d.material); s.position.set(x, 30, 0); g.add(s); } }
+          g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(g);
+        }
+      }
+      // ---- Yas: grandstand, start lights; racing against five rivals
+      function yasDressing() {
+        const loop = world.roads.find((r) => r.c);
+        if (!loop) return; Z.loop = loop;
+        const s = { x: loop.p[0], z: loop.p[1] }, hd = Math.atan2(loop.p[2] - loop.p[0], -(loop.p[3] - loop.p[1]));
+        const g = new THREE.Group(); g.position.set(s.x, 0, s.z); g.rotation.y = -hd;
+        const stand = new THREE.Mesh(new THREE.BoxGeometry(14, 12, 220), new THREE.MeshStandardMaterial({ color: '#d9d6cf' })); stand.position.set(-22, 6, -60); stand.rotation.z = 0.35; g.add(stand);
+        const roof = new THREE.Mesh(new THREE.BoxGeometry(18, 0.5, 220), new THREE.MeshStandardMaterial({ color: '#2a5a8a' })); roof.position.set(-22, 15, -60); g.add(roof);
+        const gantry = new THREE.Mesh(new THREE.BoxGeometry(18, 1.2, 1), new THREE.MeshStandardMaterial({ color: '#222' })); gantry.position.set(0, 7, 0); g.add(gantry);
+        Z.lights = [];
+        for (let i = 0; i < 5; i++) { const l = new THREE.Mesh(new THREE.SphereGeometry(0.35, 10, 8), new THREE.MeshBasicMaterial({ color: '#330000' })); l.position.set(-4 + i * 2, 6.4, -0.6); g.add(l); Z.lights.push(l); }
+        scene.add(g); Z.startPos = s; Z.startHd = hd;
+      }
+      function startRace() {
+        const loop = Z.loop; if (!loop) return;
+        Z.race = new RG.Race(loop.p, 3, 10); Z.race.countdown = 4;
+        // line up: the player last, rivals ahead in pairs
+        const cum = loop.cum, len = loop.len;
+        Z.rivals.forEach((r) => scene.remove(r.mesh.group)); Z.rivals = [];
+        const paints = ['#b5262b', '#e5b33a', '#1d4f8f', '#2f7d4a', '#141416'];
+        for (let i = 0; i < 5; i++) {
+          const mesh = makePlayerCar(carGeo, paints[i]); mesh.body.scale.set(1.04, 0.8, 1.05); scene.add(mesh.group);
+          Z.rivals.push({ mesh, s: len - 12 - i * 9, lat: i % 2 ? 2.2 : -2.2, v: 0, skill: 0.92 + i * 0.02, lap: 0, done: false });
+        }
+        const q = L.pointAt(loop.p, cum, len - 60); car.x = q.x; car.z = q.z; car.heading = Math.atan2(q.dx, -q.dz); car.vx = car.vz = 0; car.y = heightAlong(loop, len - 60) + KIND_Y[loop.k];
+        say('', 'YAS CIRCUIT · 3 LAPS · LIGHTS OUT AND AWAY WE GO');
+      }
+      // the speed a rival takes at a point: slower where the loop turns sharply
+      function cornerSpeed(s) { const loop = Z.loop, a = L.pointAt(loop.p, loop.cum, (s + loop.len) % loop.len), b = L.pointAt(loop.p, loop.cum, (s + 40 + loop.len) % loop.len); const turn = Math.abs(Math.atan2(a.dx * b.dz - a.dz * b.dx, a.dx * b.dx + a.dz * b.dz)); return 58 - Math.min(40, turn * 70); }
+      function raceStep(dt) {
+        const R = Z.race; if (!R) return;
+        if (R.countdown > 0) {
+          R.countdown -= dt; car.vx = car.vz = 0;
+          Z.lights.forEach((l, i) => l.material.color.set(R.countdown < 4 - i * 0.6 && R.countdown > 0 ? '#ff2a1a' : '#330000'));
+          if (R.countdown <= 0) Z.lights.forEach((l) => l.material.color.set('#330000'));
+          objective(R.countdown > 0 ? '' : 'GO!');
+          return;
+        }
+        const loop = Z.loop, playerS = R.progress() * loop.len;
+        for (const r of Z.rivals) {
+          if (r.done) continue;
+          const behind = playerS - (r.lap * loop.len + r.s);
+          const want = cornerSpeed(r.s) * r.skill * (1 + THREE.MathUtils.clamp(behind / 2000, -0.08, 0.1));
+          r.v += THREE.MathUtils.clamp(want - r.v, -12 * dt, 7 * dt);
+          r.s += r.v * dt; if (r.s >= loop.len) { r.s -= loop.len; r.lap++; if (r.lap >= R.laps) r.done = true; }
+          const q = L.pointAt(loop.p, loop.cum, r.s);
+          const x = q.x - q.dz * r.lat, z = q.z + q.dx * r.lat;
+          r.mesh.group.position.set(x, heightAlong(loop, r.s) + KIND_Y[loop.k], z); r.mesh.group.rotation.y = -Math.atan2(q.dx, -q.dz);
+          r.mesh.wheels.forEach((w) => w.children.forEach((c) => { c.rotation.z -= r.v / 0.31 * dt; }));
+          const dx = car.x - x, dz = car.z - z, dd = Math.hypot(dx, dz); if (dd < 2.6 && dd > 1e-3) { const v = car.hit(dx / dd, dz / dd, 2.6 - dd); if (v > 3) audio.thump(v); r.v *= 0.9; }
+        }
+        const lap = R.update(dt, car.x, car.z);
+        const ahead = Z.rivals.filter((r) => r.lap + r.s / loop.len > R.progress()).length;
+        objective(`LAP ${Math.min(R.lap + 1, R.laps)} / ${R.laps} · POSITION ${ahead + 1} / 6 · ${fmt(R.t - R.lapStart)}${R.best ? ' · BEST ' + fmt(R.best) : ''}`);
+        if (lap) say('', `LAP ${lap.lap} · ${fmt(lap.time)}`);
+        if (R.done) {
+          const pos = Z.rivals.filter((r) => r.done).length + 1, prize = [8000, 4000, 2000, 0, 0, 0][pos - 1];
+          story.chars[story.active].money += prize; city.C.moneyT = 4;
+          $('.card h2').textContent = 'YAS CIRCUIT'; $('.card .l1').textContent = `Finished ${['1st', '2nd', '3rd', '4th', '5th', '6th'][pos - 1]} · best lap ${fmt(R.best)}`;
+          $('.card .l2').textContent = prize ? `Prize: AED ${prize.toLocaleString('en')}` : 'No prize this time'; $('.card .l3').textContent = ''; $('.card').style.display = 'block';
+          Z.race = null; objective(''); Z.rivals.forEach((r) => scene.remove(r.mesh.group)); Z.rivals = [];
+        }
+      }
+      const fmt = (t) => `${Math.floor(t / 60)}:${(t % 60).toFixed(2).padStart(5, '0')}`;
+
+      // ---- jet skis at the Marina and on the Abu Dhabi Corniche
+      function jetSki() {
+        const g = new THREE.Group();
+        const hull = new THREE.Mesh(new THREE.CapsuleGeometry(0.55, 2.2, 4, 10), new THREE.MeshStandardMaterial({ color: '#f4f2ec', roughness: 0.3 })); hull.rotation.x = Math.PI / 2; hull.scale.set(1, 1, 0.45); hull.position.y = 0.25; g.add(hull);
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.12, 2.4), new THREE.MeshStandardMaterial({ color: '#b5262b' })); stripe.position.y = 0.42; g.add(stripe);
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.25, 1.2), new THREE.MeshStandardMaterial({ color: '#1b1c1e' })); seat.position.set(0, 0.6, 0.35); g.add(seat);
+        const bar = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.06, 0.06), new THREE.MeshStandardMaterial({ color: '#333' })); bar.position.set(0, 0.95, -0.55); g.add(bar);
+        g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+        return g;
+      }
+      function jetSkis() {
+        const spots = [{ x: Z.Lo.marinaJetski.x, z: Z.Lo.marinaJetski.z }];
+        const P = (u, v) => { const c = Z.Lo.abuDhabi; return { x: c.x - Math.SQRT1_2 * u + Math.SQRT1_2 * v, z: c.z + Math.SQRT1_2 * u + Math.SQRT1_2 * v }; };
+        spots.push(P(0, -RG.AD.h / 2 - 120));
+        for (const s of spots) {
+          // nudge it onto water
+          let p = { ...s }; for (let i = 0; i < 40 && onLand(p.x, p.z); i++) { p.x -= 30; p.z -= 30; }
+          const b = new RG.Boat('jetski'); b.x = p.x; b.z = p.z; b.heading = -Math.PI * 0.75;
+          const mesh = jetSki(); scene.add(mesh); Z.skis.push({ b, mesh, home: p });
+        }
+      }
+      function skiStep(dt, K) {
+        for (const s of Z.skis) {
+          const riding = story.mode === 'boat' && story.ski === s;
+          if (riding) {
+            const input = { throttle: K.has('w') || K.has('arrowup') ? 1 : 0, brake: K.has('s') || K.has('arrowdown') ? 1 : 0, steer: (K.has('d') || K.has('arrowright') ? 1 : 0) - (K.has('a') || K.has('arrowleft') ? 1 : 0) };
+            const ox = s.b.x, oz = s.b.z; s.b.step(dt, input);
+            if (onLand(s.b.x, s.b.z)) { s.b.x = ox; s.b.z = oz; s.b.speed *= -0.3; audio.thump(8); }
+            persons[story.active].group.position.set(s.b.x + Math.sin(s.b.heading) * -0.1, 0.15 + Math.sin(U.uTime.value * 9) * 0.04, s.b.z - Math.cos(s.b.heading) * -0.1);
+            persons[story.active].group.rotation.y = -s.b.heading;
+            $('.speedo b').textContent = Math.round(Math.abs(s.b.speed) * 3.6);
+            // get off at a shore
+            let shore = null; for (const a of [0, 1.57, 3.14, 4.71]) { const x = s.b.x + Math.cos(a) * 6, z = s.b.z + Math.sin(a) * 6; if (onLand(x, z)) { shore = { x, z }; break; } }
+            if (shore && Math.abs(s.b.speed) < 2) { story.prompt = 'E  GET OFF'; if (K.has('e')) { K.delete('e'); persons[story.active].setPose('stand'); startFoot(story.active, shore.x, shore.z, 1, s.b.heading); story.ski = null; } }
+            else if (!shore) story.prompt = '';
+          } else { s.b.speed *= Math.pow(0.4, dt); s.b.step(dt, {}); }
+          s.mesh.position.set(s.b.x, Math.sin(U.uTime.value * 1.7 + s.home.x) * 0.06, s.b.z); s.mesh.rotation.y = -s.b.heading; s.mesh.rotation.x = riding ? -Math.min(0.12, Math.abs(s.b.speed) * 0.006) : 0;
+          if (story.mode === 'foot' && story.foot && Math.hypot(story.foot.x - s.b.x, story.foot.z - s.b.z) < 8 && !story.mission) {
+            story.prompt = story.prompt || 'E  RIDE THE JET SKI';
+            if (K.has('e')) { K.delete('e'); persons[story.active].setPose('sit'); story.foot = null; story.mode = 'boat'; story.ski = s; root.classList.add('foot'); }
+          }
+        }
+      }
+      function boatCamera(dt) {
+        const s = story.ski; if (!s) return false;
+        const want = new THREE.Vector3(s.b.x - Math.sin(s.b.heading) * 7, 2.6, s.b.z + Math.cos(s.b.heading) * 7);
+        camPos.lerp(want, Math.min(1, dt * 5)); if (camPos.distanceTo(want) > 40) camPos.copy(want);
+        camera.position.copy(camPos); camera.lookAt(s.b.x + Math.sin(s.b.heading) * 4, 0.8, s.b.z - Math.cos(s.b.heading) * 4); camera.fov = 62;
+        sun.target.position.set(s.b.x, 0, s.b.z); return true;
+      }
+      // sand: off the road in the desert, the car slides and slows, and slopes push it
+      function sandPhysics(sim, h) {
+        if (!Z.dunes || !Z.dunes.inDesert(sim.x, sim.z)) return;
+        const e = 2, gx = (groundAt(sim.x + e, sim.z) - groundAt(sim.x - e, sim.z)) / (2 * e), gz = (groundAt(sim.x, sim.z + e) - groundAt(sim.x, sim.z - e)) / (2 * e);
+        sim.vx -= gx * 9.81 * h * 0.7; sim.vz -= gz * 9.81 * h * 0.7;
+        const drag = 1 - 0.32 * h; sim.vx *= drag; sim.vz *= drag; sim.yawRate *= 1 - 0.6 * h;
+        if (Math.abs(sim.speed) > 8 && Math.random() < h * 8) { sandPuff(sim); }
+      }
+      const puffGeo = new THREE.SphereGeometry(0.6, 6, 4), puffs = [];
+      function sandPuff(sim) { const m = new THREE.Mesh(puffGeo, new THREE.MeshBasicMaterial({ color: '#d9b07a', transparent: true, opacity: 0.4, depthWrite: false })); m.position.set(sim.x - Math.sin(sim.heading) * 2, sim.y + 0.4, sim.z + Math.cos(sim.heading) * 2); scene.add(m); puffs.push({ m, t: 1.2 }); }
+      function frame(dt, K) {
+        if (!Z.built) return;
+        for (let i = puffs.length - 1; i >= 0; i--) { const p = puffs[i]; p.t -= dt; p.m.scale.multiplyScalar(1 + dt * 1.8); p.m.position.y += dt; p.m.material.opacity = p.t * 0.3; if (p.t <= 0) { scene.remove(p.m); p.m.material.dispose(); puffs.splice(i, 1); } }
+        if (Z.fire) Z.fire.intensity = (40 + Math.random() * 30) * Math.max(0.3, U.uNight.value);
+        skiStep(dt, K);
+        raceStep(dt);
+        // start a race at the Yas grid
+        if (!Z.race && !story.mission && story.mode === 'drive' && Z.startPos && Math.hypot(car.x - Z.startPos.x, car.z - Z.startPos.z) < 30 && Math.abs(car.speed) < 2) {
+          story.prompt = story.prompt || 'E  START A RACE (3 LAPS, AED 8,000 TO WIN)';
+          if (K.has('e')) { K.delete('e'); startRace(); }
+        }
+      }
+      const isSafe = (x, z) => Z.safe.find((s) => Math.hypot(x - s.x, z - s.z) < s.r);
+      return { Z, extend, build, frame, groundAt, sandPhysics, boatCamera, isSafe, onLand };
+    })();
+
     // ------------------------------------------------------------------ maps
 
     const mini = $('.mini'), mg = mini.getContext('2d');
@@ -3368,7 +3582,8 @@
         car.step(h, input);
         // ground and decks
         const sup = supportAt(car.x, car.z, car.y);
-        const gy = sup ? sup.y : 0;
+        const gy = sup ? sup.y : region.groundAt(car.x, car.z);
+        if (!sup) region.sandPhysics(car, h);
         if (car.y > gy + 0.25) { car.vy = (car.vy || 0) - 9.81 * h; car.y += car.vy * h; if (car.y < gy) { car.y = gy; if (car.vy < -6) { audio.thump(-car.vy); state.shake = 0.3; } car.vy = 0; } }
         else { car.y += (gy - car.y) * Math.min(1, h * 25); car.vy = 0; }
         // bridge parapets: if we were on a deck and are about to leave its side, bounce off
@@ -3509,6 +3724,7 @@
       get life() { return life; },
       get acts() { return acts; },
       get sights() { return sights; },
+      get region() { return region; },
       camera(c) { story.debugCam = c; if (c) updateTiles(c[0], c[2]); },
       exit() { if (story.mode === 'drive') { car.vx = car.vz = 0; exitCar(); } },
       // jump the running mission to a step (review screenshots and tests)

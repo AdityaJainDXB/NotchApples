@@ -43,7 +43,7 @@
    * reservation. Returns a flat [x,z,...] list (or [] if the road is not in the data).
    */
   function metroLine(roads) {
-    const segs = roads.filter((r) => r.k === 0 && r.o && /Sheikh Zayed Road/.test(r.n || '') && !r.t).filter((r) => {
+    const segs = roads.filter((r) => r.k === 0 && r.o && !r.gen && /Sheikh Zayed Road/.test(r.n || '') && !r.t).filter((r) => {
       const n = r.p.length / 2, dx = r.p[n * 2 - 2] - r.p[0], dz = r.p[n * 2 - 1] - r.p[1];
       return dx > 0 && dz < 0;     // heading north-east (x east, z south)
     });
