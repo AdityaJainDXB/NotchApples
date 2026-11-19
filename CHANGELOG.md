@@ -4,6 +4,23 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.82 · Windows 2.2.82 BETA · 20 November 2026 · 🌴 Desert Heat
+
+**Mac**
+
+- New: Desert Heat, an open-world game set in Dubai and Abu Dhabi. Games → Desert Heat → Play full screen. Drive Dubai's real roads from Deira to the Marina (map data © OpenStreetMap contributors), with traffic, traffic lights, the Metro, the landmarks, day and night and weather, then take the E11 into the desert and on to Abu Dhabi and the Yas circuit
+- Play as Fareej, a ride-hailing driver, and Fatimah, a junior lawyer, and switch between them at any time (TAB). The story has 29 missions in five acts, with heists you plan yourself and two endings
+- On foot and in cars: guns and a wanted level with police, shops you can walk into and buy from, petrol, Salik and speed cameras, a phone with GPS, a bank, a ride-hailing side job, cars to buy and tune at a garage, property and businesses, jet skis and a helicopter
+- Online play is built but not switched on yet: the phone's Online app says Coming soon
+- The game is new: tell us what feels wrong (Feedback in Settings)
+
+**Windows**
+
+- New: Desert Heat, an open-world game set in Dubai and Abu Dhabi. Games → Desert Heat → Play full screen opens it in its own window. Drive Dubai's real roads (map data © OpenStreetMap contributors) with traffic, the Metro, the landmarks, day and night and weather, then the E11 to the desert, Abu Dhabi and Yas
+- Play as Fareej and Fatimah and switch between them (TAB); 29 story missions in five acts, heists you plan, two endings
+- Guns and police, shops you can enter, petrol, Salik and speed cameras, a phone with GPS, a bank, ride-hailing jobs, cars and tuning, property, jet skis and a helicopter
+- Online play is built but not switched on yet (Coming soon)
+
 ### Mac 2.2.81 · Windows 2.2.81 BETA · 19 November 2026 · Smoother hello animation
 
 **Mac**
