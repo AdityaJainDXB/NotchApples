@@ -126,3 +126,23 @@ Built (`economy.js` and `nav.js`, 8 tests in `NotchWindows/tests/desertheat-econ
 
 Not done / gaps: no contacts and phone calls yet, no tow truck, no wardrobe at home (clothes change in shops), no 10 save
 slots (one save), the phone is mouse-only (no controller).
+
+## Section 6: Act 1 (19 Nov 2026)
+
+Built (`missions.js`, 5 tests in `NotchWindows/tests/desertheat-missions.test.mjs`; a generic mission layer in game.js):
+- Missions 2-6 after "Night Fare", unlocked one at a time; the next one's start is a column of light on the map and the GPS
+  leads there; press E with the right character to start. Each has dialogue, checkpoints, failure and retry.
+  - **The Files** (Fatimah): hide the files in her apartment; her name is on forty million in transfers.
+  - **Debts** (Fareej): Uncle Rashid in the gold souk, the debt of 400,000, the first gun (Kestrel P9), deliver a pickup to
+    Kiran in Al Quoz without damaging it; a police checkpoint halfway gives a star you must lose first. AED 5,000.
+  - **Clean Hands** (Fatimah): back at the Business Bay office; sneak through the basement past security to Victor's lift;
+    his office, the contracts, and a lead to Desai Motors.
+  - **Chop Shop** (Fareej): steal a red Corsa Velo from a Jumeirah villa; the alarm brings 2 stars; lose them and deliver it
+    to Kiran. AED 25,000.
+  - **The Same Name** (both): Fareej drives to Karama, the game switches to Fatimah, they meet at Al Fanar Shawarma.
+- The supporting cast appears in scenes: Uncle Rashid (white kandura), Kiran Desai (overalls); Jomon, Victor and Officer
+  Mariam are defined for later acts.
+- The whole of Act 1 was played start to end by the review script (no errors).
+
+Not done / gaps: scenes are short in-engine shots with subtitles, no animation of talking; the basement has one guard
+(the brief says two); no voice acting.

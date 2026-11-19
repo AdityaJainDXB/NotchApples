@@ -543,7 +543,7 @@
         resetCar(true);
         city.placeAll();
         state.loaded = true;
-        { const sv = load(); if (sv && sv.done && sv.done.includes('night-fare')) { story.unlocked = sv.unlocked || { fatimah: true }; story.complete = true; story.chars.fareej.money = sv.chars.fareej.money; story.chars.fatimah.money = sv.chars.fatimah.money; war.fromJSON(sv.arms); life.fromJSON(sv.life); } else if (!opts.noStory) startMission(); }
+        { const sv = load(); if (sv && sv.done && sv.done.includes('night-fare')) { story.unlocked = sv.unlocked || { fatimah: true }; story.complete = true; story.chars.fareej.money = sv.chars.fareej.money; story.chars.fatimah.money = sv.chars.fatimah.money; war.fromJSON(sv.arms); life.fromJSON(sv.life); acts.A.done = sv.done; } else if (!opts.noStory) startMission(); }
         $('.load').style.opacity = '0'; setTimeout(() => { $('.load').style.display = 'none'; }, 700);
         setTimeout(() => { $('.hint').style.opacity = '0'; }, 14000);
         renderer.domElement.focus();
@@ -1462,7 +1462,7 @@
       const id = m.retry();
       if (id === 'chase') { story.damage = 0; car.vx = car.vz = 0; }
       if (id === 'switch') { if (story.guard) { scene.remove(story.guard.p.group); story.guard = null; } story.active = 'fareej'; story.foot = null; persons.fatimah.group.visible = false; }
-      onStepStart(); renderer.domElement.focus();
+      if (m.def.id === 'night-fare') onStepStart(); else acts.stepStart(); renderer.domElement.focus();
     });
 
     function missionStep(dt) {
@@ -1479,12 +1479,14 @@
         atLift: story.foot && Math.hypot(story.foot.x - garage.liftPos.x, story.foot.z - garage.liftPos.z) < 2.2,
         guardSaw: !!guard.saw && !(story.guard && story.guard.down),
         distFromPickup: story.pickupAt ? Math.hypot(car.x - story.pickupAt.x, car.z - story.pickupAt.z) : 0,
+        ...acts.ctx(),
       };
+      if (m.def.id !== 'night-fare') acts.runEvents(dt);
       if (story.guard && !story.guard.down && guard.behind) { story.prompt = 'E  KNOCK HIM OUT'; if (state.keys.has('e')) { story.guard.down = true; audio.thump(20); say('Fatimah', 'Sorry. Not sorry.'); } }
       if (story.chaser && st.id === 'chase') objective(story.pursuit.unseen > 0.5 ? `Lose the black SUV · out of sight ${Math.min(10, story.pursuit.unseen).toFixed(0)} / 10` : 'Lose the black SUV.');
       for (const e of m.update(dt, ctx)) {
-        if (e.type === 'stepStart') onStepStart();
-        if (e.type === 'complete') finishMission();
+        if (e.type === 'stepStart') { if (m.def.id === 'night-fare') onStepStart(); else acts.stepStart(); }
+        if (e.type === 'complete') { if (m.def.id === 'night-fare') finishMission(); else acts.finish(); }
         if (e.type === 'fail') { removeChaser(); $('.fail p').textContent = e.why; $('.fail').style.display = 'block'; objective(''); }
       }
     }
@@ -1493,13 +1495,16 @@
     const beacon = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 120, 24, 1, true), new THREE.MeshBasicMaterial({ color: '#f0c46c', transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide, fog: false }));
     beacon.visible = false; scene.add(beacon);
     function missionTarget() {
-      const m = story.mission; if (!m || m.failed || !m.step.target) return null;
-      if (m.step.id === 'switch') return garage.liftPos;
-      return S.PLACES[m.step.target];
+      const m = story.mission;
+      if (!m) return acts.A.freeAt || null;
+      if (m.failed) return null;
+      if (m.step.id === 'switch' || m.step.id === 'sneak') return garage.liftPos;
+      if (!m.step.target) return null;
+      return acts.placeOf(m.step.target);
     }
 
     // ---- homes: walk up to your door, press E to go in; inside, E at the door to leave. Going home saves.
-    function save() { try { localStorage.setItem('desertheat.save', JSON.stringify({ v: 1, unlocked: story.unlocked, chars: { fareej: { money: story.chars.fareej.money }, fatimah: { money: story.chars.fatimah.money } }, hour: state.hour, done: story.complete ? ['night-fare'] : [], arms: typeof war !== 'undefined' ? war.toJSON() : null, life: typeof life !== 'undefined' ? life.toJSON() : null })); story.savedAt = performance.now(); } catch { /* storage can be blocked; the game still runs */ } }
+    function save() { try { localStorage.setItem('desertheat.save', JSON.stringify({ v: 1, unlocked: story.unlocked, chars: { fareej: { money: story.chars.fareej.money }, fatimah: { money: story.chars.fatimah.money } }, hour: state.hour, done: typeof acts !== 'undefined' ? acts.A.done : story.complete ? ['night-fare'] : [], arms: typeof war !== 'undefined' ? war.toJSON() : null, life: typeof life !== 'undefined' ? life.toJSON() : null })); story.savedAt = performance.now(); } catch { /* storage can be blocked; the game still runs */ } }
     function load() { try { return JSON.parse(localStorage.getItem('desertheat.save') || 'null'); } catch { return null; } }
 
     function homeStep() {
@@ -1532,6 +1537,8 @@
       }
       // the parked car of whoever is not driving
       for (const id of ['fareej', 'fatimah']) if (cars[id].sim !== car) { const s = cars[id].sim, m = cars[id].mesh; m.group.position.set(s.x, s.y, s.z); m.group.rotation.y = -s.heading; m.beam.intensity = 0; }
+      acts.missionCarStep();
+      acts.A.freeAt = story.mission ? null : acts.freeRoam();
       if (story.mission) missionStep(dt);
       const tgt = missionTarget();
       beacon.visible = !!tgt && story.mode !== 'cut';
@@ -1566,6 +1573,7 @@
         camera.fov = 58; sun.target.position.set(f.x, f.y, f.z);
         return true;
       }
+      if (story.mode === 'cut' && story.mission && story.mission.def.id !== 'night-fare') { camera.fov = 45; return acts.cutCamera(dt); }
       if (story.mode === 'cut' && story.mission) {
         const m = story.mission, st = m.step, t = m.t;
         if (st.id === 'intro') {
@@ -1591,7 +1599,7 @@
       const k = e.key.toLowerCase();
       if (k === 'tab') { e.preventDefault(); if (!e.repeat && story.mode !== 'fly' && story.mode !== 'cut') showWheel(!$('.who').classList.contains('on')); }
       if ((k === '1' || k === '2') && $('.who').classList.contains('on')) { const id = k === '1' ? 'fareej' : 'fatimah'; showWheel(false); if (id !== story.active && S.canSwitch(story).ok) switchTo(id); }
-      if (k === 'f' && story.mode === 'drive' && Math.abs(car.speed) < 3 && !story.mission) exitCar();
+      if (k === 'f' && story.mode === 'drive' && Math.abs(car.speed) < 3 && (!story.mission || story.mission.def.id !== 'night-fare')) exitCar();
       if (k === 'n' && !story.mission && story.mode !== 'fly') startMission();
       if (k === 'escape' && story.mode === 'cut' && story.mission) story.mission.t += 30;   // skip the cut-scene
     });
@@ -2073,7 +2081,7 @@
           if (dd < 2.5 && dd > 1e-3 && sim.y < 2) { const v = sim.hit(dx / dd, dz / dd, 2.5 - dd); if (v > 3) { audio.thump(v); state.shake = Math.min(0.3, v / 40); story.damage += v * 0.3; } }
         }
       }
-      return { C, onTile, offTile, placeAll, signalLimit, trafficTarget, frame, collide, fuelEmpty: () => C.fuel[story.active] <= 0 };
+      return { C, onTile, offTile, placeAll, signalLimit, trafficTarget, frame, collide, fillShop, fuelEmpty: () => C.fuel[story.active] <= 0 };
     })();
 
     // ------------------------------------------------------------------ section 4: weapons and the police
@@ -2752,6 +2760,159 @@
       return { F, frame, drawRoute, setWaypoint, togglePhone, message, toJSON, fromJSON, photoCamera, applyCar };
     })();
 
+    // ------------------------------------------------------------------ section 6: the story missions (Act 1 onwards)
+
+    const MI = window.DesertHeatMissions;
+    const acts = (() => {
+      const A = { car: null, startBeacon: null, done: ['night-fare'] };
+      const placeOf = (k) => MI.PLACES[k] || S.PLACES[k];
+
+      function placeGarage(at) {
+        garage.at = at; garage.grp.position.set(at.x, garage.y, at.z);
+        garage.liftPos = { x: at.x + 26, z: at.z - 18.6 };
+      }
+      // a mission car: a separate car the player must drive (it replaces the character's car while the mission runs)
+      function spawnMissionCar(spec) {
+        const at = placeOf(spec.at), cid = spec.id;
+        const mesh = makePlayerCar(carGeo, spec.paint); const e = EC.CARS[cid];
+        mesh.body.scale.set(e.body[0], e.body[1], e.body[2]);
+        const sim = new L.Car(); sim.spec = EC.specFor(new L.Car().spec, cid, {});
+        // put it on the nearest street
+        const keep = { x: car.x, z: car.z, y: car.y, h: car.heading, vx: car.vx, vz: car.vz };
+        car.x = at.x; car.z = at.z; car.y = 30; resetCar(false);
+        sim.x = car.x; sim.z = car.z; sim.y = car.y; sim.heading = car.heading;
+        Object.assign(car, { x: keep.x, z: keep.z, y: keep.y, heading: keep.h, vx: keep.vx, vz: keep.vz });
+        scene.add(mesh.group); mesh.group.position.set(sim.x, sim.y, sim.z); mesh.group.rotation.y = -sim.heading;
+        A.car = { sim, mesh, damage: 0, owner: story.active, prev: cars[story.active] };
+      }
+      function removeMissionCar() {
+        if (!A.car) return;
+        const who = A.car.owner;
+        if (cars[who] === A.car) { cars[who] = A.car.prev; if (story.active === who && story.mode === 'drive') { exitCar(); } }
+        scene.remove(A.car.mesh.group); A.car = null;
+      }
+      // the player gets into the mission car with F when close (handled here, before the normal F)
+      function missionCarStep() {
+        const C = A.car; if (!C) return;
+        if (cars[C.owner] !== C) { const m = C.mesh, s = C.sim; m.group.position.set(s.x, s.y, s.z); m.group.rotation.y = -s.heading; m.beam.intensity = 0; }
+        const f = story.foot;
+        if (f && Math.hypot(C.sim.x - f.x, C.sim.z - f.z) < 3.6) {
+          story.prompt = 'F  GET IN';
+          if (state.keys.has('f')) { state.keys.delete('f'); cars[C.owner] = C; enterCar(); }
+        }
+        if (story.mode === 'drive' && cars[story.active] === C) C.damage = story.damage - (C.dmg0 || 0);
+      }
+
+      function stepStart() {
+        const m = story.mission, st = m.step, su = st.setup || {};
+        MS.line = 0; objective(st.objective || '');
+        root.classList.toggle('cut', !!st.cut);
+        if (st.cut) story.mode = 'cut'; else if (story.mode === 'cut') story.mode = story.foot ? 'foot' : 'drive';
+        if (A.npc) { scene.remove(A.npc.group); A.npc = null; }
+        if (su.npc) {
+          const me = story.foot || car, h = story.foot ? story.foot.heading : car.heading;
+          const n = P.makePerson(MI.CAST[su.npc]); const x = me.x + Math.sin(h) * 1.6, z = me.z - Math.cos(h) * 1.6;
+          const sup = supportAt(x, z, (me.y || 0) + 1); n.group.position.set(x, (me.y || 0) < -20 ? me.y : sup ? sup.y : 0, z); n.group.rotation.y = -(h + Math.PI);
+          scene.add(n.group); A.npc = n;
+          if (story.foot) persons[story.active].group.rotation.y = -h;
+        }
+        if (su.give) { war.W.arms[story.active].give(su.give.weapon, su.give.mags || 2); war.W.arms[story.active].select(su.give.weapon); war.showGun(); }
+        if (su.spawnCar) { removeMissionCar(); spawnMissionCar(su.spawnCar); A.car.dmg0 = story.damage; }
+        if (su.wanted) { const me = story.foot || car; war.wanted().crime(su.wanted >= 2 ? 'shotsFired' : 'ramCop', me.x, me.z); }
+        if (st.forceSwitch && story.active !== st.who) switchTo(st.who, true);
+        if (su.placeNear) { const p = placeOf(su.placeNear), ch = story.chars[st.who]; ch.inCar = false; if (story.foot && story.active === st.who) { story.foot.x = p.x + 14; story.foot.z = p.z + 6; story.foot.y = 30; } }
+        if (su.room) { const r = rooms[su.room]; r.grp.visible = true; story.inside = null; A.room = r; }
+        if (su.garage) {
+          const at = placeOf(su.garage); placeGarage(at); garage.grp.visible = true;
+          if (story.mode === 'drive') exitCar();
+          story.foot.x = at.x - 24; story.foot.z = at.z + 10; story.foot.y = garage.y; story.foot.heading = Math.PI / 2; story.camYaw = story.foot.heading;
+          if (story.guard) scene.remove(story.guard.p.group);
+          story.guard = makeGuard(); story.guard.x = at.x + 6; story.guard.z = at.z; story.guard.down = false;
+        }
+        if (su.shopCut) {
+          const me = story.foot || car;
+          const s = { ...su.shopCut, x: me.x, z: me.z, nx: 0, nz: 1, dx: 1, dz: 0, w: 8, enterable: true };
+          city.fillShop(s); A.shopCut = s;
+          if (su.shopCut.both) { for (const id of ['fareej', 'fatimah']) { const p = persons[id]; p.group.visible = true; p.setPose('sit'); p.group.position.set(me.x + (id === 'fareej' ? -2.6 : -1.4), -120, me.z + 1); p.group.rotation.y = id === 'fareej' ? -Math.PI / 2 : Math.PI / 2; } }
+          garage.grp.visible = false;
+          if (story.guard) { scene.remove(story.guard.p.group); story.guard = null; }
+        }
+        if (m.def.hour !== undefined && m.i === 0) { state.hour = m.def.hour; }
+        // leaving a cut-scene room
+        if (!st.cut && A.room) { A.room.grp.visible = false; A.room = null; }
+        if (!st.cut && A.shopCut) { city.C.interior = null; A.shopCut = null; }
+      }
+      function finish() {
+        const m = story.mission, def = m.def;
+        A.done.push(def.id); story.complete = true;
+        if (def.reward) { story.chars[def.who].money += def.reward; }
+        removeMissionCar(); garage.grp.visible = false; placeGarage(S.PLACES.marinaGarage);
+        if (A.npc) { scene.remove(A.npc.group); A.npc = null; }
+        if (story.guard) { scene.remove(story.guard.p.group); story.guard = null; }
+        if (A.room) { A.room.grp.visible = false; A.room = null; }
+        if (A.shopCut) { const s = A.shopCut; A.shopCut = null; for (const id of ['fareej', 'fatimah']) { persons[id].setPose('stand'); persons[id].group.visible = false; } }
+        root.classList.remove('cut');
+        story.mission = null; objective('');
+        story.mode = story.foot ? 'foot' : 'drive';
+        if (story.mode === 'cut' || (!story.foot && !story.chars[story.active].inCar)) { story.mode = 'drive'; }
+        if (def.id === 'same-name' || (story.foot && story.foot.y < -20) || (story.foot && story.foot.y < -100)) {
+          // back out on the street after the last scene
+          const at = def.id === 'same-name' ? MI.PLACES.karama : S.PLACES.fareejHome;
+          if (story.foot) { story.foot.x = at.x + 8; story.foot.z = at.z + 4; story.foot.y = 30; story.foot.vy = 0; persons[story.active].group.visible = true; }
+        }
+        $('.card h2').textContent = def.title.toUpperCase();
+        $('.card .l1').textContent = def.reward ? `Paid: AED ${def.reward.toLocaleString('en')}` : 'Mission passed';
+        const next = MI.nextMission(A.done);
+        $('.card .l2').textContent = next ? `Next: ${next.title} (${S.CHARACTERS[next.who].name})` : 'Act 1 complete. Act 2 comes in the next section.';
+        $('.card .l3').textContent = '';
+        $('.card').style.display = 'block';
+        if (next) life.message(next.who === 'fareej' ? 'Uncle Rashid' : 'Unknown number', `${next.title}: meet at ${placeOf(next.start).name}.`);
+        state.timeRuns = true; save();
+      }
+      function start(def) {
+        const m = new S.Mission(def); story.mission = m; MS.line = 0;
+        if (story.active !== def.who) switchTo(def.who, true);
+        stepStart();
+      }
+      function ctx() {
+        const me = story.foot || car, C = A.car;
+        return {
+          pos: { x: me.x, z: me.z }, speed: story.mode === 'drive' ? Math.abs(car.speed) : 0, wanted: war.wanted().level,
+          inMissionCar: !!C && story.mode === 'drive' && car === C.sim, missionCarDamage: C ? C.damage : 0,
+          missionCarLost: !!C && cars[C.owner] === C && story.mode === 'foot' && Math.hypot(C.sim.x - me.x, C.sim.z - me.z) > 250,
+        };
+      }
+      function runEvents(dt) {
+        const m = story.mission, st = m.step;
+        for (const ev of st.events || []) if (!m.data['ev' + st.events.indexOf(ev)] && ev.at(ctx(), m)) {
+          m.data['ev' + st.events.indexOf(ev)] = true; m.data.cops = true;
+          if (ev.run === 'wanted1') { war.wanted().crime('ramCop', car.x, car.z); }
+          if (ev.say) say(ev.say[0], ev.say[1]);
+        }
+      }
+      // free roam: the next mission's start is a column of light; walk or drive into it with the right character
+      function freeRoam() {
+        const next = MI.nextMission(A.done); if (!next || story.mission) return null;
+        const at = placeOf(next.start), me = story.foot || car;
+        if (story.active === next.who && Math.hypot(me.x - at.x, me.z - at.z) < (story.foot ? 6 : 14) && !war.wanted().level) {
+          story.prompt = story.prompt || `E  START "${next.title.toUpperCase()}"`;
+          if (state.keys.has('e')) { state.keys.delete('e'); $('.card').style.display = 'none'; start(next); }
+        }
+        return at;
+      }
+      function cutCamera(dt) {
+        const m = story.mission, st = m.step, t = m.t;
+        if (A.room) { const gp = A.room.grp.position; camera.position.set(gp.x + 0.6 + t * 0.06, gp.y + 1.5, gp.z + 1.4 - t * 0.05); camera.lookAt(gp.x + 2.2, gp.y + 0.9, gp.z - 0.6); return true; }
+        if (A.shopCut) { const s = A.shopCut; camera.position.set(s.x + 2.2 - t * 0.05, -120 + 1.6, s.z + 3.2); camera.lookAt(s.x - 2, -120 + 0.9, s.z + 1); return true; }
+        if (A.npc) A.npc.update(dt, 0, false);
+        const me = story.foot || car, a = t * 0.12;
+        camera.position.set(me.x + Math.cos(a) * 6, (me.y || 0) + 2.2, me.z + Math.sin(a) * 6); camera.lookAt(me.x, (me.y || 0) + 1.2, me.z);
+        if (story.foot) persons[story.active].update(dt, 0, false);
+        return true;
+      }
+      return { A, start, stepStart, finish, ctx, runEvents, freeRoam, missionCarStep, cutCamera, placeOf, placeGarage, removeMissionCar };
+    })();
+
     // ------------------------------------------------------------------ maps
 
     const mini = $('.mini'), mg = mini.getContext('2d');
@@ -3006,6 +3167,7 @@
       get city() { return city; },
       get war() { return war; },
       get life() { return life; },
+      get acts() { return acts; },
       exit() { if (story.mode === 'drive') { car.vx = car.vz = 0; exitCar(); } },
       // jump the running mission to a step (review screenshots and tests)
       toStep(id) { const m = story.mission; if (!m) return; while (m.step && m.step.id !== id) { m.next(); if (m.done) break; } if (!m.done) { m.checkpoint = m.i; onStepStart(); } },
