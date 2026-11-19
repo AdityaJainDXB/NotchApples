@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.81 · Windows 2.2.81 · 19 November 2026 · Smoother hello animation
+
+- Fixed: the hello animation in the notch was glitchy and slow. Its lettering is now drawn once per frame on the graphics chip instead of being worked out again every frame (issue #131)
+- Windows: Windows has no code changes; it moves to 2.2.81 to stay in step with the Mac
+
 ### Mac 2.2.80 · Windows 2.2.80 · 18 November 2026 · 🏁 Racing HUD
 
 - Changed: the Racing HUD has a new broadcast-style look on every track and every car. The timing tower now has a lap line and the gap to the leader (dashes for the leader), whoever holds the fastest lap gets a purple row with a stopwatch, and while a flag is out the tower shows CAUTION with the sector, SAFETY CAR or RED FLAG, then RESUME RACING when racing restarts. The lap panel shows your position out of the field, the lap time and your best lap together. L still switches between the gap to you and the gap to the leader
@@ -160,11 +165,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 ### Mac 2.2.79 · Windows 2.2.79 · 18 November 2026 · 📜 Teleprompter
 
 - New: Teleprompter. Tools → Teleprompter: type or paste a script, press Start, and it scrolls up a reading line at the speed you choose (1 to 10, which is 60 to 240 words a minute). You can change the text size, flip it sideways for a prompter glass, and pause or reset. Your script and settings are saved, and nothing leaves your computer
-
-### Mac 2.2.78 · Windows 2.2.78 · 18 November 2026 · 🔔 Update reminder fix, Music Wall
-
-- Fixed: the update reminder no longer comes back every time you open Notch Apple after quitting or restarting. After it has been shown, it waits another 4 or 5 opens
-- Changed: the music screen with the moving scenes and lyrics is now called Music Wall (it was Voxel Wall), and its scenes are Block Field and Block City
 
 ## Plugins
 

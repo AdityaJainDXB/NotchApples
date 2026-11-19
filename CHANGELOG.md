@@ -4,6 +4,16 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.81 · Windows 2.2.81 BETA · 19 November 2026 · Smoother hello animation
+
+**Mac**
+
+- Fixed: the hello animation in the notch was glitchy and slow. Its lettering is now drawn once per frame on the graphics chip instead of being worked out again every frame (issue #131)
+
+**Windows**
+
+- Windows has no code changes; it moves to 2.2.81 to stay in step with the Mac
+
 ### Mac 2.2.80 · Windows 2.2.80 BETA · 18 November 2026 · 🏁 Racing HUD
 
 **Mac**

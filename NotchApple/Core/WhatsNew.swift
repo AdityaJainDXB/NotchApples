@@ -20,6 +20,9 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.81", date: "19 November 2026", headline: "Smoother hello animation", items: [
+            "- Fixed: the hello animation in the notch was glitchy and slow. Its lettering is now drawn once per frame on the graphics chip instead of being worked out again every frame (issue #131)"
+        ]),
         ReleaseNote(version: "2.2.80", date: "18 November 2026", headline: "Racing HUD", items: [
             "- Changed: the Racing HUD has a new broadcast-style look on every track and every car. The timing tower now has a lap line and the gap to the leader (dashes for the leader), whoever holds the fastest lap gets a purple row with a stopwatch, and while a flag is out the tower shows CAUTION with the sector, SAFETY CAR or RED FLAG, then RESUME RACING when racing restarts. The lap panel shows your position out of the field, the lap time and your best lap together. L still switches between the gap to you and the gap to the leader",
             "- New: banners at the top centre for a new fastest lap, track-limit warnings, penalties, flags, a streak of clean laps and the chequered flag. Your engineer's and the commentator's lines also appear as subtitles, so you can follow them with the sound off",
