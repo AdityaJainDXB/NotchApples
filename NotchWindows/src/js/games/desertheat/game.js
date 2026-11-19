@@ -542,6 +542,7 @@
         if (state.stopped) return;
         resetCar(true);
         city.placeAll();
+        sights.build();
         state.loaded = true;
         { const sv = load(); if (sv && sv.done && sv.done.includes('night-fare')) { story.unlocked = sv.unlocked || { fatimah: true }; story.complete = true; story.chars.fareej.money = sv.chars.fareej.money; story.chars.fatimah.money = sv.chars.fatimah.money; war.fromJSON(sv.arms); life.fromJSON(sv.life); acts.A.done = sv.done; } else if (!opts.noStory) startMission(); }
         $('.load').style.opacity = '0'; setTimeout(() => { $('.load').style.display = 'none'; }, 700);
@@ -763,7 +764,9 @@
       const items = [];
       for (const b of list) {
         const h = b[0]; if (skipTall && h >= 45) continue;
+
         const n = (b.length - 1) / 2; if (n < 3) continue;
+        if (EXCLUDE.length) { let cx = 0, cz = 0; for (let i = 0; i < n; i++) { cx += b[1 + i * 2]; cz += b[2 + i * 2]; } cx /= n; cz /= n; if (EXCLUDE.some((e) => Math.hypot(cx - e.x, cz - e.z) < e.r)) continue; }   // a landmark model stands here
         items.push(b); verts += n * 4 + n;
       }
       if (!items.length) return null;
@@ -1552,6 +1555,7 @@
       city.frame(dt);
       war.frame(dt);
       life.frame(dt);
+      sights.frame(dt);
       $('.prompt').textContent = story.prompt; $('.prompt').style.display = story.prompt ? 'block' : 'none';
       story.sub.t -= dt; if (story.sub.t <= 0) $('.sub').classList.remove('on');
       return story.mode;
@@ -1559,6 +1563,7 @@
 
     // camera for on foot, cut-scenes and the switch flight
     function storyCamera(dt) {
+      if (story.debugCam) { const c = story.debugCam; camera.position.set(c[0], c[1], c[2]); camera.lookAt(c[3], c[4], c[5]); camera.fov = 55; sun.target.position.set(c[3], 0, c[5]); return true; }   // review screenshots only
       if (story.mode === 'fly') { flyCamera(dt); return true; }
       if (story.mode === 'foot' && story.foot && war.aimCamera(dt)) return true;
       if (story.mode === 'foot' && story.foot) {
@@ -2913,6 +2918,269 @@
       return { A, start, stepStart, finish, ctx, runEvents, freeRoam, missionCarStep, cutCamera, placeOf, placeGarage, removeMissionCar };
     })();
 
+    // ------------------------------------------------------------------ section 7: landmarks, the Metro, the airport, malls
+
+    const LMK = window.DesertHeatLandmarks;
+    const EXCLUDE = LMK.LANDMARKS.map((l) => ({ x: l.x, z: l.z, r: l.r * 1.25 }));    // map footprints replaced by a model
+    const sights = (() => {
+      const G = { built: false, trains: [], metro: null, metroLen: 0, plane: null, planeT: 0, flamingos: null, abras: [], malls: [], inMall: null };
+      const mat = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.5, ...o });
+      const glassBlue = new THREE.MeshPhysicalMaterial({ color: '#8fa9b8', metalness: 0.7, roughness: 0.12, clearcoat: 1, envMapIntensity: 1.4 });
+      const whiteM = mat('#eceae4', { roughness: 0.4 }), steelM = mat('#a5abb1', { metalness: 0.8, roughness: 0.3 }), concM = new THREE.MeshStandardMaterial({ map: TEX.concrete, color: '#cfcac0', roughness: 0.85 });
+      const groundY = (x, z) => { const s = supportAt(x, z, 400); return s ? s.y : 0; };
+
+      function landmark(l) {
+        const g = new THREE.Group(); g.position.set(l.x, 0, l.z);
+        if (l.kind === 'needle') {
+          // stacked, setback tiers that thin to a spire
+          let y = 0, r = l.r;
+          for (let i = 0; i < 14; i++) { const h = 48 - i * 1.5; const m = new THREE.Mesh(new THREE.CylinderGeometry(r * 0.82, r, h, 3 + 3, 1), glassBlue); m.position.y = y + h / 2; m.rotation.y = i * 0.21; g.add(m); y += h; r *= 0.86; }
+          const sp = new THREE.Mesh(new THREE.CylinderGeometry(0.6, r, l.h - y, 8), steelM); sp.position.y = y + (l.h - y) / 2; g.add(sp);
+          const tip = new THREE.Mesh(new THREE.SphereGeometry(1.2, 8, 6), new THREE.MeshBasicMaterial({ color: '#ff3b30' })); tip.position.y = l.h; g.add(tip); G.beaconTip = tip;
+        }
+        if (l.kind === 'sail') {
+          const shape = new THREE.Shape(); shape.moveTo(0, 0); shape.quadraticCurveTo(l.r * 1.6, l.h * 0.45, 0, l.h); shape.lineTo(-6, l.h * 0.98); shape.lineTo(-6, 0);
+          const sail = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: l.r * 1.1, bevelEnabled: false }), whiteM); sail.position.z = -l.r * 0.55; g.add(sail);
+          const mast = new THREE.Mesh(new THREE.BoxGeometry(4, l.h * 1.05, 4), steelM); mast.position.set(-8, l.h * 0.52, 0); g.add(mast);
+          const pad = new THREE.Mesh(new THREE.CylinderGeometry(12, 12, 1, 24), whiteM); pad.position.set(l.r * 0.9, l.h * 0.66, 0); g.add(pad);
+          g.rotation.y = -0.9;
+        }
+        if (l.kind === 'frame') {
+          for (const sx of [-1, 1]) { const leg = new THREE.Mesh(new THREE.BoxGeometry(12, l.h, 12), G.frameM || (G.frameM = mat('#c9a24c', { metalness: 0.85, roughness: 0.3, emissive: '#c9a24c', emissiveIntensity: 0 }))); leg.position.set(sx * (l.r - 6), l.h / 2, 0); g.add(leg); }
+          const top = new THREE.Mesh(new THREE.BoxGeometry(l.r * 2, 12, 12), G.frameM); top.position.y = l.h - 6; g.add(top);
+        }
+        if (l.kind === 'torus') {
+          const t = new THREE.Mesh(new THREE.TorusGeometry(l.r * 0.72, l.r * 0.32, 24, 48), mat('#b9c0c6', { metalness: 0.9, roughness: 0.22 })); t.scale.set(1, 1, 0.9); t.rotation.y = 0.6; t.position.y = l.h * 0.55; g.add(t);
+          const base = new THREE.Mesh(new THREE.CylinderGeometry(l.r * 1.1, l.r * 1.25, 14, 32), mat('#7d8a6a')); base.position.y = 7; g.add(base);
+        }
+        if (l.kind === 'arch') {
+          for (const sx of [-1, 1]) { const w = new THREE.Mesh(new THREE.BoxGeometry(l.r * 0.8, l.h, 26), mat('#e7c9a2')); w.position.set(sx * l.r * 0.6, l.h / 2, 0); g.add(w); }
+          const bridge = new THREE.Mesh(new THREE.BoxGeometry(l.r * 0.6, 18, 22), mat('#e7c9a2')); bridge.position.y = l.h - 9; g.add(bridge);
+          const centre = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, l.h * 0.45, 16), mat('#e7c9a2')); centre.position.y = l.h * 0.775; g.add(centre);
+        }
+        if (l.kind === 'wave') {
+          const shape = new THREE.Shape(); shape.moveTo(-l.r, 0); shape.quadraticCurveTo(-l.r * 0.2, l.h * 1.15, l.r * 0.9, l.h * 0.2); shape.lineTo(l.r, 0);
+          const wv = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: 24, bevelEnabled: false }), glassBlue); wv.position.z = -12; g.add(wv);
+        }
+        if (l.kind === 'twin') {
+          for (const [dx, h] of [[-30, l.h], [30, l.h * 0.88]]) { const t = new THREE.Mesh(new THREE.CylinderGeometry(l.r * 0.5, l.r, h, 3), mat('#9aa3aa', { metalness: 0.8, roughness: 0.2 })); t.position.set(dx, h / 2, 0); g.add(t); }
+        }
+        if (l.kind === 'clock') {
+          for (let i = 0; i < 4; i++) { const leg = new THREE.Mesh(new THREE.BoxGeometry(2, l.h, 2), whiteM); leg.position.set(Math.cos(i * Math.PI / 2) * 5, l.h / 2, Math.sin(i * Math.PI / 2) * 5); leg.rotation.z = Math.cos(i * Math.PI / 2) * 0.12; leg.rotation.x = -Math.sin(i * Math.PI / 2) * 0.12; g.add(leg); }
+          const face = new THREE.Mesh(new THREE.BoxGeometry(4, 4, 4), mat('#f4f2ec', { emissive: '#fff2cf', emissiveIntensity: 0.4 })); face.position.y = l.h; g.add(face);
+        }
+        g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+        scene.add(g);
+        // a collision ring so you cannot drive through it
+        const n = 16; for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, b = (i + 1) / n * Math.PI * 2, r = Math.min(l.r, 30); world.wallGrid.addSegment(l.x + Math.cos(a) * r, l.z + Math.sin(a) * r, l.x + Math.cos(b) * r, l.z + Math.sin(b) * r, { ax: l.x + Math.cos(a) * r, az: l.z + Math.sin(a) * r, bx: l.x + Math.cos(b) * r, bz: l.z + Math.sin(b) * r, tile: 'lm' }, 1); }
+      }
+
+      // ---- the Metro: viaduct, pillars, stations and two trains
+      function metro() {
+        const p = LMK.metroLine(world.roads); if (p.length < 4) return;
+        const cum = L.cumulative(p), len = cum[cum.length - 1]; G.metro = { p, cum }; G.metroLen = len;
+        const DECK = 13, W2 = 8.5;
+        const deck = new Builder(), pil = [];
+        for (let i = 2; i < p.length; i += 2) {
+          const ax = p[i - 2], az = p[i - 1], bx = p[i], bz = p[i + 1], d = Math.hypot(bx - ax, bz - az); if (d < 0.1) continue;
+          const nx = -(bz - az) / d * W2 / 2, nz = (bx - ax) / d * W2 / 2;
+          deck.quad([ax - nx, DECK, az - nz], [bx - nx, DECK, bz - nz], [bx + nx, DECK, bz + nz], [ax + nx, DECK, az + nz], null, [0.86, 0.85, 0.82]);
+          deck.quad([ax + nx, DECK - 1.6, az + nz], [bx + nx, DECK - 1.6, bz + nz], [bx + nx, DECK, bz + nz], [ax + nx, DECK, az + nz], null, [0.78, 0.77, 0.74]);
+          deck.quad([bx - nx, DECK - 1.6, bz - nz], [ax - nx, DECK - 1.6, az - nz], [ax - nx, DECK, az - nz], [bx - nx, DECK, bz - nz], null, [0.78, 0.77, 0.74]);
+          deck.quad([ax + nx, DECK - 1.6, az + nz], [ax - nx, DECK - 1.6, az - nz], [bx - nx, DECK - 1.6, bz - nz], [bx + nx, DECK - 1.6, bz + nz], null, [0.6, 0.6, 0.58]);
+        }
+        for (let s = 0; s < len; s += 34) { const q = L.pointAt(p, cum, s); pil.push(q); }
+        const dg = deck.geometry(); if (dg) dg.computeVertexNormals(); const dm = dg && new THREE.Mesh(dg, new THREE.MeshStandardMaterial({ map: TEX.concrete, vertexColors: true, roughness: 0.85, side: THREE.DoubleSide })); if (dm) { dm.castShadow = dm.receiveShadow = true; scene.add(dm); }
+        const pm = new THREE.InstancedMesh(new THREE.CylinderGeometry(1.1, 1.3, DECK - 1.6, 10), concM, pil.length);
+        const m4 = new THREE.Matrix4(); pil.forEach((q, i) => { m4.makeTranslation(q.x, (DECK - 1.6) / 2, q.z); pm.setMatrixAt(i, m4); }); pm.castShadow = true; scene.add(pm);
+        // stations: a long shell with the curved gold roof the Red Line is known for
+        for (const st of LMK.METRO_STATIONS) {
+          let best = null, bd = 200; for (let i = 2; i < p.length; i += 2) { const s = L.nearestOnSegment(st.x, st.z, p[i - 2], p[i - 1], p[i], p[i + 1]); if (s.d < bd) { bd = s.d; best = { s, i }; } }
+          if (!best) continue;
+          const hd = Math.atan2(p[best.i] - p[best.i - 2], -(p[best.i + 1] - p[best.i - 1]));
+          const g = new THREE.Group(); g.position.set(best.s.px, DECK, best.s.pz); g.rotation.y = -hd;
+          const shell = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, 110, 24, 1, true, Math.PI * 0.5, Math.PI), mat('#c9a96a', { metalness: 0.7, roughness: 0.35, side: THREE.DoubleSide }));
+          shell.rotation.x = Math.PI / 2; shell.rotation.y = Math.PI / 2; shell.position.y = 0.5; g.add(shell);
+          const plat = new THREE.Mesh(new THREE.BoxGeometry(17, 0.8, 110), concM); plat.position.y = 0.4; g.add(plat);
+          g.traverse((o) => { if (o.isMesh) o.castShadow = true; }); scene.add(g);
+        }
+        // trains: five cars, red and white
+        for (let k = 0; k < 2; k++) {
+          const tg = new THREE.Group(); const cars5 = [];
+          for (let c = 0; c < 5; c++) { const b = new THREE.Mesh(new THREE.BoxGeometry(2.9, 3.4, 16.5), mat('#e9e6df', { metalness: 0.4 })); const stripe = new THREE.Mesh(new THREE.BoxGeometry(2.95, 0.5, 16.6), mat('#b5262b')); stripe.position.y = -0.6; b.add(stripe); const win = new THREE.Mesh(new THREE.BoxGeometry(2.96, 1.1, 15), mat('#16202a', { emissive: '#ffe9c8', emissiveIntensity: 0 })); win.position.y = 0.5; b.add(win); b.castShadow = true; tg.add(b); cars5.push({ b, win }); }
+          scene.add(tg); G.trains.push({ g: tg, cars: cars5, s: k * len * 0.5, dir: k ? -1 : 1, side: k ? -2 : 2, wait: 0 });
+        }
+      }
+      function trainStep(dt, night) {
+        if (!G.metro) return;
+        const { p, cum } = G.metro;
+        for (const T of G.trains) {
+          if (T.wait > 0) T.wait -= dt;
+          else {
+            T.s += T.dir * 22 * dt;
+            if (T.s > G.metroLen - 50 || T.s < 50) { T.dir *= -1; T.wait = 20; }
+            // stop at stations for 25 seconds
+            for (const st of LMK.METRO_STATIONS) { const q = L.pointAt(p, cum, T.s); if (Math.hypot(q.x - st.x, q.z - st.z) < 60 && !T.at) { T.wait = 25; T.at = st; } }
+            if (T.at) { const q = L.pointAt(p, cum, T.s); if (Math.hypot(q.x - T.at.x, q.z - T.at.z) > 120) T.at = null; }
+          }
+          T.cars.forEach((c, i) => {
+            const s = THREE.MathUtils.clamp(T.s - T.dir * i * 17, 0, G.metroLen), q = L.pointAt(p, cum, s);
+            c.b.position.set(q.x - q.dz * T.side, 13 + 2.5, q.z + q.dx * T.side); c.b.rotation.y = -Math.atan2(q.dx, -q.dz);
+            c.win.material.emissiveIntensity = night * 0.9;
+          });
+        }
+      }
+
+      // ---- the airport: terminal, runway, parked aircraft, and a plane landing every couple of minutes
+      function aircraft(scale = 1) {
+        const g = new THREE.Group(), body = whiteM;
+        const fus = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 64, 16), body); fus.rotation.x = Math.PI / 2; g.add(fus);
+        const nose = new THREE.Mesh(new THREE.SphereGeometry(3, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), body); nose.rotation.x = -Math.PI / 2; nose.position.z = -32; g.add(nose);
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(62, 0.6, 9), body); wing.position.set(0, -1, 2); g.add(wing);
+        const tail = new THREE.Mesh(new THREE.BoxGeometry(0.6, 11, 7), mat('#b5262b')); tail.position.set(0, 6, 29); g.add(tail);
+        const stab = new THREE.Mesh(new THREE.BoxGeometry(20, 0.5, 5), body); stab.position.set(0, 1, 30); g.add(stab);
+        for (const sx of [-1, 1]) for (const wx of [11, 21]) { const e = new THREE.Mesh(new THREE.CylinderGeometry(1.6, 1.6, 6, 12), steelM); e.rotation.x = Math.PI / 2; e.position.set(sx * wx, -2.6, 0); g.add(e); }
+        g.scale.setScalar(scale); g.traverse((o) => { if (o.isMesh) o.castShadow = true; }); return g;
+      }
+      function airport() {
+        const A = LMK.AIRPORT, [r0, r1] = A.runway;
+        const len = Math.hypot(r1.x - r0.x, r1.z - r0.z), hd = Math.atan2(r1.x - r0.x, -(r1.z - r0.z));
+        const rw = new THREE.Mesh(new THREE.PlaneGeometry(60, len), new THREE.MeshStandardMaterial({ color: '#3a3b3d', roughness: 0.9, polygonOffset: true, polygonOffsetFactor: -1 }));
+        rw.rotation.x = -Math.PI / 2; rw.rotation.z = -hd; rw.position.set((r0.x + r1.x) / 2, 0.04, (r0.z + r1.z) / 2); scene.add(rw);
+        for (let s = 40; s < len; s += 60) { const d = new THREE.Mesh(new THREE.PlaneGeometry(1, 30), new THREE.MeshBasicMaterial({ color: '#e9e6df' })); d.rotation.x = -Math.PI / 2; d.rotation.z = -hd; d.position.set(r0.x + (r1.x - r0.x) * s / len, 0.06, r0.z + (r1.z - r0.z) * s / len); scene.add(d); }
+        const T = new THREE.Group(); T.position.set(A.terminal.x, 0, A.terminal.z); T.rotation.y = -hd;
+        const hall = new THREE.Mesh(new THREE.BoxGeometry(80, 26, 600), glassBlue); hall.position.y = 13; T.add(hall);
+        const roof = new THREE.Mesh(new THREE.CylinderGeometry(60, 60, 600, 24, 1, false, -0.5, 1), steelM); roof.rotation.x = Math.PI / 2; roof.position.y = -32; T.add(roof);
+        for (let i = 0; i < 6; i++) { const pl = aircraft(); pl.position.set(80, 6, -250 + i * 100); pl.rotation.y = Math.PI / 2; T.add(pl); }
+        scene.add(T);
+        G.plane = aircraft(); scene.add(G.plane); G.planeT = 0; G.planeRun = { r0, r1, hd, len };
+      }
+      function planeStep(dt) {
+        if (!G.plane) return;
+        const R = G.planeRun; G.planeT = (G.planeT + dt) % 150;
+        const t = G.planeT, approach = 70, roll = 25;
+        const dx = (R.r1.x - R.r0.x) / R.len, dz = (R.r1.z - R.r0.z) / R.len;
+        let s, y;
+        if (t < approach) { s = -9000 + (t / approach) * 9000; y = Math.max(0, -s * Math.tan(3 * Math.PI / 180)); }
+        else if (t < approach + roll) { const u = (t - approach) / roll; s = u * R.len * 0.7 * (1 - u * 0.4); y = 0; }
+        else { s = R.len * 0.42; y = 0; }
+        G.plane.position.set(R.r0.x + dx * s, y + 5.5, R.r0.z + dz * s); G.plane.rotation.y = -R.hd; G.plane.rotation.x = t < approach ? -0.05 : 0;
+        G.plane.visible = t < approach + roll + 10;
+      }
+
+      // ---- wildlife and the Creek
+      function flamingos() {
+        const F = LMK.FLAMINGOS, body = new THREE.InstancedMesh(new THREE.SphereGeometry(0.35, 8, 6), mat('#f3a6a0'), F.n), neck = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.05, 0.06, 0.9, 5), mat('#f3a6a0'), F.n), legs = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.02, 0.02, 1, 4), mat('#d98580'), F.n);
+        const m4 = new THREE.Matrix4(), q = new THREE.Quaternion();
+        for (let i = 0; i < F.n; i++) {
+          const x = F.x + (Math.random() - 0.5) * 80, z = F.z + (Math.random() - 0.5) * 40, y = 0.1;
+          m4.compose(new THREE.Vector3(x, y + 1.2, z), q, new THREE.Vector3(1, 0.8, 1.6)); body.setMatrixAt(i, m4);
+          m4.makeTranslation(x, y + 1.75, z - 0.35); neck.setMatrixAt(i, m4); m4.makeTranslation(x, y + 0.5, z); legs.setMatrixAt(i, m4);
+        }
+        scene.add(body, neck, legs);
+      }
+      function abras() {
+        const [a, b] = LMK.ABRA;
+        for (let i = 0; i < 4; i++) {
+          const g = new THREE.Group();
+          const hull = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.9, 10), mat('#7a5232', { roughness: 0.8 })); hull.position.y = 0.3; g.add(hull);
+          const roof = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.1, 7), mat('#e9e6df')); roof.position.y = 2.2; g.add(roof);
+          for (const sx of [-1, 1]) for (const sz of [-3, 3]) { const p = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.4, 0.08), mat('#5a3a20')); p.position.set(sx * 1.1, 1.5, sz); g.add(p); }
+          scene.add(g); G.abras.push({ g, t: i * 0.25, a, b, lane: (i - 1.5) * 9 });
+        }
+      }
+      function abraStep(dt) {
+        for (const A of G.abras) {
+          A.t = (A.t + dt / 160) % 1; const u = A.t < 0.5 ? A.t * 2 : 2 - A.t * 2, e = u * u * (3 - 2 * u);
+          const dx = A.b.x - A.a.x, dz = A.b.z - A.a.z, d = Math.hypot(dx, dz);
+          A.g.position.set(A.a.x + dx * e - dz / d * A.lane, Math.sin(U.uTime.value * 1.3 + A.lane) * 0.06, A.a.z + dz * e + dx / d * A.lane);
+          A.g.rotation.y = -Math.atan2(dx, -dz); A.g.rotation.z = Math.sin(U.uTime.value * 0.9 + A.lane) * 0.02;
+        }
+      }
+
+      // ---- malls: a big box with a sign; inside, a long hall of shops (each one enterable), a food court and the snow slope
+      function mallOutside(M) {
+        const g = new THREE.Group(); g.position.set(M.x, 0, M.z);
+        const box = new THREE.Mesh(new THREE.BoxGeometry(160, 24, 90), mat('#d9cfbd', { roughness: 0.7 })); box.position.y = 12; g.add(box);
+        const canopy = new THREE.Mesh(new THREE.BoxGeometry(40, 1.2, 10), steelM); canopy.position.set(0, 7, 50); g.add(canopy);
+        const tex = canvasTex(512, (c) => { c.canvas.height = 96; c.fillStyle = '#1d1d22'; c.fillRect(0, 0, 512, 96); c.fillStyle = '#d4b45a'; c.font = '600 54px "Avenir Next Condensed",sans-serif'; c.textAlign = 'center'; c.fillText(M.name.toUpperCase(), 256, 66); }, false);
+        const sign = new THREE.Mesh(new THREE.PlaneGeometry(36, 6.75), new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: '#fff', emissiveIntensity: 0.6 })); sign.position.set(0, 18, 45.1); g.add(sign);
+        const door = new THREE.Mesh(new THREE.PlaneGeometry(12, 5), new THREE.MeshStandardMaterial({ color: '#c8a25a', emissive: '#f0c46c', emissiveIntensity: 0.7 })); door.position.set(0, 2.5, 45.1); g.add(door);
+        g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(g);
+        // walls for collisions (the four sides)
+        const hw = 80, hd = 45;
+        for (const [ax, az, bx, bz] of [[-hw, -hd, hw, -hd], [hw, -hd, hw, hd], [hw, hd, -hw, hd], [-hw, hd, -hw, -hd]]) world.wallGrid.addSegment(M.x + ax, M.z + az, M.x + bx, M.z + bz, { ax: M.x + ax, az: M.z + az, bx: M.x + bx, bz: M.z + bz, tile: 'mall' }, 1);
+        M.door = { x: M.x, z: M.z + 47 };
+        G.malls.push(M);
+      }
+      const mallRoom = (() => { const g = new THREE.Group(); g.visible = false; scene.add(g); return g; })();
+      function buildMallInside(M) {
+        const g = mallRoom; while (g.children.length) { const o = g.children.pop(); o.traverse((m) => { if (m.geometry) m.geometry.dispose(); }); }
+        g.position.set(M.x, -200, M.z);
+        const L2 = 90, W2 = 18, H = 9;
+        const floor = new THREE.Mesh(new THREE.BoxGeometry(W2, 0.2, L2), mat('#e9e3d6', { roughness: 0.15, metalness: 0.1 })); floor.position.y = -0.1; g.add(floor);
+        const ceil = new THREE.Mesh(new THREE.BoxGeometry(W2, 0.2, L2), mat('#f4f2ec')); ceil.position.y = H; g.add(ceil);
+        const sky = new THREE.Mesh(new THREE.BoxGeometry(6, 0.1, L2 - 10), new THREE.MeshBasicMaterial({ color: '#dff0ff' })); sky.position.y = H - 0.15; g.add(sky);
+        for (const sx of [-1, 1]) { const w = new THREE.Mesh(new THREE.BoxGeometry(0.2, H, L2), mat('#efe9dc', { side: THREE.DoubleSide })); w.position.set(sx * W2 / 2, H / 2, 0); g.add(w); }
+        const end = new THREE.Mesh(new THREE.BoxGeometry(W2, H, 0.2), mat('#efe9dc')); end.position.set(0, H / 2, -L2 / 2); g.add(end);
+        for (let i = 0; i < 5; i++) { const l = new THREE.PointLight('#fff4e4', 40, 30, 1.2); l.position.set(0, H - 1, -L2 / 2 + 10 + i * 18); g.add(l); }
+        // shop fronts along both sides, each a door into that shop's interior
+        M.fronts = [];
+        M.shops.forEach((type, i) => {
+          const side = i % 2 ? 1 : -1, z = -L2 / 2 + 14 + Math.floor(i / 2) * 22, T = CY.SHOP_TYPES[type];
+          const name = T.names[i % T.names.length];
+          const tex = canvasTex(256, (c) => { c.canvas.height = 48; c.fillStyle = T.sign; c.fillRect(0, 0, 256, 48); c.fillStyle = '#fff'; c.font = '600 24px "Avenir Next Condensed",sans-serif'; c.textAlign = 'center'; c.fillText(name.toUpperCase(), 128, 32); }, false);
+          const s = new THREE.Mesh(new THREE.PlaneGeometry(8, 1.5), new THREE.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: '#fff', emissiveIntensity: 0.5 })); s.position.set(side * (W2 / 2 - 0.15), 4.6, z); s.rotation.y = -side * Math.PI / 2; g.add(s);
+          const glass = new THREE.Mesh(new THREE.PlaneGeometry(10, 3.6), new THREE.MeshStandardMaterial({ map: TEX.concrete, color: '#aab', emissive: '#ffe9c8', emissiveIntensity: 0.35, roughness: 0.1 })); glass.position.set(side * (W2 / 2 - 0.12), 1.8, z); glass.rotation.y = -side * Math.PI / 2; g.add(glass);
+          M.fronts.push({ type, name, x: M.x + side * (W2 / 2 - 1.2), z: M.z + z });
+        });
+        // food court tables, and at the far end the snow slope behind glass
+        for (let i = 0; i < 6; i++) { const t = new THREE.Mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.05, 16), mat('#fff')); t.position.set(-4 + (i % 3) * 4, 0.75, 30 + Math.floor(i / 3) * 5); g.add(t); }
+        if (M.ski) { const snow = new THREE.Mesh(new THREE.PlaneGeometry(W2 - 2, H - 1), new THREE.MeshBasicMaterial({ map: canvasTex(256, (c, S2) => { const gr = c.createLinearGradient(0, 0, 0, S2); gr.addColorStop(0, '#cfdcea'); gr.addColorStop(1, '#ffffff'); c.fillStyle = gr; c.fillRect(0, 0, S2, S2); c.strokeStyle = '#9fb1c4'; c.lineWidth = 3; c.beginPath(); c.moveTo(20, 40); c.lineTo(230, 220); c.stroke(); for (let i = 0; i < 8; i++) { c.fillStyle = ['#c43d2f', '#2f6fb5', '#222'][i % 3]; c.fillRect(40 + i * 24, 60 + i * 20, 4, 8); } }, false) })); snow.position.set(0, H / 2, -L2 / 2 + 0.2); g.add(snow); }
+        // shoppers
+        for (let i = 0; i < 14; i++) { const p = P.makePerson({ skin: ['#7a4e34', '#c99a76', '#e0b896', '#9c6b4a'][i % 4], hair: '#151210', shirt: ['#f4f2ec', '#141417', '#2f6fb5', '#c8b48e', '#8d2f2f'][i % 5], trousers: '#2f3a4c', height: 1.6 + (i % 4) * 0.07, abaya: i % 5 === 1 }); p.group.position.set((Math.random() - 0.5) * 12, 0, (Math.random() - 0.5) * 70); p.group.rotation.y = Math.random() * 6; p.update(0.016, 0, false); g.add(p.group); }
+        g.visible = true;
+        return { grp: g, w: W2, d: L2, door: new THREE.Vector3(M.x, -200, M.z + L2 / 2 - 1) };
+      }
+
+      function build() {
+        if (G.built) return; G.built = true;
+        for (const l of LMK.LANDMARKS) landmark(l);
+        metro(); airport(); flamingos(); abras();
+        for (const M of LMK.MALLS) mallOutside(M);
+      }
+      function mallStep() {
+        const f = story.foot; if (!f || story.mission) return;
+        if (G.inMall) {
+          const M = G.inMall;
+          for (const fr of M.fronts) if (Math.hypot(f.x - fr.x, f.z - fr.z) < 2.2 && !city.C.interior) {
+            story.prompt = `E  ENTER ${fr.name.toUpperCase()}`;
+            if (state.keys.has('e')) { state.keys.delete('e'); fade(true); setTimeout(() => { mallRoom.visible = false; const s = { id: 'mall:' + fr.name, type: fr.type, name: fr.name, x: fr.x, z: fr.z, nx: 0, nz: 1, dx: 1, dz: 0, w: 8, enterable: true }; city.fillShop(s); city.C.interior = s; story.inside = { grp: { position: new THREE.Vector3(s.x, -120, s.z) }, w: 8, d: 10, door: new THREE.Vector3(s.x, -120, s.z + 4.3) }; G.backToMall = M; f.x = s.x; f.z = s.z + 3.6; f.y = -120; fade(false); }, 400); }
+          }
+          if (story.inside && Math.hypot(f.x - story.inside.door.x, f.z - story.inside.door.z) < 1.5) {
+            story.prompt = 'E  LEAVE THE MALL';
+            if (state.keys.has('e')) { state.keys.delete('e'); fade(true); setTimeout(() => { mallRoom.visible = false; G.inMall = null; story.inside = null; f.x = M.door.x; f.z = M.door.z + 3; f.y = 30; f.heading = Math.PI; fade(false); }, 400); }
+          }
+          return;
+        }
+        // back from a shop inside the mall
+        if (G.backToMall && !city.C.interior && !story.inside) { const M = G.backToMall; G.backToMall = null; const inside = buildMallInside(M); G.inMall = M; story.inside = inside; f.x = M.x; f.z = M.z; f.y = -200; return; }
+        for (const M of G.malls) if (Math.hypot(f.x - M.door.x, f.z - M.door.z) < 6 && !city.C.interior) {
+          story.prompt = `E  ENTER ${M.name.toUpperCase()}`;
+          if (state.keys.has('e')) { state.keys.delete('e'); fade(true); setTimeout(() => { const inside = buildMallInside(M); G.inMall = M; story.inside = inside; f.x = inside.door.x; f.z = inside.door.z - 2; f.y = -200; f.heading = 0; story.camYaw = 0; fade(false); }, 450); }
+        }
+      }
+      function frame(dt) {
+        if (!G.built) return;
+        const night = U.uNight.value;
+        trainStep(dt, night); planeStep(dt); abraStep(dt);
+        if (G.frameM) G.frameM.emissiveIntensity = night * 0.6;
+        if (G.beaconTip) G.beaconTip.visible = Math.floor(U.uTime.value * 1.2) % 2 === 0;
+        mallStep();
+      }
+      return { G, build, frame };
+    })();
+
     // ------------------------------------------------------------------ maps
 
     const mini = $('.mini'), mg = mini.getContext('2d');
@@ -3168,6 +3436,8 @@
       get war() { return war; },
       get life() { return life; },
       get acts() { return acts; },
+      get sights() { return sights; },
+      camera(c) { story.debugCam = c; if (c) updateTiles(c[0], c[2]); },
       exit() { if (story.mode === 'drive') { car.vx = car.vz = 0; exitCar(); } },
       // jump the running mission to a step (review screenshots and tests)
       toStep(id) { const m = story.mission; if (!m) return; while (m.step && m.step.id !== id) { m.next(); if (m.done) break; } if (!m.done) { m.checkpoint = m.i; onStepStart(); } },

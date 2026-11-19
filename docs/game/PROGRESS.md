@@ -146,3 +146,22 @@ Built (`missions.js`, 5 tests in `NotchWindows/tests/desertheat-missions.test.mj
 
 Not done / gaps: scenes are short in-engine shots with subtitles, no animation of talking; the basement has one guard
 (the brief says two); no voice acting.
+
+## Section 7: the rest of Dubai (19 Nov 2026)
+
+Built (`landmarks.js`, 3 tests in `NotchWindows/tests/desertheat-landmarks.test.mjs`):
+- Landmark models at their real places (the plain map footprint there is removed): Burj Khalifa (setback tiers, spire and a
+  blinking red light), Burj Al Arab (the sail, mast and helipad), Dubai Frame (gold, lit at night), Museum of the Future,
+  Atlantis on the Palm, the Jumeirah Beach Hotel wave, Emirates Towers, the Deira clock tower. You cannot drive through them.
+- The Metro Red Line: a 25.8 km viaduct down the middle of Sheikh Zayed Road on pillars, built from the road data, with 12
+  stations at their real places (gold curved shells) and two red-and-white trains that stop at each station; windows light up
+  at night.
+- Dubai International: the runway, a long glass terminal with parked aircraft, and a plane landing about every 2.5 minutes.
+- Ras Al Khor flamingos; four abras crossing the Creek between Bur Dubai and Deira.
+- Two malls with made-up names: Mall of the Dunes (Al Barsha, with the snow slope behind glass) and Crescent Mall
+  (Downtown). Inside: a long hall with shoppers, a food court, and six shop fronts that each open into their own interior.
+- The Palm, the airport roads, Al Quoz and Ras Al Khor were already in the road data.
+
+Not done / gaps: the map's west edge cuts the outer crescent of the Palm, and the airport's east side; downloading more map
+data was blocked in this session, so those need the owner's go-ahead to fetch. The airport terminal is not enterable.
+No Metro rides yet (trains run, you cannot board).
