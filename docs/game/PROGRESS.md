@@ -207,3 +207,43 @@ Built (`region.js`, 6 tests in `NotchWindows/tests/desertheat-region.test.mjs`):
 
 Not done / gaps: the region is generated, not real map data; no boats bigger than jet skis; the Metro no longer runs into
 the generated motorway (fixed); Abu Dhabi has no interiors or shops yet; no Hatta mountains (Act 4 needs them).
+
+## Section 10: Acts 3-5, the helicopter and the endings (19-20 Nov 2026)
+
+Built (missions 13-29 in `missions.js`, `air.js` for the helicopter with a test):
+- **Act 3, Abu Dhabi:** The E11 (a motorway chase), Layla (get your sister out of a Yas party), Track Day (win at Yas),
+  Corniche (an ambush), Mussafah (clear a warehouse with a shotgun, take back a stolen car), The Estate (sneak into the
+  Captain's study; he has a name: Khalid Al Murr).
+- **Act 4, Burned:** Set Up (framed, 4 stars), The Mountains (hide in the dunes; there are no Hatta mountains on the map yet),
+  The Yacht (jet ski out to the Captain's yacht off the Palm), Mariam's Deal, and The Big One in four parts: steal an armoured
+  van, collect uniforms from Jomon, fly a helicopter from Downtown to Al Quoz and land it, then the vault heist (quiet or
+  loud, by the plan) and the split.
+- **Act 5:** Victor (fight his guards, then the truth), The Captain (ram his fleeing car three times, then switch to Fatimah
+  in a helicopter and keep him in sight for 30 seconds, then the arrest), and The End of the Road: a final choice (take the
+  money and leave, or give the evidence to Mariam) with two epilogues; neither is a "bad" ending. Free roam continues after.
+- The helicopter (W/S tilt, A/D turn, Space up, Shift down) spins up, climbs, flies, bounces off towers and lands; F gets
+  out when landed.
+- 29 story missions in all (Night Fare plus 28), and free roam after the end. The review script played every one of them
+  from start to end with no errors.
+- Carjacking: F next to a stopped traffic car takes it (1 star if anyone sees). A step that needs a car while yours is far
+  away parks it close by.
+
+Not done / gaps: no Hatta mountains (the dunes stand in); the final scenes are short and voiced only by subtitles; the
+Captain's escape is a single car, not a convoy.
+
+## Section 11: weather, radio, random events, settings (20 Nov 2026)
+
+Built (`polish.js`, 7 tests in `NotchWindows/tests/desertheat-polish.test.mjs`):
+- Weather by day and hour: clear most of the time, haze, fog on winter mornings, rare sandstorms and rain storms; fog,
+  colour, light, rain or blowing sand around the camera, slippery roads in rain, and storms help you lose the police.
+- The radio in cars: six made-up stations (Noor FM, Masala 104, Gulf Rock, Deep Dunes, Classic Khaleeji, Talk 97), music
+  synthesised in the game per style (no recordings, no real songs), DJ links, made-up ads, and Talk 97 reading the news the
+  player made. Comma and full stop change station, O turns it off; music drops under dialogue.
+- Five random events: a street race offer at night, a broken-down car, a bag snatcher to chase down, a wedding convoy with
+  horns and hazard lights, a police chase passing by.
+- Graphics presets (Low, Balanced, High, Ultra) in the phone's Settings, with "keep 60 fps automatically" stepping down or up
+  by the measured frame rate. Autosave every 5 minutes in free roam, save slots, saves are versioned and migrated.
+- Colour-blind palettes are defined (map and HUD) but not yet switchable in Settings.
+
+Not done / gaps: weather effects are subtle close up; no photo-mode filters; the controller cannot open the phone; the
+radio is synthesised, so it sounds simple.

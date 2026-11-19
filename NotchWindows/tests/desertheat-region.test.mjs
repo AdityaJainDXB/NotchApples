@@ -63,3 +63,16 @@ test('Abu Dhabi has its land, towers on the Corniche and the mosque as a no-weap
   const b = R.buildings(end); assert.ok(b.length > 100); assert.ok(b.some((x) => x[0] > 150));
   assert.ok(R.LANDMARKS(end).find((l) => l.id === 'grand-mosque').safe > 0);
 });
+
+test('the helicopter spins up, climbs, flies forward when tilted and lands', async () => {
+  const { createRequire } = await import('node:module');
+  const A = createRequire(import.meta.url)('../src/js/games/desertheat/air.js');
+  const h = new A.Heli();
+  for (let t = 0; t < 6; t += 0.02) h.step(0.02, { up: true });
+  assert.ok(h.y > 15, `climbed to ${h.y.toFixed(1)} m`);
+  for (let t = 0; t < 8; t += 0.02) h.step(0.02, { forward: 1 });
+  assert.ok(h.speed > 25, `flying at ${h.speed.toFixed(1)} m/s`);
+  for (let t = 0; t < 20; t += 0.02) h.step(0.02, { down: true, forward: -0.3 });
+  for (let t = 0; t < 6; t += 0.02) h.step(0.02, { down: true });
+  assert.ok(h.landed, 'landed');
+});

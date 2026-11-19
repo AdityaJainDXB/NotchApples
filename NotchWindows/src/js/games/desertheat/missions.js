@@ -15,6 +15,22 @@
     villa: { ...S.xz(25.2050, 55.2470), name: 'A villa in Jumeirah' },
     karama: { ...S.xz(25.2420, 55.3030), name: 'Al Fanar Shawarma, Karama' },
     marinaTower: S.PLACES.fatimahHome,
+    // Act 3-5 places: the ones outside the real map are filled in by region.js once the generated region exists
+    fareejHomeAct: { ...S.PLACES.fareejHome, name: 'Fareej\'s flat, Deira' },
+    yasParty: { x: 0, z: 0, name: 'A party on Yas Island', region: 'yasParty' },
+    corniche: { x: 0, z: 0, name: 'The Corniche, Abu Dhabi', region: 'corniche' },
+    mussafah: { x: 0, z: 0, name: 'A warehouse in Mussafah', region: 'mussafah' },
+    estate: { x: 0, z: 0, name: 'The Captain\'s desert estate', region: 'estate' },
+    hideout: { x: 0, z: 0, name: 'The dunes', region: 'hideout' },
+    yasGrid: { x: 0, z: 0, name: 'Yas circuit, the grid', region: 'yasGrid' },
+    yacht: { ...S.xz(25.1300, 55.1060), name: 'The Captain\'s yacht, off the Palm' },
+    palmBeach: { ...S.xz(25.1180, 55.1290), name: 'A beach on the Palm' },
+    downtownTower: { ...S.xz(25.1955, 55.2780), name: 'The network\'s vault, Downtown' },
+    uniforms: { ...S.xz(25.2440, 55.3010), name: 'A uniform supplier, Karama' },
+    armoured: { ...S.xz(25.1520, 55.2330), name: 'An armoured van, Al Quoz' },
+    helipad: { ...S.xz(25.2010, 55.2700), name: 'A rooftop helipad, Downtown' },
+    victorOffice: { ...S.xz(25.1875, 55.2640), name: 'Haldane Properties, Business Bay' },
+    captainStart: { ...S.xz(25.2020, 55.2690), name: 'Downtown' },
     goldBag: { ...S.xz(25.2693, 55.2969), name: 'The gold shop, the souk' },
     abraDeira: { ...S.xz(25.2633, 55.2990), name: 'Deira Old Souk abra station' },
     abraBur: { ...S.xz(25.2610, 55.2958), name: 'Bur Dubai abra station' },
@@ -31,6 +47,8 @@
     kiran: { name: 'Kiran Desai', skin: '#8a5a3c', hair: '#1a1410', shirt: '#2f4a6a', trousers: '#2f4a6a', height: 1.7, beard: false, shoes: '#222' },
     jomon: { name: 'Jomon', skin: '#6e4630', hair: '#141210', shirt: '#e2a72c', trousers: '#2b2b2b', height: 1.68, beard: false, shoes: '#111' },
     victor: { name: 'Victor Haldane', skin: '#e0b896', hair: '#8a7a64', shirt: '#22252b', trousers: '#22252b', height: 1.86, beard: false, shoes: '#111' },
+    layla: { name: 'Layla', skin: '#b58560', hair: '#1a1410', shirt: '#7a3fa0', trousers: '#22252b', height: 1.62, abaya: false, shoes: '#eee' },
+    son: { name: 'Saif', skin: '#c99a76', hair: '#141210', shirt: '#f4f2ec', trousers: '#f4f2ec', height: 1.8, beard: true, shoes: '#6b4a2c' },
     mariam: { name: 'Officer Mariam Al Suwaidi', skin: '#b07c58', hair: '#141210', shirt: '#5b6450', trousers: '#4a5242', height: 1.68, abaya: false, shoes: '#111' },
   };
   const near = (c, p, r) => c.pos && Math.hypot(c.pos.x - p.x, c.pos.z - p.z) < r;
@@ -165,6 +183,154 @@
         { id: 'split', who: 'fareej', cut: true, setup: { npc: 'kiran', payout: true }, check: (c, m) => m.t > 8, lines: [[0.5, 'Kiran', 'I have never seen this much money in one room.'], [4, 'Fatimah', 'It is not the money. It is the ledger in bag nine.']] },
       ],
     },
+    // ---------------------------------------------------------------- Act 3: Abu Dhabi
+    {
+      id: 'the-e11', act: 3, title: 'The E11', who: 'fareej', after: 'business-bay-job', start: 'kiran', reward: 15000, hour: 23.2,
+      steps: [
+        { id: 'go', who: 'fareej', objective: 'Bag nine says the network\'s money goes to Abu Dhabi. Take the E11 south.', target: 'yasGrid', check: (c) => c.inCar && c.onE11 },
+        { id: 'chase', who: 'fareej', checkpoint: true, objective: 'A black SUV again. Lose it on the motorway.', setup: { chaser: true }, check: (c) => c.pursuitLost, fail: (c) => c.wrecked ? 'The car is wrecked.' : null,
+          lines: [[0.5, 'Fareej', 'The same SUV. They never learn.'], [3, '', 'HOLD Q · ROAD SENSE']] },
+        { id: 'arrive', who: 'fareej', objective: 'Get to Yas Island.', target: 'yasGrid', check: (c) => near(c, P.yasGrid, 60) },
+      ],
+    },
+    {
+      id: 'layla', act: 3, title: 'Layla', who: 'fatimah', after: 'the-e11', start: 'yasParty', reward: 0, hour: 22.8,
+      steps: [
+        { id: 'party', who: 'fatimah', objective: 'Your sister Layla is at a party on Yas. The network knows who she is. Find her.', target: 'yasParty', check: (c) => !c.inCar && near(c, P.yasParty, 8) },
+        { id: 'found', who: 'fatimah', cut: true, setup: { npc: 'layla' }, check: (c, m) => m.t > 9,
+          lines: [[0.5, 'Layla', 'Fatimah? What are you doing here?'], [2.5, 'Fatimah', 'We\'re leaving. Now. Don\'t ask.'], [5, 'Layla', 'You\'re scaring me.'], [7, 'Fatimah', 'Good.']] },
+        { id: 'drive', who: 'fatimah', objective: 'Get Layla to the Corniche, away from the island.', target: 'corniche', setup: { wanted: 2 }, check: (c) => c.inCar && near(c, P.corniche, 40) && !c.wanted,
+          lines: [[1, 'Layla', 'Why are the police here?'], [3.5, 'Fatimah', 'Not the police I\'m worried about.']] },
+      ],
+    },
+    {
+      id: 'track-day', act: 3, title: 'Track Day', who: 'fareej', after: 'layla', start: 'yasGrid', reward: 30000, hour: 20,
+      steps: [
+        { id: 'grid', who: 'fareej', objective: 'The Captain\'s son races at Yas tonight. Line up on the grid and press E.', target: 'yasGrid', check: (c) => c.raceStarted },
+        { id: 'race', who: 'fareej', checkpoint: true, objective: 'Win the race.', check: (c) => c.raceWon, fail: (c) => c.raceLost ? 'You did not win.' : null },
+        { id: 'son', who: 'fareej', cut: true, setup: { npc: 'son' }, check: (c, m) => m.t > 8, lines: [[0.5, 'Saif', 'Nobody beats me here. Who taught you to drive?'], [3.5, 'Fareej', 'Deira traffic.'], [5.5, 'Saif', 'Come to the Corniche tomorrow. My father likes drivers.']] },
+      ],
+    },
+    {
+      id: 'corniche', act: 3, title: 'Corniche', who: 'fareej', after: 'track-day', start: 'corniche', reward: 20000, hour: 18.2,
+      steps: [
+        { id: 'meet', who: 'fareej', objective: 'Meet Saif on the Corniche.', target: 'corniche', check: (c) => !c.inCar && near(c, P.corniche, 10) },
+        { id: 'ambush', who: 'fareej', checkpoint: true, objective: 'It\'s a trap. Fight your way out.', setup: { hostiles: { at: 'corniche', n: 7 } }, check: (c) => c.hostilesLeft === 0,
+          lines: [[0.5, 'Fareej', 'Of course. Of course it is.']] },
+        { id: 'call', who: 'fareej', cut: true, check: (c, m) => m.t > 6, lines: [[0.5, 'Fatimah', 'Are you alive?'], [2, 'Fareej', 'Mostly. They know about us.']] },
+      ],
+    },
+    {
+      id: 'mussafah', act: 3, title: 'Mussafah', who: 'fareej', after: 'corniche', start: 'mussafah', reward: 45000, hour: 2.5,
+      steps: [
+        { id: 'go', who: 'fareej', objective: 'The network\'s warehouse in Mussafah: stolen cars and guns.', target: 'mussafah', check: (c) => near(c, P.mussafah, 20) },
+        { id: 'clear', who: 'fareej', checkpoint: true, objective: 'Clear the warehouse.', setup: { hostiles: { at: 'mussafah', n: 8 }, give: { weapon: 'shotgun', mags: 4 } }, check: (c) => c.hostilesLeft === 0 },
+        { id: 'take', who: 'fareej', objective: 'Take the Corsa Velo they stole from Kiran\'s client.', setup: { spawnCar: { id: 'super', paint: '#8d1f1f', at: 'mussafah' } }, check: (c) => c.inMissionCar },
+        { id: 'home', who: 'fareej', objective: 'Drive it back to Kiran in Al Quoz.', target: 'kiran', check: (c) => c.inMissionCar && near(c, P.kiran, 18) && c.speed < 2, fail: (c) => c.missionCarDamage > 240 ? 'The car is wrecked.' : null },
+      ],
+    },
+    {
+      id: 'the-estate', act: 3, title: 'The Estate', who: 'fatimah', after: 'mussafah', start: 'estate', reward: 0, hour: 22,
+      steps: [
+        { id: 'arrive', who: 'fatimah', objective: 'The Captain\'s estate in the desert. There is a party. Walk in like a guest.', target: 'estate', check: (c) => !c.inCar && near(c, P.estate, 12) },
+        { id: 'sneak', who: 'fatimah', checkpoint: true, objective: 'Find his study below the house without being seen.', setup: { garage: 'estate', guards: 1 }, check: (c) => c.atLift, fail: (c) => c.guardSaw ? 'A guard saw you.' : null },
+        { id: 'study', who: 'fatimah', cut: true, setup: { shopCut: { type: 'bank', name: 'The study' } }, check: (c, m) => m.t > 10,
+          lines: [[0.5, 'Fatimah', 'Photos. Of Victor, of Rashid, of Fareej\'s father.'], [4.5, 'Fatimah', 'And a name on the deeds: Captain Khalid Al Murr.'], [8, 'Fatimah', 'The Captain has a name.']] },
+      ],
+    },
+    // ---------------------------------------------------------------- Act 4: Burned
+    {
+      id: 'set-up', act: 4, title: 'Set Up', who: 'fareej', after: 'the-estate', start: 'fareejHomeAct', reward: 0, hour: 7.5,
+      steps: [
+        { id: 'news', who: 'fareej', cut: true, check: (c, m) => m.t > 7, lines: [[0.5, '', 'GULF NEWS TODAY · "TWO WANTED FOR BUSINESS BAY MURDER"'], [3, 'Fareej', 'That\'s my face. That\'s my face on the news.'], [5.5, 'Fatimah', 'Mine too. Victor. Run.']] },
+        { id: 'run', who: 'fareej', checkpoint: true, objective: 'You are wanted for a murder you did not do. Escape.', setup: { wanted: 4 }, check: (c) => !c.wanted },
+      ],
+    },
+    {
+      id: 'the-mountains', act: 4, title: 'The Mountains', who: 'fareej', after: 'set-up', start: 'hideout', reward: 0, hour: 15,
+      steps: [
+        { id: 'hide', who: 'fareej', objective: 'Hide out in the dunes past the camp.', target: 'hideout', check: (c) => near(c, P.hideout, 60) },
+        { id: 'found', who: 'fareej', checkpoint: true, objective: 'They found you. Lose them in the dunes.', setup: { wanted: 3 }, check: (c) => !c.wanted, lines: [[0.5, 'Fareej', 'Sand in my teeth and police in my mirrors.']] },
+      ],
+    },
+    {
+      id: 'the-yacht', act: 4, title: 'The Yacht', who: 'fatimah', after: 'the-mountains', start: 'palmBeach', reward: 0, hour: 21,
+      steps: [
+        { id: 'ski', who: 'fatimah', objective: 'Take a jet ski from the Palm out to the Captain\'s yacht.', target: 'palmBeach', setup: { jetski: 'palmBeach', yacht: true }, check: (c) => c.onBoat },
+        { id: 'out', who: 'fatimah', objective: 'Ride out to the yacht.', target: 'yacht', check: (c) => c.onBoat && near(c, P.yacht, 40) },
+        { id: 'aboard', who: 'fatimah', cut: true, check: (c, m) => m.t > 10, lines: [[0.5, '', 'THE CAPTAIN\'S YACHT · OFF THE PALM'], [2, 'Fatimah', 'The ledger. The real one. With every bank account.'], [6, 'Fatimah', 'And a date: Friday. The vault under the Downtown tower.']] },
+      ],
+    },
+    {
+      id: 'mariams-deal', act: 4, title: 'Mariam\'s Deal', who: 'fatimah', after: 'the-yacht', start: 'policeHQ', reward: 0, hour: 11,
+      steps: [
+        { id: 'go', who: 'fatimah', objective: 'Officer Mariam wants to meet. Alone.', target: 'policeHQ', check: (c) => !c.inCar && near(c, P.policeHQ, 8) },
+        { id: 'deal', who: 'fatimah', cut: true, setup: { npc: 'mariam', clearWanted: true }, check: (c, m) => m.t > 9,
+          lines: [[0.5, 'Mariam', 'I know you did not kill anyone.'], [3, 'Mariam', 'Help me take the Captain, and you both walk free.'], [6, 'Fatimah', 'And if we take the money in the vault instead?'], [8, 'Mariam', 'Then I never met you.']] },
+      ],
+    },
+    {
+      id: 'big-one-1', act: 4, title: 'The Big One: The Van', who: 'fareej', after: 'mariams-deal', start: 'armoured', reward: 0, hour: 3,
+      steps: [
+        { id: 'van', who: 'fareej', objective: 'Steal the armoured van in Al Quoz.', target: 'armoured', setup: { spawnCar: { id: 'suv', paint: '#3a3e44', at: 'armoured' } }, check: (c) => c.inMissionCar },
+        { id: 'stash', who: 'fareej', objective: 'Hide it at Kiran\'s.', target: 'kiran', check: (c) => c.inMissionCar && near(c, P.kiran, 18) && c.speed < 2 && !c.wanted },
+      ],
+    },
+    {
+      id: 'big-one-2', act: 4, title: 'The Big One: Uniforms', who: 'fatimah', after: 'big-one-1', start: 'uniforms', reward: 0, hour: 10,
+      steps: [
+        { id: 'buy', who: 'fatimah', objective: 'Collect the security uniforms in Karama.', target: 'uniforms', check: (c) => !c.inCar && near(c, P.uniforms, 6) },
+        { id: 'paid', who: 'fatimah', cut: true, setup: { npc: 'jomon' }, check: (c, m) => m.t > 6, lines: [[0.5, 'Jomon', 'Two uniforms, two passes, one very nervous Jomon.'], [3.5, 'Fatimah', 'You\'re not coming, Jomon.'], [5, 'Jomon', 'Thank God.']] },
+      ],
+    },
+    {
+      id: 'big-one-3', act: 4, title: 'The Big One: The Helicopter', who: 'fatimah', after: 'big-one-2', start: 'helipad', reward: 0, hour: 17,
+      steps: [
+        { id: 'pad', who: 'fatimah', objective: 'A helicopter is waiting near the Burj. Take it.', target: 'helipad', setup: { heli: 'helipad' }, check: (c) => c.inHeli },
+        { id: 'fly', who: 'fatimah', objective: 'Fly to Kiran\'s in Al Quoz and land. (W/S forward and back, A/D turn, SPACE up, SHIFT down)', target: 'kiran', check: (c) => c.inHeli && near(c, P.kiran, 60) && c.landed },
+      ],
+    },
+    {
+      id: 'big-one-4', act: 4, title: 'The Big One', who: 'fatimah', after: 'big-one-3', start: 'downtownTower', reward: 0, heist: true, hour: 23.8,
+      steps: [
+        { id: 'inside', who: 'fatimah', objective: 'Friday night. Walk into the Downtown tower in uniform.', target: 'downtownTower', check: (c) => !c.inCar && near(c, P.downtownTower, 10) },
+        { id: 'vault', who: 'fatimah', checkpoint: true, objective: 'Down to the vault.', setup: { garage: 'downtownTower', guards: 1, heistLoud: true }, check: (c) => c.atLift, fail: (c) => c.quiet && c.guardSaw ? 'Security saw you.' : null },
+        { id: 'grab', who: 'fatimah', cut: true, setup: { shopCut: { type: 'bank', name: 'The vault' } }, check: (c, m) => m.t > 7, lines: [[0.5, 'Fatimah', 'Gold, cash, and the Captain\'s hard drives.'], [4, 'Fareej', 'I\'m outside. Hurry.']] },
+        { id: 'getaway', who: 'fareej', forceSwitch: true, checkpoint: true, objective: 'Get away. Lose the police.', setup: { wanted: 4, outside: 'downtownTower', bothInCar: true }, check: (c) => !c.wanted && c.inCar },
+        { id: 'safe', who: 'fareej', objective: 'Back to Kiran\'s.', target: 'kiran', check: (c) => c.inCar && near(c, P.kiran, 18) && c.speed < 2 },
+        { id: 'split', who: 'fareej', cut: true, setup: { npc: 'kiran', payout: true }, check: (c, m) => m.t > 7, lines: [[0.5, 'Kiran', 'Bigger than Business Bay. Much bigger.'], [3.5, 'Fatimah', 'The Captain will come for this himself.']] },
+      ],
+    },
+    // ---------------------------------------------------------------- Act 5: The End of the Road
+    {
+      id: 'victor', act: 5, title: 'Victor', who: 'fatimah', after: 'big-one-4', start: 'victorOffice', reward: 0, hour: 9,
+      steps: [
+        { id: 'go', who: 'fatimah', objective: 'Go to Haldane Properties. It is time to talk to Victor.', target: 'victorOffice', check: (c) => !c.inCar && near(c, P.victorOffice, 8) },
+        { id: 'guards', who: 'fatimah', checkpoint: true, objective: 'Victor\'s guards are waiting. Get through them.', setup: { hostiles: { at: 'victorOffice', n: 6 }, give: { weapon: 'rifle', mags: 3 } }, check: (c) => c.hostilesLeft === 0 },
+        { id: 'talk', who: 'fatimah', cut: true, setup: { npc: 'victor' }, check: (c, m) => m.t > 12,
+          lines: [[0.5, 'Victor', 'Fatimah. You were always my best lawyer.'], [3.5, 'Fatimah', 'You signed my name forty million times.'], [6.5, 'Victor', 'The Captain made me. He leaves the country tonight, from Downtown.'], [10, 'Fatimah', 'Then I\'ll be there too.']] },
+      ],
+    },
+    {
+      id: 'the-captain', act: 5, title: 'The Captain', who: 'fareej', after: 'victor', start: 'captainStart', reward: 0, hour: 22,
+      steps: [
+        { id: 'spot', who: 'fareej', objective: 'The Captain\'s car leaves Downtown. Get close.', target: 'captainStart', check: (c) => near(c, P.captainStart, 60) },
+        { id: 'chase', who: 'fareej', checkpoint: true, objective: 'Chase the Captain\'s car. Ram it three times.', setup: { flee: true }, check: (c) => c.targetHits >= 3, fail: (c) => c.targetLost ? 'The Captain got away.' : null,
+          lines: [[0.5, 'Fareej', 'Yalla, Captain. One more fare.']] },
+        { id: 'air', who: 'fatimah', forceSwitch: true, checkpoint: true, objective: 'Fatimah, in the helicopter: keep the Captain in sight for 30 seconds.', setup: { heli: 'overTarget' }, check: (c) => c.trackedSecs >= 30, fail: (c) => c.targetLost ? 'You lost him.' : null },
+        { id: 'end', who: 'fareej', forceSwitch: true, cut: true, setup: { stopTarget: true }, check: (c, m) => m.t > 10,
+          lines: [[0.5, '', 'THE END OF THE ROAD · 1:40 AM'], [2, 'Captain', 'A taxi driver and a junior lawyer.'], [5, 'Fareej', 'And you\'re out of road.'], [8, 'Mariam', 'Khalid Al Murr, step away from the car.']] },
+      ],
+    },
+    {
+      id: 'ending', act: 5, title: 'The End of the Road', who: 'fatimah', after: 'the-captain', start: 'kiran', reward: 0, hour: 6.2,
+      steps: [
+        { id: 'dawn', who: 'fatimah', objective: 'Meet Fareej at the garage at dawn.', target: 'kiran', check: (c) => near(c, P.kiran, 20) },
+        { id: 'choose', who: 'fatimah', cut: true, setup: { choice: { key: 'ending', options: ['Take the money and leave Dubai together', 'Give the hard drives and the money to Mariam'] } }, check: (c) => c.choiceMade,
+          lines: [[0.5, 'Fatimah', 'The money, or our names. We can\'t have both.']] },
+        { id: 'epilogue', who: 'fatimah', cut: true, setup: { epilogue: true }, check: (c, m) => m.t > 14 },
+      ],
+    },
   ];
 
 
@@ -185,10 +351,17 @@
   }
   const startWanted = (plan) => plan.approach === 'loud' ? 4 : 3;
 
+
+  // The two endings (part 9: neither is "bad"). flags.ending: 0 = take the money, 1 = give the evidence.
+  const ENDINGS = [
+    [[0.5, '', 'SIX MONTHS LATER'], [2, '', 'A small garage on a quiet road in Muscat. A sign: "F & F Motors".'], [6, 'Fatimah', 'Your father called. The debt is paid. He cried.'], [10, 'Fareej', 'Five stars, then?'], [12, 'Fatimah', 'Four. You still drive like a maniac.']],
+    [[0.5, '', 'SIX MONTHS LATER'], [2, '', 'The Captain and Victor Haldane are sentenced. Two names are cleared.'], [6, 'Mariam', 'The police could use a driver like you, Fareej.'], [9, 'Fareej', 'I have a ride-hailing rating to repair.'], [12, 'Fatimah', 'And I have a law firm to start. In my own name.']],
+  ];
+
   const byId = (id) => MISSIONS.find((m) => m.id === id);
   /** The next mission available after the ones done (null when Act 1 is finished). */
   function nextMission(done) { return MISSIONS.find((m) => !done.includes(m.id) && done.includes(m.after)) || null; }
   const PLACES = P;
 
-  return { MISSIONS, byId, nextMission, PLACES, CAST, CREW, GETAWAY, heistPayout, startWanted };
+  return { MISSIONS, byId, nextMission, PLACES, CAST, CREW, GETAWAY, heistPayout, startWanted, ENDINGS };
 }));
