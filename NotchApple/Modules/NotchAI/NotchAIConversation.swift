@@ -114,12 +114,15 @@ final class NotchAIConversation: ObservableObject {
         task = Task { [weak self] in
             var reply = ""
             var error: Error?
+            var gate = StreamPublishGate()
             do {
                 try await NotchAIGuard.check(provider: provider, model: model)
                 for try await piece in AIClient.stream(history, provider: provider, model: model, system: system) {
                     reply += piece
-                    self?.updateReply(reply)
+                    // Redraw at most about 8 times a second; the last text is pushed below.
+                    if gate.shouldPublish(now: ProcessInfo.processInfo.systemUptime) { self?.updateReply(reply) }
                 }
+                if !reply.isEmpty { self?.updateReply(reply) }
                 if reply.isEmpty { error = AIError.empty }
             } catch is CancellationError {
             } catch let e {

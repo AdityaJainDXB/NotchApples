@@ -2,6 +2,10 @@
 
 For the next agent (or person) picking this up. Read `CLAUDE.md` first: its release, README and safety rules apply. Facts below were true when written; check them (`gh release list`, `gh run list`, `gh pr list`) before relying on them. Things that are already pushed and finished are not listed here; they are in the Releases page, `CHANGELOG.md` and git history.
 
+## Issue #135: AI freezes the notch (20 November 2026, PR open, not merged)
+
+Free-plan user on 2.2.81 says AI freezes or crashes the notch. Not reproduced. Evidence: the chat pushed the whole reply to SwiftUI on every streamed token, and `RichTextView` re-parses all the Markdown each time, on the main thread. Fix: `StreamPublishGate` (in `NotchAIConversationLogic.swift`) limits redraws to about 8 a second; the final text is always pushed. Open: not profiled with `sample` or Instruments; the reporter has not said which provider or whether it is fixed; hosted/Ollama server-side hangs were not ruled out. Do not close #135 until the reporter confirms.
+
 ## 2.2.81 is RELEASED on Mac and Windows (19 November 2026)
 
 - **What it is:** only the hello-animation fix (issue #131: the lettering was re-worked out every frame; it is now parsed once and drawn as one GPU layer). Windows has no code change; it moves to 2.2.81 to stay in step.
