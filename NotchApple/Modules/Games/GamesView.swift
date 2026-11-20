@@ -25,7 +25,7 @@ import SwiftUI
 
 struct GamesView: View {
     enum Game: String, CaseIterable, Identifiable {
-        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane", racing = "Racing", ctf = "Capture Flag", rocket = "Rocket League", scribble = "Scribble", chess = "Chess", tetris = "Tetris", nightShift = "Night Shift", eagle = "Eagle Ride", fnaf = "FNAF 1", dailyWord = "Daily Word", dailyTrivia = "Daily Trivia", blackjack = "Blackjack", solitaire = "Solitaire", poker = "Poker"
+        case g2048 = "2048", snake = "Snake", breakout = "Breakout", memory = "Memory", reaction = "Reaction", cookies = "Cookies", runner = "Runner", plane = "Plane", racing = "Racing", desertHeat = "Desert Heat", ctf = "Capture Flag", rocket = "Rocket League", scribble = "Scribble", chess = "Chess", tetris = "Tetris", nightShift = "Night Shift", eagle = "Eagle Ride", fnaf = "FNAF 1", dailyWord = "Daily Word", dailyTrivia = "Daily Trivia", blackjack = "Blackjack", solitaire = "Solitaire", poker = "Poker"
         var id: String { rawValue }
         var symbol: String {
             switch self {
@@ -38,6 +38,7 @@ struct GamesView: View {
             case .runner: "figure.run"
             case .plane: "airplane"
             case .racing: "car.fill"
+            case .desertHeat: "road.lanes"
             case .ctf: "flag.fill"
             case .rocket: "soccerball"
             case .scribble: "pencil.and.scribble"
@@ -150,6 +151,7 @@ struct GamesView: View {
         case .runner: RunnerGameView()
         case .plane: PlaneGameView()
         case .racing: RacingGameView()
+        case .desertHeat: DesertHeatLauncher()
         case .ctf: CtfGameView()
         case .rocket: RocketGameView()
         case .scribble: ScribbleGameView()
@@ -195,6 +197,7 @@ struct GamesView: View {
         case .scribble: "Scribble. Draw the word you are given with the mouse, and type guesses for what others draw. Faster guesses score more. Computer players, or friends online with a room code."
         case .rocket: "Rocket League. A D or ← → drive (and spin in the air), Space or W jump (again in the air to dash), Shift or X boost. Computer players, or a friend online with a room code."
         case .racing: "Racing. ↑ W gas, ↓ S brake, ← → A D steer, Space handbrake, V view (chase, cockpit, top), M sound. 12 tracks, 7 cars, a track designer, online rooms."
+        case .desertHeat: "Desert Heat. An open-world game in Dubai, built in stages: stage 1 is the real road network from Deira to the Marina. Play opens it full screen; W A S D drive, Space hand brake, C camera, M map, T time of day."
         case .plane: "3D flying. ↑ ↓ pitch, ← → roll, A D rudder, W S throttle, F flaps, Space brakes, C camera, P pause."
         }
     }

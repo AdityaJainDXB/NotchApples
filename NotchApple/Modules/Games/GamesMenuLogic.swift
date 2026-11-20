@@ -35,6 +35,7 @@ enum GamesCatalog {
         .init(id: "fe", name: "Flight Economy", cats: ["strategy", "private"], tags: ["Private"], icon: "✈️", art: ["#1c3b6e", "#2f8fd6"], locked: true),
         .init(id: "plane", name: "Plane", cats: ["fly", "online"], tags: ["Online"], icon: "🛩️", art: ["#1d6fa5", "#56c1ff"]),
         .init(id: "racing", name: "Racing", cats: ["fly", "online"], tags: ["Online"], icon: "🏎️", art: ["#a3201f", "#ff6b4a"]),
+        .init(id: "desertheat", name: "Desert Heat", cats: ["fly"], tags: ["New"], icon: "🌴", art: ["#6b3d17", "#e0a25a"]),
         .init(id: "rocket", name: "Rocket League", cats: ["fly", "online"], tags: ["Online"], icon: "⚽", art: ["#1e5d3a", "#52d68a"]),
         .init(id: "ctf", name: "Capture the Flag", cats: ["online"], tags: ["Online"], icon: "🚩", art: ["#6b2d8c", "#c07bff"]),
         .init(id: "scribble", name: "Scribble", cats: ["online"], tags: ["Online"], icon: "✏️", art: ["#8a5a14", "#ffc95c"]),

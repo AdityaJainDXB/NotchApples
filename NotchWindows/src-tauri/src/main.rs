@@ -541,6 +541,24 @@ fn widget_hide(app: AppHandle, kind: String) {
 
 /// Opens a Music Wall window (issue #119): "saver" fills the main screen above everything and takes the keyboard (any key ends
 /// it); "wallpaper" fills the screen behind every other window, never takes the mouse and stays off the taskbar.
+
+/// Desert Heat (the open-world Dubai game): its own resizable window, opened from the Games tab. One copy at a time.
+#[tauri::command]
+async fn desertheat_open(app: AppHandle) -> Result<(), String> {
+    if let Some(existing) = app.get_webview_window("desertheat") { let _ = existing.show(); let _ = existing.unminimize(); let _ = existing.set_focus(); return Ok(()); }
+    let window = WebviewWindowBuilder::new(&app, "desertheat", WebviewUrl::App("js/games/desertheat/play.html".into()))
+        .title("Desert Heat")
+        .inner_size(1280.0, 760.0)
+        .min_inner_size(960.0, 560.0)
+        .resizable(true)
+        .center()
+        .focused(true)
+        .build()
+        .map_err(|e| e.to_string())?;
+    let _ = window.maximize();
+    Ok(())
+}
+
 #[tauri::command]
 async fn voxel_show(app: AppHandle, mode: String) -> Result<(), String> {
     let saver = match mode.as_str() { "saver" => true, "wallpaper" => false, _ => return Err("unknown mode".into()) };
@@ -817,7 +835,7 @@ fn main() {
             awake::set_keep_awake, awake::keep_awake_state,
             system_stats, top_processes, transliterate, capture_screen,
             installed_apps, path_info, launch_app, open_path, reveal_path, open_url,
-            pick_app, pick_folder, pick_file, open_browser, browser_place, browser_hide, browser_close, browser_nav, lyrics_overlay_show, lyrics_overlay_hide, widget_show, widget_hide, voxel_show, voxel_hide, levels::voxel_levels, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
+            pick_app, pick_folder, pick_file, open_browser, browser_place, browser_hide, browser_close, browser_nav, lyrics_overlay_show, lyrics_overlay_hide, widget_show, widget_hide, voxel_show, voxel_hide, desertheat_open, levels::voxel_levels, greeting_show, greeting_hide, privategame::private_game_save, privategame::private_game_open, privategame::private_game_remove,
             index::search_files, index::set_search_folders, index::search_status,
             icons::icons,
             watch::screen_time, watch::set_edge_trigger, watch::privacy_now, watch::foreground_now, watch::minimize_external,

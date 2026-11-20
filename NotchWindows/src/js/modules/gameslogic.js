@@ -17,6 +17,7 @@ export const GAMES = [
   { id: 'fe', name: 'Flight Economy', icon: '✈️', art: ['#1c3b6e', '#2f8fd6'], cats: ['strategy', 'private'], tags: ['Private'], locked: true },
   { id: 'plane', name: 'Plane', icon: '🛩️', art: ['#1d6fa5', '#56c1ff'], cats: ['fly', 'online'], tags: ['Online'] },
   { id: 'racing', name: 'Racing', icon: '🏎️', art: ['#a3201f', '#ff6b4a'], cats: ['fly', 'online'], tags: ['Online'] },
+  { id: 'desertheat', name: 'Desert Heat', icon: '🌴', art: ['#6b3d17', '#e0a25a'], cats: ['fly'], tags: ['New'] },
   { id: 'rocket', name: 'Rocket League', icon: '⚽', art: ['#1e5d3a', '#52d68a'], cats: ['fly', 'online'], tags: ['Online'] },
   { id: 'ctf', name: 'Capture the Flag', icon: '🚩', art: ['#6b2d8c', '#c07bff'], cats: ['online'], tags: ['Online'] },
   { id: 'scribble', name: 'Scribble', icon: '✏️', art: ['#8a5a14', '#ffc95c'], cats: ['online'], tags: ['Online'] },

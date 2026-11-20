@@ -13,7 +13,7 @@ extension GamesView.Game {
     /// The menu's id for each game (the same ids the Windows app uses).
     static let menuIDs: [(id: String, game: GamesView.Game)] = [
         ("2048", .g2048), ("snake", .snake), ("breakout", .breakout), ("memory", .memory), ("reaction", .reaction), ("cookie", .cookies),
-        ("runner", .runner), ("plane", .plane), ("racing", .racing), ("ctf", .ctf), ("rocket", .rocket), ("scribble", .scribble),
+        ("runner", .runner), ("plane", .plane), ("racing", .racing), ("desertheat", .desertHeat), ("ctf", .ctf), ("rocket", .rocket), ("scribble", .scribble),
         ("chess", .chess), ("tetris", .tetris), ("nightshift", .nightShift), ("eagle", .eagle), ("fnaf", .fnaf), ("wordle", .dailyWord), ("trivia", .dailyTrivia),
         ("blackjack", .blackjack), ("solitaire", .solitaire), ("poker", .poker),
     ]

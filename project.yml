@@ -41,6 +41,10 @@ targets:
       # The Racing game's engine is shared with the Windows app too.
       - path: NotchWindows/src/js/games/racing.js
         buildPhase: resources
+      # Desert Heat (the open-world Dubai game): the game, three.js and the Dubai map data, shared with the Windows app.
+      - path: NotchWindows/src/js/games/desertheat
+        type: folder
+        buildPhase: resources
       # The F1 Weekend simulation of the Racing game (era, aero, power unit, tyres, damage, race control, stewards, weekend rules, track evolution, strategy, MFD): shared with the Windows app.
       - path: NotchWindows/src/js/games/f1
         type: folder

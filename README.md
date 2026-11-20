@@ -150,10 +150,12 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
-### Mac 2.2.82 · Windows 2.2.82 · 20 November 2026 · AI reply freeze fix
+### Mac 2.2.82 · Windows 2.2.82 · 20 November 2026 · 🌴 Desert Heat
 
+- New: Desert Heat, an open-world game set in Dubai and Abu Dhabi (Games → Desert Heat → Play full screen). Real Dubai roads from OpenStreetMap, traffic, the Metro, landmarks, weather, the desert, Abu Dhabi and Yas
+- Two characters you switch between, Fareej and Fatimah, and a story of 29 missions with planned heists and two endings
+- Guns and police, shops you can enter, a phone with GPS and a bank, ride-hailing jobs, cars and tuning, property, jet skis and a helicopter. Online play is coming soon
 - Fixed: the notch could freeze while an AI answer was being written, because the chat redrew the whole reply on every word. It now redraws about 8 times a second and always shows the full answer at the end (issue #135; we could not reproduce the freeze, so please tell us if it still happens)
-- Windows: Windows has no code changes; it moves to 2.2.82 to stay in step with the Mac
 
 ### Mac 2.2.81 · Windows 2.2.81 · 19 November 2026 · Smoother hello animation
 
