@@ -150,6 +150,11 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.82 · Windows 2.2.82 · 20 November 2026 · AI reply freeze fix
+
+- Fixed: the notch could freeze while an AI answer was being written, because the chat redrew the whole reply on every word. It now redraws about 8 times a second and always shows the full answer at the end (issue #135; we could not reproduce the freeze, so please tell us if it still happens)
+- Windows: Windows has no code changes; it moves to 2.2.82 to stay in step with the Mac
+
 ### Mac 2.2.81 · Windows 2.2.81 · 19 November 2026 · Smoother hello animation
 
 - Fixed: the hello animation in the notch was glitchy and slow. Its lettering is now drawn once per frame on the graphics chip instead of being worked out again every frame (issue #131)
@@ -161,10 +166,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - New: banners at the top centre for a new fastest lap, track-limit warnings, penalties, flags, a streak of clean laps and the chequered flag. Your engineer's and the commentator's lines also appear as subtitles, so you can follow them with the sound off
 - New: the minimap line takes the colours of your sectors (green for your best, yellow for slower, purple while your last lap was the fastest of the race) with a chequered flag at the line on the final lap, and a card with your place, name and the circuit appears when you finish
 - Changed: in the F1 Weekend the MFD shows the row you are on as a white bar with arrows round its value, and the telemetry panels, the qualifying screen and the pit panel use the same colours
-
-### Mac 2.2.79 · Windows 2.2.79 · 18 November 2026 · 📜 Teleprompter
-
-- New: Teleprompter. Tools → Teleprompter: type or paste a script, press Start, and it scrolls up a reading line at the speed you choose (1 to 10, which is 60 to 240 words a minute). You can change the text size, flip it sideways for a prompter glass, and pause or reset. Your script and settings are saved, and nothing leaves your computer
 
 ## Plugins
 
