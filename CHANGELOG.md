@@ -4,6 +4,16 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.82 · Windows 2.2.82 BETA · 20 November 2026 · AI reply freeze fix
+
+**Mac**
+
+- Fixed: the notch could freeze while an AI answer was being written, because the chat redrew the whole reply on every word. It now redraws about 8 times a second and always shows the full answer at the end (issue #135; we could not reproduce the freeze, so please tell us if it still happens)
+
+**Windows**
+
+- Windows has no code changes; it moves to 2.2.82 to stay in step with the Mac
+
 ### Mac 2.2.81 · Windows 2.2.81 BETA · 19 November 2026 · Smoother hello animation
 
 **Mac**

@@ -57,6 +57,7 @@ Never run a Debug or test copy of the Mac app with the real bundle id (`com.notc
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 20 Nov 2026: release 2.2.82 prepared (version, notes, WhatsNew, CHANGELOG, README): the #135 redraw throttle from PR #137 (merged). Open: not released yet when this line was written; #135 stays open until the reporter confirms.
 - 20 Nov 2026: #135 (AI freezes the notch): streamed AI replies are now redrawn at most about 8 times a second instead of on every token (StreamPublishGate, tested; PR refs #135). Open: not reproduced or profiled, so the cause (per-token Markdown re-parse on the main thread) is unproven; the reporter has not confirmed.
 - 20 Nov 2026: the owner confirmed the hello animation is no longer glitchy (#131 stays closed); handoff updated after PR #133 merged. Open: Mac 2.2.81 still not installed on the owner's Mac (ad-hoc signed by CI); website and Whop copy at 2.2.81 not rechecked.
 - 19 Nov 2026: handoff cleaned up (old 2.2.72-2.2.77 "ready to release" sections removed; worker redeem route confirmed live). Open: the owner is not receiving key emails; Ultimate's 200-a-day AI cap; Whop site copy.
