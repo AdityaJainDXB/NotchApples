@@ -111,3 +111,26 @@ final class NotchAIConversationTests: XCTestCase {
         XCTAssertTrue(r.findings.contains { $0.text.contains("ollama pull qwen3:8b") })
     }
 }
+
+final class StreamPublishGateTests: XCTestCase {
+    func testFirstPassesThenTokensInsideTheIntervalAreHeldBack() {
+        var g = StreamPublishGate()
+        XCTAssertTrue(g.shouldPublish(now: 10))
+        XCTAssertFalse(g.shouldPublish(now: 10.01))
+        XCTAssertFalse(g.shouldPublish(now: 10.1))
+        XCTAssertTrue(g.shouldPublish(now: 10.13))
+        XCTAssertFalse(g.shouldPublish(now: 10.14))
+    }
+
+    func testFiftyTokensASecondPublishAboutEightTimes() {
+        var g = StreamPublishGate()
+        let n = (0..<50).filter { g.shouldPublish(now: 5 + Double($0) * 0.02) }.count
+        XCTAssertTrue((7...9).contains(n), "published \(n)")
+    }
+
+    func testClockGoingBackwardsDoesNotStall() {
+        var g = StreamPublishGate()
+        XCTAssertTrue(g.shouldPublish(now: 100))
+        XCTAssertTrue(g.shouldPublish(now: 50))
+    }
+}

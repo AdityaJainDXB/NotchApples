@@ -46,3 +46,19 @@ enum NotchAIConversationLogic {
         return max(2_000, Int(Double(w) * 4 * 0.75))
     }
 }
+
+/// Limits how often a streaming reply is pushed to the screen. A fast model sends dozens of tokens a second and the
+/// chat re-parses the whole Markdown reply on every push, which froze the notch (issue #135). The full text is
+/// always kept; only the redraws are spaced out, and the last push is always made by the caller.
+struct StreamPublishGate {
+    static let minInterval: TimeInterval = 0.12
+    private var last: TimeInterval?
+
+    /// True when enough time has passed since the last push (the first call always passes). A clock that went
+    /// backwards also passes, so a reply can never stall.
+    mutating func shouldPublish(now: TimeInterval) -> Bool {
+        if let l = last, now >= l, now - l < Self.minInterval { return false }
+        last = now
+        return true
+    }
+}
