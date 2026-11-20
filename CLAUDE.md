@@ -57,6 +57,7 @@ Never run a Debug or test copy of the Mac app with the real bundle id (`com.notc
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 20 Nov 2026: 2.2.83 prepared: Desert Heat for the Mac (Mac 2.2.82 shipped without it from a CI build started before PR #134 merged); 2.2.82 notes split back to the fix for Mac and the game for Windows. Open: CI Mac build ad-hoc signed, not installed on the owner's Mac.
 - 20 Nov 2026: merged main into game-dubai-prompt: 2.2.82 now carries Desert Heat and the #135 AI redraw throttle together (notes, WhatsNew, CHANGELOG, README, handoff combined). Open: Mac 2.2.82 release on the signing Mac.
 - 20 Nov 2026: 2.2.82 prepared (Desert Heat): version, release notes, WhatsNew, CHANGELOG, README, handoff. Windows CI passed on the game branch, Mac type-check and 693 Mac tests pass. Open: Mac release on the signing Mac; the game not yet played inside either installed app.
 - 20 Nov 2026: Desert Heat sections 10 and 11 (branch game-dubai-prompt): Acts 3-5 (missions 13-29, the helicopter, the Captain chase, two endings), carjacking, weather, six made-up radio stations, random events, graphics presets with automatic 60 fps, autosave and save slots (air.js, polish.js, tests). Every story mission played start to end by the review script. Open: run it inside both apps, release.

@@ -4,7 +4,7 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
-### Mac 2.2.82 · Windows 2.2.82 BETA · 20 November 2026 · 🌴 Desert Heat
+### Mac 2.2.83 · Windows 2.2.83 BETA · 20 November 2026 · 🌴 Desert Heat
 
 **Mac**
 
@@ -13,6 +13,15 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 - On foot and in cars: guns and a wanted level with police, shops you can walk into and buy from, petrol, Salik and speed cameras, a phone with GPS, a bank, a ride-hailing side job, cars to buy and tune at a garage, property and businesses, jet skis and a helicopter
 - Online play is built but not switched on yet: the phone's Online app says Coming soon
 - The game is new: tell us what feels wrong (Feedback in Settings)
+
+**Windows**
+
+- Windows has no code changes; it moves to 2.2.83 to stay in step with the Mac (Desert Heat came to Windows in 2.2.82)
+
+### Mac 2.2.82 · Windows 2.2.82 BETA · 20 November 2026 · AI reply freeze fix (Mac), Desert Heat (Windows)
+
+**Mac**
+
 - Fixed: the notch could freeze while an AI answer was being written, because the chat redrew the whole reply on every word. It now redraws about 8 times a second and always shows the full answer at the end (issue #135; we could not reproduce the freeze, so please tell us if it still happens)
 
 **Windows**
