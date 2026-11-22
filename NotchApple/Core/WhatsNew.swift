@@ -20,6 +20,12 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.84", date: "22 November 2026", headline: "Stability fixes", items: [
+            "- Fixed: a stopped or interrupted AI answer now shows all the text that had arrived, and a late reply from an earlier chat can no longer appear in a new one (issue #135 follow-up)",
+            "- Fixed: the calculator could close the app when solving or factoring an equation with very large or awkward fractions; it now falls back to a decimal answer",
+            "- Fixed: restoring a settings backup no longer overwrites licence, update-server or other machine-specific settings with the file's values",
+            "- Fixed: an admin key with redeemed Humanizer top-up words could overflow the word counter"
+        ]),
         ReleaseNote(version: "2.2.83", date: "20 November 2026", headline: "Desert Heat", items: [
             "- New: Desert Heat, an open-world game set in Dubai and Abu Dhabi. Games → Desert Heat → Play full screen. Drive Dubai's real roads from Deira to the Marina (map data © OpenStreetMap contributors), with traffic, traffic lights, the Metro, the landmarks, day and night and weather, then take the E11 into the desert and on to Abu Dhabi and the Yas circuit",
             "- Play as Fareej, a ride-hailing driver, and Fatimah, a junior lawyer, and switch between them at any time (TAB). The story has 29 missions in five acts, with heists you plan yourself and two endings",

@@ -1,18 +1,18 @@
 {
-  "version": "2.2.74",
-  "title": "Notch Apple 2.2.74 · Admin keys",
-  "notes": "## Notch Apple 2.2.74\n\n- New: admin keys. A higher key tier with no limits at all: every paid feature unlocked and no word or message caps. Only the owner can issue one, and at most four can be live at a time.\n- Fixed: Humanizer and the Ultimate-only screens now open for the admin tier, and the Windows key check accepts admin keys\n",
-  "published": "2026-11-16T14:57:50Z",
-  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.2.74/NotchApple-2.2.74.dmg",
-  "dmgSize": 31058788,
-  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.2.74",
+  "version": "2.2.83",
+  "title": "Notch Apple 2.2.83",
+  "notes": "## Notch Apple 2.2.83\n\n- New: Desert Heat, an open-world game set in Dubai and Abu Dhabi. Games → Desert Heat → Play full screen. Drive Dubai's real roads from Deira to the Marina (map data © OpenStreetMap contributors), with traffic, traffic lights, the Metro, the landmarks, day and night and weather, then take the E11 into the desert and on to Abu Dhabi and the Yas circuit\n- Play as Fareej, a ride-hailing driver, and Fatimah, a junior lawyer, and switch between them at any time (TAB). The story has 29 missions in five acts, with heists you plan yourself and two endings\n- On foot and in cars: guns and a wanted level with police, shops you can walk into and buy from, petrol, Salik and speed cameras, a phone with GPS, a bank, a ride-hailing side job, cars to buy and tune at a garage, property and businesses, jet skis and a helicopter\n- Online play is built but not switched on yet: the phone's Online app says Coming soon\n- The game is new: tell us what feels wrong (Feedback in Settings)\n",
+  "published": "2026-11-20T07:01:15Z",
+  "dmg": "https://github.com/AdityaJainDXB/NotchApples/releases/download/v2.2.83/NotchApple-2.2.83.dmg",
+  "dmgSize": 37203204,
+  "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/v2.2.83",
   "stars": 4,
   "windows": {
-    "version": "2.2.74",
+    "version": "2.2.82",
     "notes": "",
-    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.2.74/Notch.apple_2.2.74_x64-setup.exe",
-    "sha256": "0bf19687f7a16bc4ff503a8c66b025973cf1fe6a9e085df949e156f89660dc3a",
-    "size": 6794970,
-    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.2.74"
+    "url": "https://github.com/AdityaJainDXB/NotchApples/releases/download/win-v2.2.82/Notch.apple_2.2.82_x64-setup.exe",
+    "sha256": "3d276752f501efae1a5df95223a20c58d07b661e851915cededa96eb1ced8682",
+    "size": 11284703,
+    "page": "https://github.com/AdityaJainDXB/NotchApples/releases/tag/win-v2.2.82"
   }
 }

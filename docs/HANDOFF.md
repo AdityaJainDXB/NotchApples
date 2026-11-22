@@ -2,6 +2,10 @@
 
 For the next agent (or person) picking this up. Read `CLAUDE.md` first: its release, README and safety rules apply. Facts below were true when written; check them (`gh release list`, `gh run list`, `gh pr list`) before relying on them. Things that are already pushed and finished are not listed here; they are in the Releases page, `CHANGELOG.md` and git history.
 
+## 2.2.84: weekly audit fixes (22 November 2026, Mac only)
+
+Fixed from the weekly audit: calculator Int overflow crash, settings-backup import now skips machine-specific keys, admin Humanizer total overflow, stopped AI answers show their full text. **Audit findings left for the owner to decide** (not changed on purpose): (1) Mac Humanizer allowance and credits live in UserDefaults, so they can be edited; the worker would have to meter words. (2) Legacy activation (`license.activated` + `license.codeHash` in secrets.json) is unsigned. (3) `UpdateSigning.requireSignature` is false, so an unsigned DMG is accepted. (4) `notchapple://record`, `screenshot` and `snippet` URLs run with no prompt. (5) `FeatureHub` has `case "focus"` twice, so the Shortcuts Focus branch never runs. (6) Worker (needs `wrangler deploy` for any fix): top-up quantity falls back to the payment total (cap 100 units), KV has no compare-and-swap so a code can be redeemed twice in a race, a suspended (refunded) key can still download the Flight Economy game, the passkey add/remove step does not require an existing passkey. (7) `try!` on Friends key seeds in `FriendsLogic.swift:114`. Issue #135 stays open until the reporter confirms.
+
 ## 2.2.83: Desert Heat on the Mac (20 November 2026)
 
 Mac v2.2.82 was published by a CI "Mac build" run from main before PR #134 merged, so it has only the #135 fix. Windows win-v2.2.82 (pre-release) has Desert Heat. 2.2.83 brings Desert Heat to the Mac via the CI "Mac build" workflow (ad-hoc signed, like 2.2.81 and 2.2.82); Windows 2.2.83 has no code changes. The section below is the game's history; where it says 2.2.82 for the Mac, read 2.2.83.

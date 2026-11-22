@@ -122,12 +122,13 @@ final class NotchAIConversation: ObservableObject {
                     // Redraw at most about 8 times a second; the last text is pushed below.
                     if gate.shouldPublish(now: ProcessInfo.processInfo.systemUptime) { self?.updateReply(reply) }
                 }
-                if !reply.isEmpty { self?.updateReply(reply) }
                 if reply.isEmpty { error = AIError.empty }
             } catch is CancellationError {
             } catch let e {
                 error = e
             }
+            // Show the last streamed text even when the stream stopped early (the redraw gate may have held it back).
+            if !reply.isEmpty, self?.sessionID == session { self?.updateReply(reply) }
             self?.finish(reply: reply, error: error, question: question, provider: provider, model: model, session: session)
         }
     }

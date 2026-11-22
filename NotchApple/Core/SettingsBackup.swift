@@ -93,7 +93,7 @@ final class SettingsBackup: ObservableObject {
         for key in (d.persistentDomain(forName: bundle) ?? [:]).keys where !excludedPrefixes.contains(where: { key.hasPrefix($0) }) {
             d.removeObject(forKey: key)
         }
-        for (key, value) in prefs {
+        for (key, value) in prefs where !excludedPrefixes.contains(where: { key.hasPrefix($0) }) {
             if key == "__shared.weatherLocation" { SharedStore.defaults.set(value, forKey: "shared.weatherLocation") }
             else { d.set(value, forKey: key) }
         }

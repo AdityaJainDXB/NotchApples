@@ -68,4 +68,9 @@ final class HumanizerTests: XCTestCase {
         XCTAssertEqual(HumanizerLogic.monthlyAllowance(for: .admin), Int.max)
         XCTAssertNil(HumanizerLogic.message(for: .allowed(fromMonth: 999_999, fromCredits: 0), tier: .admin))
     }
+
+    func testAdminTotalLeftDoesNotOverflowWithCredits() {
+        let u = HumanizerLogic.Usage(month: "2026-11", used: 0, credits: 500)
+        XCTAssertEqual(HumanizerLogic.totalLeft(u, tier: .admin), Int.max)
+    }
 }

@@ -4,6 +4,14 @@ Every Notch Apple release, newest first. The latest few are also on the [README]
 
 > **About old versions:** Mac releases before 1.34.10 and Windows releases before 1.31.0 were removed from the Releases page to keep it short. Their notes stay below, and the code for every version is in the repository's history.
 
+### Mac 2.2.84 · 22 November 2026 · Stability fixes
+
+- Fixed: a stopped or interrupted AI answer now shows all the text that had arrived, and a late reply from an earlier chat can no longer appear in a new one (issue #135 follow-up)
+- Fixed: the calculator could close the app when solving or factoring an equation with very large or awkward fractions; it now falls back to a decimal answer
+- Fixed: restoring a settings backup no longer overwrites licence, update-server or other machine-specific settings with the file's values
+- Fixed: an admin key with redeemed Humanizer top-up words could overflow the word counter
+- Windows: no code changes (still 2.2.83)
+
 ### Mac 2.2.83 · Windows 2.2.83 BETA · 20 November 2026 · 🌴 Desert Heat
 
 **Mac**

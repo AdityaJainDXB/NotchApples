@@ -114,4 +114,11 @@ final class MathEngineTests: XCTestCase {
     func testAnUnknownLetterWithNoValueIsReported() {
         XCTAssertEqual(run("x + y = 5")[0].kind, .error)   // two letters, one equation
     }
+
+    func testHugeCoefficientsDoNotCrash() {
+        // Whole-number scaling used to overflow Int and trap.
+        _ = run("solve(x^2 + 0.001x + 0.000001 = 0, x)")
+        _ = run("x^7 + x^6/997 + x^5/991 + x^4/983 + x^3/977 + x^2/971 + x/967 + 1/961")
+        _ = run("factor(x^7 + x^6/997 + x^5/991 + x^4/983 + x^3/977 + x^2/971 + x/967 + 1/961)")
+    }
 }

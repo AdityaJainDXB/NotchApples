@@ -244,6 +244,7 @@
 		5D480C1CC37D54DFD70F951E /* NotchAIOfficeReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 602B2E8A2FA24537681574CC /* NotchAIOfficeReader.swift */; };
 		5D7F5D766A349C34E27672E2 /* GameEngines.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A2294A11AF6369D10835393 /* GameEngines.swift */; };
 		5DA036B0487FEFE1B56816D4 /* Purge-MIT.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8AFC7FE5E490233091CC0AC2 /* Purge-MIT.txt */; };
+		5DAAAC53348DDE205547BA2D /* DesertHeatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB89B62D4FE41308ED01001A /* DesertHeatView.swift */; };
 		5DCFF5FAC0FB3C4B22AE8E7B /* NotchMessengerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 643FFB36BCE34E64BBD52883 /* NotchMessengerView.swift */; };
 		5E3C1CC5BAB503490C8F01EA /* ConvertFormats.swift in Sources */ = {isa = PBXBuildFile; fileRef = E26901871B9937AEB263FD76 /* ConvertFormats.swift */; };
 		5E92B32B8E218C4DA0ECFDDD /* NotchAIConversationLogic.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB63454B0761715BDBAA4F80 /* NotchAIConversationLogic.swift */; };
@@ -523,6 +524,7 @@
 		C7E011E3E6578C0F925D2E4D /* ModuleLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAD8B98D0C5A260C98386133 /* ModuleLayoutTests.swift */; };
 		C8498011350804A76A4E17CC /* DailyTriviaGame.html in Resources */ = {isa = PBXBuildFile; fileRef = 5EB79DEF5F1A0049764636C6 /* DailyTriviaGame.html */; };
 		C853415D511D635A9AB65D10 /* NotchAIConversation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B1797A9FC3ACD2FCB0D43D8 /* NotchAIConversation.swift */; };
+		C886EB01F46F9AC28D190D71 /* desertheat in Resources */ = {isa = PBXBuildFile; fileRef = 3F1F748614110014A6DAC9C7 /* desertheat */; };
 		C8D6BA93557B9964E383EA8F /* CompanionProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8945C0BF0272BD283A250BDC /* CompanionProtocol.swift */; };
 		C8D956D4F40952369A4498AA /* ConvertView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2F817CBD2CC66E658282B91 /* ConvertView.swift */; };
 		C91A005EA4ED8AC410BAF839 /* ClaudeChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76A2AE80E039AD25E2029A03 /* ClaudeChatView.swift */; };
@@ -817,6 +819,7 @@
 		3D5341204537860AAD266BF9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3D60DFF8D29CE5938A540D8E /* SmartHomeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartHomeTests.swift; sourceTree = "<group>"; };
 		3ED6813AA8EF7F3F44235A0D /* NotchWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotchWindowController.swift; sourceTree = "<group>"; };
+		3F1F748614110014A6DAC9C7 /* desertheat */ = {isa = PBXFileReference; lastKnownFileType = folder; name = desertheat; path = NotchWindows/src/js/games/desertheat; sourceTree = SOURCE_ROOT; };
 		3F22844E48EEA4FEBD1273E0 /* DownloadWatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownloadWatcher.swift; sourceTree = "<group>"; };
 		3F56873F8683487EBE9C958A /* TranslationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TranslationManager.swift; sourceTree = "<group>"; };
 		404B8C35377E3958184925BE /* BackgroundMusic.pkg */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.installer-pkg"; path = BackgroundMusic.pkg; sourceTree = "<group>"; };
@@ -1227,6 +1230,7 @@
 		FAD3012040BD25D1B90DFD5E /* AppleIntelligence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleIntelligence.swift; sourceTree = "<group>"; };
 		FAD8B98D0C5A260C98386133 /* ModuleLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModuleLayoutTests.swift; sourceTree = "<group>"; };
 		FB44C1551051FAC38513B591 /* MirrorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MirrorView.swift; sourceTree = "<group>"; };
+		FB89B62D4FE41308ED01001A /* DesertHeatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesertHeatView.swift; sourceTree = "<group>"; };
 		FBB4149538B608F14EF695A6 /* PlayController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayController.swift; sourceTree = "<group>"; };
 		FBF3DAEC5D6E71106D9278BE /* ModelLocality.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModelLocality.swift; sourceTree = "<group>"; };
 		FBF521DE52E4227ABF0CCC29 /* Entitlements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entitlements.swift; sourceTree = "<group>"; };
@@ -1326,6 +1330,7 @@
 				47B08D0E9864B3CC96B3F02F /* chess.js */,
 				3B249F7C71D18A1BD0D8E788 /* ctf-logic.js */,
 				22BC3DD953937929570782CA /* ctf.js */,
+				3F1F748614110014A6DAC9C7 /* desertheat */,
 				6B71DFFB51F3504D56D9F955 /* eagle-ride-logic.js */,
 				5335866028CCCA64B2560D3E /* eagle-ride.js */,
 				B2561F2C94E868FBB42E434C /* f1 */,
@@ -2452,6 +2457,7 @@
 				9D4FADAB2335D1E735AA1EF8 /* CtfGameView.swift */,
 				D6CD970482476F8CC5C56D7E /* DailyTriviaGameView.swift */,
 				DEB323B15181A7CBF33193DE /* DailyWordGameView.swift */,
+				FB89B62D4FE41308ED01001A /* DesertHeatView.swift */,
 				4258877FB506A1DE0F81BD38 /* EagleRideGameView.swift */,
 				4A2294A11AF6369D10835393 /* GameEngines.swift */,
 				E0C8A8EBFAB59EBC323417FC /* GameFullScreen.swift */,
@@ -2650,6 +2656,7 @@
 				F645FA1F8EA68212CBDD7333 /* chess.js in Resources */,
 				68E148D5C8B7CEA4F02B859A /* ctf-logic.js in Resources */,
 				94134084A487BEB193A089C3 /* ctf.js in Resources */,
+				C886EB01F46F9AC28D190D71 /* desertheat in Resources */,
 				996A0F04A4274B13AC54D086 /* eagle-ride-logic.js in Resources */,
 				1F53E5CFEC0D07871784A1D2 /* eagle-ride.js in Resources */,
 				F4E4DC057112D60E43CDF0E8 /* f1 in Resources */,
@@ -2760,6 +2767,7 @@
 				DFEDE6722BDF5310FD00615D /* DailyTriviaGameView.swift in Sources */,
 				94A1DAACE593691EEA463858 /* DailyWordGameView.swift in Sources */,
 				CD90A054724EB2DEDC4FEE75 /* DemoHooks.swift in Sources */,
+				5DAAAC53348DDE205547BA2D /* DesertHeatView.swift in Sources */,
 				7B12BD9CB555C24A35F8E4D3 /* DesktopWidgetLogic.swift in Sources */,
 				90B75BF37C6334B3AB28FC7D /* DesktopWidgets.swift in Sources */,
 				4C0F7D796DCC0A288B9322F6 /* DevToolkitLogic.swift in Sources */,
@@ -3420,7 +3428,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 257;
+				CURRENT_PROJECT_VERSION = 258;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3436,7 +3444,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.80;
+				MARKETING_VERSION = 2.2.84;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -3554,7 +3562,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 257;
+				CURRENT_PROJECT_VERSION = 258;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -3576,7 +3584,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.2.80;
+				MARKETING_VERSION = 2.2.84;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;

@@ -150,6 +150,13 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.84 · 22 November 2026 · Stability fixes
+
+- Fixed: a stopped or interrupted AI answer now shows all the text that had arrived, and a late reply from an earlier chat can no longer appear in a new one (issue #135 follow-up)
+- Fixed: the calculator could close the app when solving or factoring an equation with very large or awkward fractions; it now falls back to a decimal answer
+- Fixed: restoring a settings backup no longer overwrites licence, update-server or other machine-specific settings with the file's values
+- Fixed: an admin key with redeemed Humanizer top-up words could overflow the word counter
+
 ### Mac 2.2.83 · 20 November 2026 · 🌴 Desert Heat
 
 - New: Desert Heat, an open-world game set in Dubai and Abu Dhabi (Games → Desert Heat → Play full screen). Real Dubai roads from OpenStreetMap, traffic, the Metro, landmarks, weather, the desert, Abu Dhabi and Yas
@@ -162,10 +169,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Fixed: the notch could freeze while an AI answer was being written, because the chat redrew the whole reply on every word. It now redraws about 8 times a second and always shows the full answer at the end (issue #135; we could not reproduce the freeze, so please tell us if it still happens)
 - Windows: Desert Heat (as above)
 
-### Mac 2.2.81 · Windows 2.2.81 · 19 November 2026 · Smoother hello animation
-
-- Fixed: the hello animation in the notch was glitchy and slow. Its lettering is now drawn once per frame on the graphics chip instead of being worked out again every frame (issue #131)
-- Windows: Windows has no code changes; it moves to 2.2.81 to stay in step with the Mac
 
 ## Plugins
 

@@ -57,6 +57,7 @@ Never run a Debug or test copy of the Mac app with the real bundle id (`com.notc
 
 One line per commit, newest first: date, what changed, what is left open.
 
+- 22 Nov 2026: weekly routine: audit fixes (calculator overflow crash, settings import now skips machine-specific keys, admin Humanizer total overflow, stopped AI answers show their full text), released Mac 2.2.84 (Windows unchanged at 2.2.83). Open (owner decisions): Humanizer allowance is kept in UserDefaults on the Mac so it can be edited; legacy activation in secrets.json is not signed; UpdateSigning.requireSignature is false; worker top-up quantity fallback to the payment total, KV double-redeem and suspended-key game download (worker deploy needed); issue #135 awaits the reporter.
 - 20 Nov 2026: 2.2.83 prepared: Desert Heat for the Mac (Mac 2.2.82 shipped without it from a CI build started before PR #134 merged); 2.2.82 notes split back to the fix for Mac and the game for Windows. Open: CI Mac build ad-hoc signed, not installed on the owner's Mac.
 - 20 Nov 2026: merged main into game-dubai-prompt: 2.2.82 now carries Desert Heat and the #135 AI redraw throttle together (notes, WhatsNew, CHANGELOG, README, handoff combined). Open: Mac 2.2.82 release on the signing Mac.
 - 20 Nov 2026: 2.2.82 prepared (Desert Heat): version, release notes, WhatsNew, CHANGELOG, README, handoff. Windows CI passed on the game branch, Mac type-check and 693 Mac tests pass. Open: Mac release on the signing Mac; the game not yet played inside either installed app.

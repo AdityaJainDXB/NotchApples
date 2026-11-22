@@ -551,9 +551,11 @@ enum MathAlgebra {
         let disc = b * b - 4 * a * c
         // Exact form when the coefficients are whole numbers (or fractions scaled to whole numbers).
         var scale = 1
-        for x in [a, b, c] { if let (_, q) = MathFormat.rational(x) { scale = scale / gcd(scale, q) * q } }
-        let ia = Int((a * Double(scale)).rounded()), ib = Int((b * Double(scale)).rounded()), ic = Int((c * Double(scale)).rounded())
-        let exact = [a, b, c].allSatisfy { MathFormat.rational($0) != nil } && scale <= 1000
+        for x in [a, b, c] { if let (_, q) = MathFormat.rational(x) { let (m, o) = (scale / gcd(scale, q)).multipliedReportingOverflow(by: q); scale = o ? 1_000_001 : m } }
+        let safe = scale <= 1000 && [a, b, c].allSatisfy { abs($0 * Double(scale)) < 1e9 }   // keeps Int maths from overflowing
+        func whole(_ x: Double) -> Int { safe ? Int((x * Double(scale)).rounded()) : 0 }
+        let ia = whole(a), ib = whole(b), ic = whole(c)
+        let exact = [a, b, c].allSatisfy { MathFormat.rational($0) != nil } && safe
         if abs(disc) < 1e-12 { return ["\(v) = " + MathFormat.number(-b / (2 * a))] }
         if exact {
             let D = ib * ib - 4 * ia * ic
@@ -623,7 +625,8 @@ enum MathAlgebra {
         guard c.allSatisfy({ MathFormat.rational($0) != nil }) else { return nil }
         // Whole-number version, only to know which fractions can be roots.
         var scale = 1
-        for x in c { if let (_, q) = MathFormat.rational(x) { scale = scale / gcd(scale, q) * q } }
+        for x in c { if let (_, q) = MathFormat.rational(x) { let (m, o) = (scale / gcd(scale, q)).multipliedReportingOverflow(by: q); if o { return nil }; scale = m } }
+        guard c.allSatisfy({ abs($0 * Double(scale)) < 1e15 }) else { return nil }
         let ints = c.map { Int(($0 * Double(scale)).rounded()) }
         let content = ints.reduce(0) { gcd($0, $1) }
         guard content != 0 else { return nil }

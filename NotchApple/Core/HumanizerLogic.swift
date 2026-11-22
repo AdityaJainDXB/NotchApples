@@ -65,7 +65,10 @@ enum HumanizerLogic {
     }
 
     static func monthlyLeft(_ u: Usage, tier: Tier) -> Int { max(0, monthlyAllowance(for: tier) - u.used) }
-    static func totalLeft(_ u: Usage, tier: Tier) -> Int { monthlyLeft(u, tier: tier) + u.credits }
+    static func totalLeft(_ u: Usage, tier: Tier) -> Int {
+        let (sum, overflow) = monthlyLeft(u, tier: tier).addingReportingOverflow(u.credits)
+        return overflow ? Int.max : sum
+    }
 
     enum Decision: Equatable {
         /// Go ahead: `fromMonth` words come out of this month's allowance and `fromCredits` out of extra credits.
@@ -85,7 +88,7 @@ enum HumanizerLogic {
         if words <= month { return .allowed(fromMonth: words, fromCredits: 0) }
         let extra = words - month
         if extra <= usage.credits { return .allowed(fromMonth: month, fromCredits: extra) }
-        return .outOfWords(needed: words, left: month + usage.credits)
+        return .outOfWords(needed: words, left: totalLeft(usage, tier: tier))
     }
 
     /// The usage after a successful request.
