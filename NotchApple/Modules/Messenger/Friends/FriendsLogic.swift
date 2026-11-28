@@ -111,8 +111,9 @@ struct FriendIdentity: Codable, Equatable {
                        dhSeed: Curve25519.KeyAgreement.PrivateKey().rawRepresentation)
     }
 
-    var signKey: Curve25519.Signing.PrivateKey { try! Curve25519.Signing.PrivateKey(rawRepresentation: signSeed) }
-    var dhKey: Curve25519.KeyAgreement.PrivateKey { try! Curve25519.KeyAgreement.PrivateKey(rawRepresentation: dhSeed) }
+    // A damaged stored seed (not 32 bytes) used to crash the app; it now gets a fresh key instead of a trap.
+    var signKey: Curve25519.Signing.PrivateKey { (try? Curve25519.Signing.PrivateKey(rawRepresentation: signSeed)) ?? Curve25519.Signing.PrivateKey() }
+    var dhKey: Curve25519.KeyAgreement.PrivateKey { (try? Curve25519.KeyAgreement.PrivateKey(rawRepresentation: dhSeed)) ?? Curve25519.KeyAgreement.PrivateKey() }
     var signPublic: Data { signKey.publicKey.rawRepresentation }
     var dhPublic: Data { dhKey.publicKey.rawRepresentation }
     var box: String { Friends.box(for: code) }

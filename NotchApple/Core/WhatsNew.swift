@@ -20,6 +20,13 @@ struct ReleaseNote: Identifiable {
 
 enum WhatsNew {
     static let releases: [ReleaseNote] = [
+        ReleaseNote(version: "2.2.85", date: "28 November 2026", headline: "Security and reliability fixes", items: [
+            "- Fixed: the notchapple://record, screenshot and snippet links now ask before they act, so a web page can no longer start a recording, take a screenshot or paste a snippet by itself",
+            "- Fixed: the notchapple://focus link from a Shortcuts Focus automation (focus?on=1&profile=Work) now works; it was hidden behind the focus timer link of the same name",
+            "- Fixed: a damaged Friends key in storage no longer closes the app; a fresh key is made instead",
+            "- Fixed: adding a second passkey to a key now needs one of its existing passkeys to confirm it (the app opens the browser twice)",
+            "- Fixed: a Humanizer top-up bought in a different quantity no longer takes the payment total as the number of units; a code redeemed twice at the same moment is no longer added twice (licence server; needs a worker deploy)"
+        ]),
         ReleaseNote(version: "2.2.84", date: "22 November 2026", headline: "Stability fixes", items: [
             "- Fixed: a stopped or interrupted AI answer now shows all the text that had arrived, and a late reply from an earlier chat can no longer appear in a new one (issue #135 follow-up)",
             "- Fixed: the calculator could close the app when solving or factoring an equation with very large or awkward fractions; it now falls back to a decimal answer",

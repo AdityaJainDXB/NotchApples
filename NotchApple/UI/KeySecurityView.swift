@@ -443,7 +443,16 @@ private struct SecurityWindowView: View {
     }
     private func startPasskey() async {
         loading = true; error = nil; passkeyURL = nil
-        let b = await entitlements.passkeyBegin(mode == .addPasskey ? "add" : "remove")
+        var b = await entitlements.passkeyBegin(mode == .addPasskey ? "add" : "remove")
+        if mode == .addPasskey, b.ticket == nil, b.error?.hasPrefix("Confirm with an existing passkey") == true {
+            // The key already has a passkey: prove it with that one first, then add the new one.
+            let v = await entitlements.passkeyBegin("verify")
+            guard let vt = v.ticket else { loading = false; error = v.error; return }
+            passkeyURL = vt.url
+            NSWorkspace.shared.open(vt.url)
+            if let e = await entitlements.passkeyWait(vt.id) { loading = false; error = e; return }
+            b = await entitlements.passkeyBegin("add", proof: vt.id)
+        }
         loading = false
         guard let ticket = b.ticket else { error = b.error; return }
         passkeyURL = ticket.url

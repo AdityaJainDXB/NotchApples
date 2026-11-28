@@ -150,6 +150,14 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 
 ## What's new
 
+### Mac 2.2.85 · 28 November 2026 · Security and reliability fixes
+
+- Fixed: the notchapple://record, screenshot and snippet links now ask before they act, so a web page can no longer start a recording, take a screenshot or paste a snippet by itself
+- Fixed: the notchapple://focus link from a Shortcuts Focus automation (focus?on=1&profile=Work) now works; it was hidden behind the focus timer link of the same name
+- Fixed: a damaged Friends key in storage no longer closes the app; a fresh key is made instead
+- Fixed: adding a second passkey to a key now needs one of its existing passkeys to confirm it (the app opens the browser twice)
+- Fixed: a Humanizer top-up bought in a different quantity no longer takes the payment total as the number of units; a code redeemed twice at the same moment is no longer added twice (licence server; needs a worker deploy)
+
 ### Mac 2.2.84 · 22 November 2026 · Stability fixes
 
 - Fixed: a stopped or interrupted AI answer now shows all the text that had arrived, and a late reply from an earlier chat can no longer appear in a new one (issue #135 follow-up)
@@ -163,12 +171,6 @@ More screenshots of the capture overlay, the AI answer, the settings and the Win
 - Two characters you switch between, Fareej and Fatimah, and a story of 29 missions with planned heists and two endings
 - Guns and police, shops you can enter, a phone with GPS and a bank, ride-hailing jobs, cars and tuning, property, jet skis and a helicopter. Online play is coming soon
 - Windows got Desert Heat in 2.2.82; Windows 2.2.83 has no code changes
-
-### Mac 2.2.82 · Windows 2.2.82 · 20 November 2026 · AI reply freeze fix
-
-- Fixed: the notch could freeze while an AI answer was being written, because the chat redrew the whole reply on every word. It now redraws about 8 times a second and always shows the full answer at the end (issue #135; we could not reproduce the freeze, so please tell us if it still happens)
-- Windows: Desert Heat (as above)
-
 
 ## Plugins
 

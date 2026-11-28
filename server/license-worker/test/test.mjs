@@ -1305,6 +1305,7 @@ await test('Passkeys: add one from a device that uses the key; a new device then
   assert.equal((await call('/passkey/status', { ticket: t1 })).status, 'approved');
   assert.equal((await create(t1)).status, 409, 'a ticket answers once');
   assert.equal((await call('/security', { key, device: dv(40) })).passkeys, 1);
+  assert.equal((await call('/passkey/begin', { key, device: dv(40), purpose: 'add' })).status, 403, 'a second passkey needs an existing one to approve it');
   // ---- the key is now protected by the passkey, even with no email
   assert.deepEqual(Object.assign({}, await call('/activate', { key, device: dv(42) })), { status: 200, ok: false, reason: 'verify', bound: true, passkey: true, hint: null, error: (await call('/activate', { key, device: dv(42) })).error });
   assert.equal((await call('/otp/start', { key, device: dv(42), email: 'thief@example.com' })).status, 403, 'a thief cannot put their email on a passkey-protected key');

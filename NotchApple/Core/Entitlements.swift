@@ -228,9 +228,11 @@ final class Entitlements: ObservableObject {
     struct PasskeyTicket { let id: String; let url: URL }
 
     /// A ticket and the page to open, for `purpose` add, verify or remove. `key` is for a Mac that is new to the key (verify).
-    func passkeyBegin(_ purpose: String, key: String? = nil) async -> (ticket: PasskeyTicket?, error: String?) {
+    func passkeyBegin(_ purpose: String, key: String? = nil, proof: String? = nil) async -> (ticket: PasskeyTicket?, error: String?) {
         guard let text = key ?? self.key?.text else { return (nil, "No key on this Mac.") }
-        let r = await secure("passkey/begin", text, ["purpose": purpose])
+        var extra = ["purpose": purpose]
+        if let proof { extra["proof"] = proof }   // adding a second passkey needs an approved ticket from an existing one
+        let r = await secure("passkey/begin", text, extra)
         guard let id = r["ticket"] as? String, let u = r["url"] as? String, let url = URL(string: u) else { return (nil, r["error"] as? String ?? "Couldn't start. Try again.") }
         return (PasskeyTicket(id: id, url: url), nil)
     }

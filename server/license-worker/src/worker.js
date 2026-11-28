@@ -890,7 +890,8 @@ const cleanWordCode = (c) => { const s = String(c || '').toUpperCase().replace(/
 
 async function humanizerTopUp(env, d, payId) {
   if (await env.KV.get(`tx:whopwords:${payId}`)) return { ok: true, again: true };          // a retried delivery: one code per payment
-  const qty = Math.max(1, Math.min(100, Math.round(Number(pick(d, 'quantity', 'line_items.0.quantity')) || 0) || Math.round(Number(pick(d, 'usd_total', 'total.amount', 'total', 'subtotal')) || 1)));
+  // Only a real quantity counts. The payment total used to be the fallback, which turned an amount in dollars into a number of units.
+  const qty = Math.max(1, Math.min(100, Math.round(Number(pick(d, 'quantity', 'line_items.0.quantity')) || 0) || 1));
   const words = WORDS_PER_TOPUP * qty;
   const code = newWordCode(), hash = await sha256(`word|${code}`);
   await putJSON(env, `wordcode:${hash}`, { words, at: Date.now(), payId, used: false });
@@ -914,6 +915,11 @@ async function humanizerRedeem(env, body) {
   if (!rec) throw new HTTPError(404, 'That code is not valid. Check it and try again.');
   if (rec.refunded) throw new HTTPError(410, 'That top-up was refunded, so the code no longer works.');
   if (rec.used) throw new HTTPError(409, rec.device === device ? 'This code was already added on this computer.' : 'That code has already been used.');
+  // KV has no compare-and-swap, so two requests could both see used:false. Each writes its own claim first, then reads it back:
+  // only the request whose claim is still there goes on. (Narrows the race; a Durable Object would close it fully.)
+  const claim = hex(randomBytes(8));
+  await env.KV.put(`wordclaim:${hash}`, claim, { expirationTtl: 3600 });
+  if ((await env.KV.get(`wordclaim:${hash}`)) !== claim) throw new HTTPError(409, 'That code has already been used.');
   await putJSON(env, `wordcode:${hash}`, { ...rec, used: true, device, usedAt: Date.now() });
   return { ok: true, words: rec.words };
 }
@@ -1083,6 +1089,13 @@ async function passkeyBegin(env, body, now = Date.now()) {
   if (purpose === 'add') {
     if (!registered) throw new HTTPError(403, 'Open this from a device that already uses the key.');
     if (have >= PK_MAX) throw new HTTPError(400, `A key can have ${PK_MAX} passkeys. Remove one first.`);
+    if (have) {
+      // A key that already has a passkey needs one to add another: an approved verify ticket for this key and device, used once.
+      const pid = String(body.proof || ''), pt = /^[0-9a-f]{32}$/.test(pid) ? await getJSON(env, `pk:${pid}`) : null;
+      if (!pt || pt.exp < now || pt.k !== k.keyId || pt.device !== body.device || pt.purpose !== 'verify' || pt.status !== 'approved')
+        throw new HTTPError(403, 'Confirm with an existing passkey first.');
+      await env.KV.delete(`pk:${pid}`);
+    }
   } else if (purpose === 'remove') {
     if (!registered) throw new HTTPError(403, 'Open this from a device that already uses the key.');
     if (!have) throw new HTTPError(400, 'This key has no passkey.');

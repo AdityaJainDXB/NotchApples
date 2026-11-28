@@ -166,12 +166,19 @@ enum FeatureHub {
         case "stopwatch":
             parts.dropFirst().first == "stop" ? CountdownTimer.shared.pauseStopwatch() : CountdownTimer.shared.startStopwatch()
         case "focus":
-            parts.dropFirst().first == "stop" ? FocusTimer.shared.pause() : FocusTimer.shared.start()
+            // From a Shortcuts Focus automation: notchapple://focus?on=1&profile=Work (with on= or profile=).
+            // Without them, notchapple://focus/start and focus/stop drive the focus timer.
+            if query["on"] != nil || query["profile"] != nil {
+                FocusBridge.handle(query)
+            } else {
+                parts.dropFirst().first == "stop" ? FocusTimer.shared.pause() : FocusTimer.shared.start()
+            }
         case "keepawake":
             if parts.dropFirst().first == "off" { KeepAwake.shared.stop() }
             else { KeepAwake.shared.start(minutes: query["minutes"].flatMap(Int.init).map { min(max($0, 1), 1440) }) }   // (an overflowing value used to trap)
         case "snippet":
-            if let name = query["name"], let s = SnippetStore.shared.items.first(where: { $0.title.caseInsensitiveCompare(name) == .orderedSame }) {
+            if let name = query["name"], let s = SnippetStore.shared.items.first(where: { $0.title.caseInsensitiveCompare(name) == .orderedSame }),
+               URLHandler.confirm("Paste the snippet \u{201C}\(s.title)\u{201D}?", detail: "A link or app asked Notch Apple to paste this snippet into the front app.") {
                 PasteHelper.paste(s.text)
             }
         case "activate":
@@ -180,9 +187,6 @@ enum FeatureHub {
                 Entitlements.shared.pendingKey = key
                 AppDelegate.openSettingsWindow(tab: .license)
             }
-        case "focus":
-            // From a Shortcuts Focus automation: notchapple://focus?on=1&profile=Work
-            FocusBridge.handle(query)
         case "profile":
             // notchapple://profile?name=Work (or name=auto), Pro
             if Entitlements.shared.canUse(.profiles), let name = query["name"] {
@@ -215,8 +219,10 @@ enum FeatureHub {
             // Live Activities API (Ultimate): notchapple://activity?id=…&text=…, notchapple://activity/end?id=…
             ExternalActivities.shared.handle(query, end: parts.dropFirst().first == "end")
         case "claude-code": ClaudeCodeStatus.shared.handle(query["status"])
-        case "record": ScreenRecorder.shared.toggle()
-        case "screenshot": ScreenCaptureActions.shared.takeScreenshot()
+        case "record":
+            if URLHandler.confirm("Start or stop a screen recording?", detail: "A link or app asked Notch Apple to do this.") { ScreenRecorder.shared.toggle() }
+        case "screenshot":
+            if URLHandler.confirm("Take a screenshot?", detail: "A link or app asked Notch Apple to do this.") { ScreenCaptureActions.shared.takeScreenshot() }
         default: delegate?.toggleNotch()
         }
     }
@@ -224,6 +230,17 @@ enum FeatureHub {
 
 final class URLHandler: NSObject {
     static let shared = URLHandler()
+
+    /// Links can come from any web page, so actions that capture the screen or type into another app ask first.
+    @MainActor static func confirm(_ question: String, detail: String) -> Bool {
+        let alert = NSAlert()
+        alert.messageText = question
+        alert.informativeText = detail
+        alert.addButton(withTitle: "Allow")
+        alert.addButton(withTitle: "Cancel")
+        NSApp.activate(ignoringOtherApps: true)
+        return alert.runModal() == .alertFirstButtonReturn
+    }
     @objc func handle(_ event: NSAppleEventDescriptor, reply: NSAppleEventDescriptor) {
         guard let string = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue, let url = URL(string: string) else { return }
         DispatchQueue.main.async { MainActor.assumeIsolated { FeatureHub.handle(url) } }
